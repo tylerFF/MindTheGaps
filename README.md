@@ -9,25 +9,25 @@ Tyler and Jesse working for Marc on MindTheGaps, where we can house all the file
 | Phase | Status | Notes |
 |-------|--------|-------|
 | Phase 0: Setup + Schema | **Done** | Directory structure, shared constants |
-| Phase 1: Quiz Build | **In Progress** | Scoring + Results done, 3 items remaining |
+| Phase 1: Quiz Build | **Done** | All 5 tasks complete, 107 tests passing |
 | Phase 2: Payment + Booking | Not started | Stripe, Calendly, prefill links |
 | Phase 3: Scan Worksheet | Not started | JotForm worksheet + scan webhook |
-| Phase 4: Plan Generation | Not started | Stop rules, confidence, Claude API, DOCX, R2, Resend |
+| Phase 4: Plan Generation | **In Progress** | Stop rules + confidence done (112 tests), Claude API/DOCX/R2/Resend remaining |
 | Phase 5: QA + Handoff | Not started | End-to-end testing, runbook, handoff to Marc |
 
 ---
 
-## Phase 1 — Quiz Build (Current)
+## Phase 1 — Quiz Build (Complete)
 
 | # | Task | Status | File(s) | Tests |
 |---|------|--------|---------|-------|
-| 1 | Scoring engine | **Done** | `workers/mtg-quiz-webhook/src/scoring.js` | 51 tests passing |
-| 2 | Results content generator | **Done** | `workers/mtg-quiz-webhook/src/results.js` | 25 tests passing |
-| 3 | Eligibility check | To do | `workers/mtg-quiz-webhook/src/eligibility.js` | — |
-| 4 | Webhook handler (index.js) | To do | `workers/mtg-quiz-webhook/src/index.js` | — |
-| 5 | Results page (static HTML) | To do | `pages/results/` | — |
+| 1 | Scoring engine | **Done** | `workers/mtg-quiz-webhook/src/scoring.js` | 51 tests |
+| 2 | Results content generator | **Done** | `workers/mtg-quiz-webhook/src/results.js` | 25 tests |
+| 3 | Eligibility check | **Done** | `workers/mtg-quiz-webhook/src/eligibility.js` | 31 tests |
+| 4 | Webhook handler (index.js) | **Done** | `workers/mtg-quiz-webhook/src/index.js` | — |
+| 5 | Results page (static HTML) | **Done** | `pages/results/index.html` | — |
 
-**Total tests: 76 passing (0 failing)**
+**Phase 1 tests: 107 passing (0 failing)**
 
 ---
 
@@ -40,6 +40,22 @@ Single source of truth for the entire project. Contains:
 - C3 special routing table (MIXED question)
 - Tie-break signal definitions and V1 answer mapping
 - HubSpot field name prefixes
+- Scan worksheet Tier-1 baseline field keys per pillar (Conv=7, Acq=7, Ret=6)
+- Sub-path options per pillar
+- Scan thresholds (required actions=6, baseline answers=5, metrics=2)
+
+### `workers/shared/validation.js`
+Shared validation utilities used by webhook handlers:
+- Email validation (format check) and normalization (trim + lowercase)
+- Required field presence checks
+- JotForm answer extraction with field mapping
+- String sanitization (control chars, whitespace)
+
+### `workers/shared/hubspot.js`
+HubSpot Contacts v3 API client. Plug-and-play — pass `env.HUBSPOT_API_KEY` at runtime.
+- `createHubSpotClient(apiKey)` factory returns `{ upsertContact, getContactByEmail, updateContact }`
+- Deduplicates by email (search → create or update, never duplicate)
+- Contact-only — no Deals pipeline (per spec)
 
 ### `workers/mtg-quiz-webhook/src/scoring.js`
 Complete quiz scoring engine. Pure functions, zero side effects.
@@ -57,36 +73,96 @@ Results content generator. Takes scoring output + raw answers, returns all displ
 - Fastest-next-step bullet templates per gap
 - Primary gap statement templates
 
+### `workers/mtg-quiz-webhook/src/eligibility.js`
+Scan eligibility check. Pure function, determines if prospect qualifies for the $295 CAD paid scan.
+- 3 automated checks from quiz data: basic numbers available, active demand/client base, offer clarity
+- Returns `{ eligible, fixFirstReason, fixFirstAdvice, allReasons }`
+- "Decision-maker will attend" assumed true for MVP (can't infer from quiz answers)
+- Configurable thresholds (NOT_SURE_THRESHOLD = 5, CLARITY_NOT_SURE_THRESHOLD = 8)
+
+### `workers/mtg-quiz-webhook/src/index.js`
+Webhook handler — the main Cloudflare Worker entry point. Wires everything together:
+1. Parses JotForm webhook payload (form-encoded or JSON, handles rawRequest)
+2. Extracts contact info + quiz answers via configurable field map
+3. Validates email
+4. Runs scoring → results → eligibility pipeline
+5. Builds HubSpot properties (all `mtg_*` fields) and upserts contact
+6. Returns full results JSON + `resultsUrl` (base64-encoded data for results page)
+
+### `pages/results/index.html`
+Static results page (Cloudflare Pages). Reads base64-encoded results from URL hash fragment.
+- Displays: primary gap statement, score badge, sub-diagnosis, key signals, cost-of-leak, fastest next steps
+- Eligible prospects see "Book Your Scan" CTA ($295 CAD)
+- Not-eligible prospects see fix-first reason + actionable advice
+- Mobile-responsive, no external dependencies, pillar-specific color themes
+
+### `workers/mtg-scan-webhook/src/stopRules.js`
+Stop rules engine. Pure function, checks scan worksheet data against 3 stop conditions.
+- `checkStopRules(scanData)` — takes processed scan data, returns `{ stopped, reasons[], details[] }`
+- Rule 1: Sub-path = "Not sure" or "Other (manual)" → halt
+- Rule 2: Primary gap changed from quiz without explanation → halt
+- Rule 3: Missing required fields (primary gap + sub-path + lever + ≥5 baseline + 6 actions + ≥2 metrics)
+- Collects ALL stop reasons at once (doesn't short-circuit)
+
+### `workers/mtg-scan-webhook/src/confidence.js`
+Confidence calculator. Counts "Not sure"/missing Tier-1 baseline answers per pillar.
+- `calculateConfidence(baselineFields, primaryGap)` → `{ level, notSureCount, totalFields, answeredCount, includeConstraints, includeDataGaps }`
+- High (0-1 "Not sure"): constraints optional
+- Med (2-3): must include ≥1 constraint row
+- Low (≥4): must include constraints + "Data gaps to measure" box
+
 ### `tests/testCases.js`
-12 reusable fixtures with a `buildAnswers()` helper (sparse overrides on neutral defaults). Covers:
+12 reusable quiz fixtures with a `buildAnswers()` helper (sparse overrides on neutral defaults). Covers:
 - Clear wins for each pillar
 - All tie-break levels (Conv signal, Acq dual signal, Ret dual signal, V1, alphabetical)
 - C3 routing variants (price objections, not right fit)
 - Mixed realistic scenario
 - Partial / missing answers
 
+### `tests/scanTestCases.js`
+Scan worksheet test fixtures with `buildScanData()` and `buildBaselineWithNotSure()` helpers.
+- Default baseline field sets for all 3 pillars (Conv=7, Acq=7, Ret=6)
+- Default actions (6 filled), metrics (3 filled)
+- Sparse override pattern (uses `in` operator to properly handle empty-string overrides)
+
 ---
 
 ## What's Next
 
-**Immediate (Phase 1 remaining):**
-1. `eligibility.js` — Check if prospect qualifies for the paid scan ($295 CAD)
-2. `index.js` — Webhook handler: receive JotForm POST → parse → score → generate results → write HubSpot → return results JSON
-3. Results page — Static HTML/JS that reads results and displays gap + sub-diagnosis + cost-of-leak + next steps
+### Plug-and-play items (need credentials / config):
+1. **HUBSPOT_API_KEY** — Set as Cloudflare Worker secret. HubSpot client is ready.
+2. **JotForm field mapping** — Update `JOTFORM_FIELD_MAP` in index.js once the quiz form is built
+3. **RESULTS_PAGE_URL** — Set as Worker env var once the results page is deployed
+4. **Stripe checkout URL** — Update the CTA link in results page once Stripe is configured
 
-**After Phase 1:**
-- Phase 2: Stripe checkout + Calendly booking + prefill link generation
-- Phase 3: Scan worksheet JotForm + scan webhook worker
-- Phase 4: Stop rules → confidence → Claude API plan gen → DOCX → R2 → Resend notification
+### Phase 2: Payment + Booking
+- Stripe checkout integration ($295 CAD)
+- Calendly webhook handler (booking confirmation → HubSpot update)
+- Prefill link generator for scan worksheet
+
+### Phase 3: Scan Worksheet
+- JotForm scan worksheet build (7 sections, heavy conditionals)
+- Scan webhook Worker
+
+### Phase 4: Plan Generation (remaining)
+- ~~Stop rules engine~~ **Done** (76 tests)
+- ~~Confidence calculator~~ **Done** (36 tests)
+- Claude API plan generator
+- DOCX builder
+- R2 upload
+- Resend notification
 
 ---
 
 ## Running Tests
 
 ```bash
-npm test                    # Run all tests
-npm run test:scoring        # Scoring engine only
-npm run test:results        # Results generator only
+npm test                    # Run all tests (219)
+npm run test:scoring        # Scoring engine only (51)
+npm run test:results        # Results generator only (25)
+npm run test:eligibility    # Eligibility check only (31)
+npm run test:stoprules      # Stop rules engine only (76)
+npm run test:confidence     # Confidence calculator only (36)
 ```
 
 Requires Node >= 18 (uses built-in `node:test` runner, zero external dependencies).

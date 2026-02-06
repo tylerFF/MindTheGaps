@@ -188,6 +188,81 @@ const QUIZ_FIELD_NAMES = Object.freeze(
   QUESTION_IDS.map((id) => `${HUBSPOT_PREFIX}quiz_${id.toLowerCase()}`),
 );
 
+// ===========================================================================
+// SCAN WORKSHEET CONSTANTS
+// ===========================================================================
+
+// ---------------------------------------------------------------------------
+// Tier-1 baseline field keys per pillar
+//
+// These are the internal field names the scan webhook maps JotForm answers to.
+// Used by both stop rules (≥5 non-"Not sure" required) and confidence
+// calculator (count "Not sure" to determine High/Med/Low).
+// ---------------------------------------------------------------------------
+const BASELINE_FIELDS = Object.freeze({
+  [PILLARS.CONVERSION]: Object.freeze([
+    'conv_inbound_leads',
+    'conv_first_response_time',
+    'conv_lead_to_booked',
+    'conv_booked_to_show',
+    'conv_time_to_first_appointment',
+    'conv_quote_sent_timeline',
+    'conv_quote_to_close',
+  ]),
+  [PILLARS.ACQUISITION]: Object.freeze([
+    'acq_inbound_leads',
+    'acq_top_source_dependence',
+    'acq_pct_from_top_source',
+    'acq_calls_answered_live',
+    'acq_website_capture_friction',
+    'acq_reviews_per_month',
+    'acq_referral_intros_per_month',
+  ]),
+  [PILLARS.RETENTION]: Object.freeze([
+    'ret_pct_revenue_repeat',
+    'ret_pct_revenue_referrals',
+    'ret_rebook_scheduling',
+    'ret_reviews_per_month',
+    'ret_follow_up_time',
+    'ret_check_in_rhythm',
+  ]),
+});
+
+// ---------------------------------------------------------------------------
+// Sub-path options per pillar
+// ---------------------------------------------------------------------------
+const SUB_PATHS = Object.freeze({
+  [PILLARS.CONVERSION]: Object.freeze([
+    'Speed-to-lead',
+    'Booking friction',
+    'Show rate',
+    'Quote follow-up / decision drop-off',
+    'Other (manual)',
+  ]),
+  [PILLARS.ACQUISITION]: Object.freeze([
+    'Channel concentration risk',
+    'Demand capture / local visibility',
+    'Lead capture friction',
+    'Fit mismatch',
+    'Referral / partner flow is not intentional',
+    'Other (manual)',
+  ]),
+  [PILLARS.RETENTION]: Object.freeze([
+    'Rebook/recall gap',
+    'Review rhythm gap',
+    'Referral ask gap',
+    'Post-service follow-up gap',
+    'Other (manual)',
+  ]),
+});
+
+// ---------------------------------------------------------------------------
+// Scan worksheet thresholds
+// ---------------------------------------------------------------------------
+const REQUIRED_ACTION_COUNT = 6;
+const REQUIRED_BASELINE_ANSWERS = 5;
+const REQUIRED_METRICS_COUNT = 2;
+
 module.exports = {
   PILLARS,
   QUESTION_IDS,
@@ -196,4 +271,9 @@ module.exports = {
   TIEBREAK_SIGNALS,
   HUBSPOT_PREFIX,
   QUIZ_FIELD_NAMES,
+  BASELINE_FIELDS,
+  SUB_PATHS,
+  REQUIRED_ACTION_COUNT,
+  REQUIRED_BASELINE_ANSWERS,
+  REQUIRED_METRICS_COUNT,
 };
