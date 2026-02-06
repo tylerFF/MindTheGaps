@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm test)",
+      "Bash(taskkill:*)",
+      "Bash(ls:*)",
+      "Bash(node --test:*)"
+    ]
+  }
+}

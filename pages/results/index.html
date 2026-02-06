@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Growth Gap Results — MindtheGaps</title>
+  <style>
+    /* Reset + base */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: #1a1a2e;
+      background: #f8f9fa;
+      min-height: 100vh;
+    }
+
+    /* Layout */
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #16213e;
+      margin-bottom: 0.25rem;
+    }
+    .header p {
+      font-size: 0.9rem;
+      color: #6c757d;
+    }
+
+    /* Card */
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Primary gap */
+    .gap-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6c757d;
+      margin-bottom: 0.5rem;
+    }
+    .gap-statement {
+      font-size: 1.25rem;
+      font-weight: 600;
+      line-height: 1.4;
+      margin-bottom: 1rem;
+    }
+    .gap-statement strong { color: var(--gap-color, #0f3460); }
+
+    /* Score badge */
+    .score-badge {
+      display: inline-block;
+      padding: 0.35rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: var(--gap-bg, #e8edf3);
+      color: var(--gap-color, #0f3460);
+      margin-bottom: 1.25rem;
+    }
+
+    /* Sub-diagnosis */
+    .sub-diagnosis {
+      font-size: 1rem;
+      color: #333;
+      padding: 0.75rem 1rem;
+      background: #f8f9fa;
+      border-left: 3px solid var(--gap-color, #0f3460);
+      border-radius: 0 6px 6px 0;
+      margin-bottom: 1rem;
+    }
+
+    /* Signals */
+    .signals-line {
+      font-size: 0.9rem;
+      color: #555;
+      font-style: italic;
+      margin-bottom: 1.25rem;
+    }
+
+    /* Section headings */
+    .section-heading {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #6c757d;
+      margin-bottom: 0.5rem;
+      margin-top: 1.5rem;
+    }
+
+    /* Cost of leak */
+    .cost-of-leak {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #c0392b;
+      margin-bottom: 0.5rem;
+    }
+    .cost-advice {
+      font-size: 0.9rem;
+      color: #555;
+    }
+
+    /* Next steps */
+    .next-steps {
+      list-style: none;
+      padding: 0;
+    }
+    .next-steps li {
+      position: relative;
+      padding: 0.5rem 0 0.5rem 1.5rem;
+      font-size: 0.95rem;
+      color: #333;
+    }
+    .next-steps li::before {
+      content: '\2713';
+      position: absolute;
+      left: 0;
+      color: var(--gap-color, #0f3460);
+      font-weight: 700;
+    }
+
+    /* CTA section */
+    .cta-section {
+      text-align: center;
+      padding-top: 0.5rem;
+    }
+    .cta-button {
+      display: inline-block;
+      padding: 0.85rem 2rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      color: #fff;
+      background: var(--gap-color, #0f3460);
+      transition: opacity 0.2s;
+      border: none;
+      cursor: pointer;
+    }
+    .cta-button:hover { opacity: 0.9; }
+    .cta-price {
+      display: block;
+      font-size: 0.8rem;
+      color: #6c757d;
+      margin-top: 0.5rem;
+    }
+
+    /* Fix-first (not eligible) */
+    .fix-first {
+      background: #fff8e1;
+      border: 1px solid #ffe082;
+      border-radius: 8px;
+      padding: 1.25rem;
+    }
+    .fix-first h3 {
+      font-size: 0.95rem;
+      color: #e65100;
+      margin-bottom: 0.5rem;
+    }
+    .fix-first p {
+      font-size: 0.9rem;
+      color: #555;
+    }
+
+    /* Loading / error states */
+    .state-message {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: #6c757d;
+    }
+    .state-message h2 {
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+      color: #333;
+    }
+
+    /* Pillar colors */
+    .gap-acquisition { --gap-color: #2e86ab; --gap-bg: #e3f2fd; }
+    .gap-conversion  { --gap-color: #a23b72; --gap-bg: #fce4ec; }
+    .gap-retention   { --gap-color: #f18f01; --gap-bg: #fff3e0; }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .container { padding: 1.25rem 1rem; }
+      .card { padding: 1.5rem 1.25rem; }
+      .gap-statement { font-size: 1.1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading state -->
+  <div id="loading" class="container">
+    <div class="state-message">
+      <h2>Loading your results...</h2>
+      <p>Just a moment while we prepare your growth gap analysis.</p>
+    </div>
+  </div>
+
+  <!-- Error state -->
+  <div id="error" class="container" style="display: none;">
+    <div class="state-message">
+      <h2>Something went wrong</h2>
+      <p id="error-message">We couldn't load your results. Please try again or contact support.</p>
+    </div>
+  </div>
+
+  <!-- Results (hidden until data loads) -->
+  <div id="results" class="container" style="display: none;">
+
+    <div class="header">
+      <h1>Your Growth Gap Results</h1>
+      <p>MindtheGaps Business Diagnostic</p>
+    </div>
+
+    <!-- Primary Gap Card -->
+    <div id="gap-card" class="card">
+      <div class="gap-label">Primary Growth Gap</div>
+      <div id="gap-statement" class="gap-statement"></div>
+      <div id="score-badge" class="score-badge"></div>
+
+      <div id="sub-diagnosis-section">
+        <div id="sub-diagnosis" class="sub-diagnosis"></div>
+      </div>
+
+      <div id="signals-section" style="display: none;">
+        <div id="signals-line" class="signals-line"></div>
+      </div>
+    </div>
+
+    <!-- Cost of Leak Card -->
+    <div class="card">
+      <div class="section-heading">What This Costs You</div>
+      <div id="cost-of-leak" class="cost-of-leak"></div>
+      <div id="cost-advice" class="cost-advice"></div>
+    </div>
+
+    <!-- Next Steps Card -->
+    <div class="card">
+      <div class="section-heading">Fastest Next Steps</div>
+      <ul id="next-steps" class="next-steps"></ul>
+    </div>
+
+    <!-- CTA Card -->
+    <div id="cta-card" class="card cta-section">
+      <!-- Filled by JS: eligible or fix-first -->
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // ---------------------------------------------------------------
+      // Gap-to-CSS-class mapping
+      // ---------------------------------------------------------------
+      var GAP_CLASSES = {
+        Acquisition: 'gap-acquisition',
+        Conversion:  'gap-conversion',
+        Retention:   'gap-retention',
+      };
+
+      // ---------------------------------------------------------------
+      // Read results data from URL hash (base64-encoded JSON)
+      //
+      // Expected URL format:
+      //   /results/#eyJzY29yaW5nI...   (base64 of JSON)
+      //
+      // The JSON shape matches the webhook response:
+      //   { scoring, results, eligibility }
+      // ---------------------------------------------------------------
+      function getResultsData() {
+        var hash = window.location.hash.substring(1); // remove #
+        if (!hash) return null;
+
+        try {
+          var json = atob(hash);
+          return JSON.parse(json);
+        } catch (e) {
+          console.error('Failed to decode results data:', e);
+          return null;
+        }
+      }
+
+      // ---------------------------------------------------------------
+      // Render results into the page
+      // ---------------------------------------------------------------
+      function renderResults(data) {
+        var scoring = data.scoring;
+        var results = data.results;
+        var eligibility = data.eligibility;
+
+        if (!scoring || !results) {
+          showError('Invalid results data. Please retake the quiz.');
+          return;
+        }
+
+        var gap = scoring.primaryGap;
+        var gapClass = GAP_CLASSES[gap] || '';
+
+        // Apply gap color theme
+        var gapCard = document.getElementById('gap-card');
+        gapCard.className = 'card ' + gapClass;
+
+        var ctaCard = document.getElementById('cta-card');
+        ctaCard.className = 'card cta-section ' + gapClass;
+
+        // Primary gap statement (render markdown bold as <strong>)
+        var statement = results.primaryGapStatement || '';
+        document.getElementById('gap-statement').innerHTML =
+          statement.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+        // Score badge
+        document.getElementById('score-badge').textContent =
+          'Gap Score: ' + scoring.baselineScore + '/100';
+
+        // Sub-diagnosis
+        if (results.subDiagnosisDisplay) {
+          document.getElementById('sub-diagnosis').textContent = results.subDiagnosisDisplay;
+        } else {
+          document.getElementById('sub-diagnosis-section').style.display = 'none';
+        }
+
+        // Key signals line
+        if (results.keySignalsLine) {
+          document.getElementById('signals-section').style.display = 'block';
+          document.getElementById('signals-line').textContent = results.keySignalsLine;
+        }
+
+        // Cost of leak
+        document.getElementById('cost-of-leak').textContent = results.costOfLeak || '';
+        document.getElementById('cost-advice').textContent = results.costOfLeakAdvice || '';
+
+        // Next steps
+        var stepsList = document.getElementById('next-steps');
+        var steps = results.fastestNextSteps || [];
+        for (var i = 0; i < steps.length; i++) {
+          var li = document.createElement('li');
+          li.textContent = steps[i];
+          stepsList.appendChild(li);
+        }
+
+        // CTA section
+        renderCTA(eligibility, gapClass);
+
+        // Show results, hide loading
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('results').style.display = 'block';
+      }
+
+      function renderCTA(eligibility, gapClass) {
+        var container = document.getElementById('cta-card');
+
+        if (eligibility && eligibility.eligible) {
+          // Eligible — show scan booking CTA
+          container.innerHTML =
+            '<div class="section-heading">Ready for Your Personalized Plan?</div>' +
+            '<p style="margin-bottom: 1rem; color: #555;">Get a 45-minute facilitator-led scan to build your custom One-Page Growth Plan.</p>' +
+            '<a id="checkout-link" href="#" class="cta-button ' + gapClass + '">Book Your Scan</a>' +
+            '<span class="cta-price">$295 CAD &middot; 45-minute session</span>';
+
+          // Stripe checkout link will be configured when Stripe is set up
+          // For now, the link is a placeholder
+          var checkoutLink = document.getElementById('checkout-link');
+          checkoutLink.href = '#checkout'; // Replace with Stripe checkout URL
+        } else if (eligibility) {
+          // Not eligible — show fix-first
+          var reason = eligibility.fixFirstReason || 'We need a bit more info before booking.';
+          var advice = eligibility.fixFirstAdvice || '';
+
+          container.innerHTML =
+            '<div class="fix-first">' +
+            '<h3>Before We Can Book Your Scan</h3>' +
+            '<p><strong>' + escapeHtml(reason) + '</strong></p>' +
+            (advice ? '<p style="margin-top: 0.5rem;">' + escapeHtml(advice) + '</p>' : '') +
+            '</div>';
+        }
+      }
+
+      // ---------------------------------------------------------------
+      // Helpers
+      // ---------------------------------------------------------------
+      function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(text));
+        return div.innerHTML;
+      }
+
+      function showError(message) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('error').style.display = 'block';
+        if (message) {
+          document.getElementById('error-message').textContent = message;
+        }
+      }
+
+      // ---------------------------------------------------------------
+      // Init
+      // ---------------------------------------------------------------
+      var data = getResultsData();
+      if (data) {
+        renderResults(data);
+      } else {
+        showError('No results data found. Please complete the quiz first.');
+      }
+    })();
+  </script>
+</body>
+</html>
