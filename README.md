@@ -10,6 +10,7 @@ Tyler and Jesse working for Marc on MindTheGaps, where we can house all the file
 |-------|--------|-------|
 | Phase 0: Setup + Schema | **Done** | Directory structure, shared constants |
 | Phase 1: Quiz Build | **Done** | All 5 tasks complete, 107 tests passing |
+| UX Polish | **Done** | One-question-per-page quiz, progress bar, spec-exact copy, results page updates |
 | Phase 2: Payment + Booking | Not started | Stripe, Calendly, prefill links |
 | Phase 3: Scan Worksheet | Not started | JotForm worksheet + scan webhook |
 | Phase 4: Plan Generation | **In Progress** | Stop rules + confidence done (112 tests), Claude API/DOCX/R2/Resend remaining |
@@ -89,11 +90,22 @@ Webhook handler — the main Cloudflare Worker entry point. Wires everything tog
 5. Builds HubSpot properties (all `mtg_*` fields) and upserts contact
 6. Returns full results JSON + `resultsUrl` (base64-encoded data for results page)
 
+### `pages/quiz/index.html`
+Full quiz form with one-question-per-page UX (card layout). Spec-ready for Cloudflare Pages deployment.
+- **15 steps:** intro screen, V1-V5, profile block (P1-P6), A1, C1-C4, R1-R3
+- Radio buttons for all diagnostic questions (large tappable targets, all options visible)
+- Progress bar at top fills as user advances
+- Back/Next navigation with Next disabled until answer selected
+- Profile block captures: name, email, business, industry, location, team size, website (optional), phone (optional)
+- All question text and options are spec-exact (from Quiz Spec v2.1E)
+- Mobile-responsive, Enter key advances to next question
+- Traditional form POST on submit (feeds into the same scoring pipeline)
+
 ### `pages/results/index.html`
 Static results page (Cloudflare Pages). Reads base64-encoded results from URL hash fragment.
 - Displays: primary gap statement, score badge, sub-diagnosis, key signals, cost-of-leak, fastest next steps
-- Eligible prospects see "Book Your Scan" CTA ($295 CAD)
-- Not-eligible prospects see fix-first reason + actionable advice
+- Eligible prospects see spec-exact CTA: "Book the 45-Minute Growth Gap Scan — CAD $295"
+- Not-eligible prospects see fix-first reason + actionable advice + re-check eligibility link
 - Mobile-responsive, no external dependencies, pillar-specific color themes
 
 ### `workers/mtg-scan-webhook/src/stopRules.js`
@@ -151,6 +163,19 @@ Scan worksheet test fixtures with `buildScanData()` and `buildBaselineWithNotSur
 - DOCX builder
 - R2 upload
 - Resend notification
+
+---
+
+## Dev Server
+
+```bash
+npm run dev     # Start at http://localhost:3000
+```
+
+- **Quiz form:** http://localhost:3000/ — full one-question-per-page quiz with progress bar
+- **Results page:** http://localhost:3000/results/ — displays after quiz submit
+- Runs the production scoring pipeline locally (scoring → results → eligibility)
+- Profile fields + scoring output logged to console on each submission
 
 ---
 
