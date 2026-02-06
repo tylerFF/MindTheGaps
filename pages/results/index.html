@@ -370,19 +370,17 @@
         var container = document.getElementById('cta-card');
 
         if (eligibility && eligibility.eligible) {
-          // Eligible — show scan booking CTA
+          // Eligible — show scan booking CTA (spec-exact label)
           container.innerHTML =
             '<div class="section-heading">Ready for Your Personalized Plan?</div>' +
             '<p style="margin-bottom: 1rem; color: #555;">Get a 45-minute facilitator-led scan to build your custom One-Page Growth Plan.</p>' +
-            '<a id="checkout-link" href="#" class="cta-button ' + gapClass + '">Book Your Scan</a>' +
-            '<span class="cta-price">$295 CAD &middot; 45-minute session</span>';
+            '<a id="checkout-link" href="#" class="cta-button ' + gapClass + '">Book the 45-Minute Growth Gap Scan &mdash; CAD $295</a>';
 
           // Stripe checkout link will be configured when Stripe is set up
-          // For now, the link is a placeholder
           var checkoutLink = document.getElementById('checkout-link');
           checkoutLink.href = '#checkout'; // Replace with Stripe checkout URL
         } else if (eligibility) {
-          // Not eligible — show fix-first
+          // Not eligible — show fix-first guidance + re-check link
           var reason = eligibility.fixFirstReason || 'We need a bit more info before booking.';
           var advice = eligibility.fixFirstAdvice || '';
 
@@ -391,6 +389,7 @@
             '<h3>Before We Can Book Your Scan</h3>' +
             '<p><strong>' + escapeHtml(reason) + '</strong></p>' +
             (advice ? '<p style="margin-top: 0.5rem;">' + escapeHtml(advice) + '</p>' : '') +
+            '<p style="margin-top: 1rem;"><a href="/" style="color: #0f3460; font-weight: 600;">Re-take the quiz to check eligibility</a></p>' +
             '</div>';
         }
       }

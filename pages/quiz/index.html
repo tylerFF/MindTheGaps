@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>12-Minute Growth Gap Quiz — MindtheGaps</title>
+  <style>
+    /* ================================================================
+       Reset + Base
+       ================================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: #1a1a2e;
+      background: #f8f9fa;
+      min-height: 100vh;
+    }
+
+    /* ================================================================
+       Layout
+       ================================================================ */
+    .container {
+      max-width: 580px;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 2rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ================================================================
+       Progress Bar
+       ================================================================ */
+    .progress-wrap {
+      margin-bottom: 1.75rem;
+    }
+    .progress-bar-bg {
+      height: 6px;
+      background: #e2e6ea;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: #0f3460;
+      border-radius: 3px;
+      width: 0%;
+      transition: width 0.35s ease;
+    }
+    .progress-text {
+      font-size: 0.75rem;
+      color: #6c757d;
+      margin-top: 0.35rem;
+      text-align: right;
+    }
+
+    /* ================================================================
+       Step Cards
+       ================================================================ */
+    .step {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+    }
+    .step.active {
+      display: flex;
+    }
+    .step-body {
+      flex: 1;
+    }
+
+    /* ================================================================
+       Intro Screen
+       ================================================================ */
+    .intro-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #16213e;
+      text-align: center;
+      margin-bottom: 1rem;
+      margin-top: 1.5rem;
+    }
+    .intro-text {
+      font-size: 1rem;
+      color: #444;
+      text-align: center;
+      margin-bottom: 1.25rem;
+      line-height: 1.7;
+    }
+    .intro-reassurance {
+      font-size: 0.95rem;
+      color: #555;
+      text-align: center;
+      font-style: italic;
+      margin-bottom: 2rem;
+    }
+
+    /* ================================================================
+       Question Card
+       ================================================================ */
+    .question-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 2rem 1.75rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+    .question-id {
+      display: inline-block;
+      background: #e8edf3;
+      color: #0f3460;
+      font-size: 0.7rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+    .question-text {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #16213e;
+      line-height: 1.45;
+      margin-bottom: 1.5rem;
+    }
+
+    /* ================================================================
+       Radio Options
+       ================================================================ */
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .radio-option {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.85rem 1rem;
+      border: 2px solid #e2e6ea;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      font-size: 0.95rem;
+      color: #333;
+    }
+    .radio-option:hover {
+      border-color: #0f3460;
+      background: #f0f4fa;
+    }
+    .radio-option input[type="radio"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #ced4da;
+      border-radius: 50%;
+      flex-shrink: 0;
+      cursor: pointer;
+      position: relative;
+      transition: border-color 0.15s;
+    }
+    .radio-option input[type="radio"]:checked {
+      border-color: #0f3460;
+    }
+    .radio-option input[type="radio"]:checked::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 10px;
+      height: 10px;
+      background: #0f3460;
+      border-radius: 50%;
+    }
+    .radio-option:has(input:checked) {
+      border-color: #0f3460;
+      background: #f0f4fa;
+    }
+
+    /* ================================================================
+       Profile Block (step 6)
+       ================================================================ */
+    .profile-grid {
+      display: grid;
+      gap: 1rem;
+    }
+    .field-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 0.3rem;
+    }
+    .field-group .optional-tag {
+      font-weight: 400;
+      color: #999;
+      font-size: 0.8rem;
+    }
+    .field-group input,
+    .field-group select {
+      width: 100%;
+      padding: 0.7rem 0.85rem;
+      border: 2px solid #e2e6ea;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      color: #333;
+      background: #fff;
+      transition: border-color 0.15s;
+    }
+    .field-group input:focus,
+    .field-group select:focus {
+      outline: none;
+      border-color: #0f3460;
+      box-shadow: 0 0 0 3px rgba(15,52,96,0.1);
+    }
+    .field-group input::placeholder {
+      color: #aaa;
+    }
+
+    /* ================================================================
+       Navigation Buttons
+       ================================================================ */
+    .nav-buttons {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.75rem;
+      padding-top: 0.5rem;
+    }
+    .btn {
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s, background 0.15s;
+      border: none;
+    }
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .btn-back {
+      background: #e8edf3;
+      color: #333;
+    }
+    .btn-back:hover:not(:disabled) {
+      background: #dce3ed;
+    }
+    .btn-next {
+      flex: 1;
+      background: #0f3460;
+      color: #fff;
+    }
+    .btn-next:hover:not(:disabled) {
+      opacity: 0.9;
+    }
+    .btn-start {
+      display: block;
+      width: 100%;
+      padding: 0.9rem;
+      background: #0f3460;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-start:hover {
+      opacity: 0.9;
+    }
+
+    /* ================================================================
+       Dev Badge
+       ================================================================ */
+    .dev-badge {
+      text-align: center;
+      padding: 0.35rem 0.75rem;
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      color: #856404;
+      margin-bottom: 1rem;
+    }
+
+    /* ================================================================
+       Responsive
+       ================================================================ */
+    @media (max-width: 480px) {
+      .container {
+        padding: 1rem 1rem 1.5rem;
+      }
+      .question-card {
+        padding: 1.5rem 1.25rem;
+      }
+      .intro-title {
+        font-size: 1.35rem;
+      }
+      .question-text {
+        font-size: 1.05rem;
+      }
+      .radio-option {
+        padding: 0.75rem 0.85rem;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="dev-badge">LOCAL DEV MODE — Production scoring pipeline running locally</div>
+
+    <!-- Progress Bar -->
+    <div class="progress-wrap">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-text" id="progressText"></div>
+    </div>
+
+    <form id="quizForm" method="POST" action="/submit" novalidate>
+
+      <!-- ============================================================
+           STEP 0: Intro Screen
+           ============================================================ -->
+      <div class="step active" data-step="0">
+        <div class="step-body">
+          <h1 class="intro-title">12-Minute Growth Gap Quiz</h1>
+          <p class="intro-text">
+            Answer a short quiz and see your results instantly.
+            If you're eligible, you can book a 45-minute working session
+            and get a 1-page plan within 24 hours.
+          </p>
+          <p class="intro-reassurance">No jargon. No fluff. You'll get a clear next step.</p>
+        </div>
+        <div class="nav-buttons">
+          <button type="button" class="btn-start" onclick="goNext()">Start the Quiz</button>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           STEP 1: V1
+           ============================================================ -->
+      <div class="step" data-step="1">
+        <div class="step-body">
+          <div class="question-card">
+            <span class="question-id">Question 1 of 13</span>
+            <div class="question-text">Where does growth feel most stuck right now?</div>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="V1" value="Getting more leads (Acquisition)">
+                Getting more leads (Acquisition)
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="V1" value="Turning leads into booked work (Conversion)">
+                Turning leads into booked work (Conversion)
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="V1" value="Getting repeats/referrals (Retention)">
+                Getting repeats/referrals (Retention)
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="V1" value="Not sure">
+                Not sure
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="nav-buttons">
+          <button type="button" class="btn btn-back" onclick="goBack()">Back</button>
+          <button type="button" class="btn btn-next" onclick="goNext()" disabled>Next</button>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           STEP 2: V2
+           ============================================================ -->
+      <div class="step" data-step="2">
+        <div class="step-body">
+          <div class="question-card">
+            <span class="question-id">Question 2 of 13</span>
+            <div class="question-text">About how many new inbound leads do you get in a typical month?</div>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="V2" value="0-9">
+                0-9
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="V2" value="10-24">
+                10-24
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="V2" value="25-49">
+                25-49
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="V2" value="50+">
+                50+
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="V2" value="Not sure">
+                Not sure
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="nav-buttons">
+          <button type="button" class="btn btn-back" onclick="goBack()">Back</button>
+          <button type="button" class="btn btn-next" onclick="goNext()" disabled>Next</button>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           STEP 3: V3
+           ============================================================ -->
+      <div class="step" data-step="3">
+        <div class="step-body">
+          <div class="question-card">
+            <span class="question-id">Question 3 of 13</span>
+            <div class="question-text">How fast do leads typically get a first response?</div>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="V3" value="Within 15 minutes">
+                Within 15 minutes
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="V3" value="Within 1 hour">
+                Within 1 hour
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="V3" value="Same day">
+                Same day
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="V3" value="1-2 days">
+                1-2 days
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="V3" value="3+ days">
+                3+ days
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="V3" value="Not sure">
+                Not sure
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="nav-buttons">
+          <button type="button" class="btn btn-back" onclick="goBack()">Back</button>
+          <button type="button" class="btn btn-next" onclick="goNext()" disabled>Next</button>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           STEP 4: V4
+           ============================================================ -->
+      <div class="step" data-step="4">
+        <div class="step-body">
+          <div class="question-card">
+            <span class="question-id">Question 4 of 13</span>
+            <div class="question-text">When a first meeting is booked, what % actually show up?</div>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="V4" value="80%+">
+                80%+
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="V4" value="60-79%">
+                60-79%
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="V4" value="40-59%">
+                40-59%
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="V4" value="Under 40%">
+                Under 40%
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="V4" value="Not sure">
+                Not sure
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="nav-buttons">
+          <button type="button" class="btn btn-back" onclick="goBack()">Back</button>
+          <button type="button" class="btn btn-next" onclick="goNext()" disabled>Next</button>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           STEP 5: V5
+           ============================================================ -->
+      <div class="step" data-step="5">
+        <div class="step-body">
+          <div class="question-card">
+            <span class="question-id">Question 5 of 13</span>
+            <div class="question-text">How dependent are you on your top lead source?</div>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="V5" value="Most leads come from one source">
+                Most leads come from one source
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="V5" value="Two sources">
+                Two sources
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="V5" value="Three or more sources">
+                Three or more sources
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="V5" value="Not sure">
+                Not sure
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="nav-buttons">
+          <button type="button" class="btn btn-back" onclick="goBack()">Back</button>
+          <button type="button" class="btn btn-next" onclick="goNext()" disabled>Next</button>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           STEP 6: Profile Block (P1-P6)
+           ============================================================ -->
+      <div class="step" data-step="6">
+        <div class="step-body">
+          <div class="question-card">
+            <span class="question-id">Almost there — tell us about you</span>
+            <div class="question-text">A few quick details so we can personalize your results.</div>
+            <div class="profile-grid">
+              <div class="field-group">
+                <label for="firstName">First name</label>
+                <input type="text" id="firstName" name="firstName" placeholder="e.g. Sarah" required>
+              </div>
+              <div class="field-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="you@company.com" required>
+              </div>
+              <div class="field-group">
+                <label for="businessName">Business name</label>
+                <input type="text" id="businessName" name="businessName" placeholder="e.g. Acme Services" required>
+              </div>
+              <div class="field-group">
+                <label for="industry">Industry</label>
+                <select id="industry" name="industry" required>
+                  <option value="">— Select —</option>
+                  <option value="Home Services">Home Services</option>
+                  <option value="Health & Wellness">Health & Wellness</option>
+                  <option value="Professional Services">Professional Services</option>
+                  <option value="Financial Services">Financial Services</option>
+                  <option value="Automotive">Automotive</option>
+                  <option value="Real Estate">Real Estate</option>
+                  <option value="Legal">Legal</option>
+                  <option value="Dental / Medical">Dental / Medical</option>
+                  <option value="Trades / Contracting">Trades / Contracting</option>
+                  <option value="Beauty / Personal Care">Beauty / Personal Care</option>
+                  <option value="Insurance">Insurance</option>
+                  <option value="Fitness / Recreation">Fitness / Recreation</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="location">Location</label>
+                <select id="location" name="location" required>
+                  <option value="">— Select —</option>
+                  <option value="Ontario">Ontario</option>
+                  <option value="Elsewhere in Canada">Elsewhere in Canada</option>
+                  <option value="United States">United States</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="teamSize">Team size</label>
+                <select id="teamSize" name="teamSize" required>
+                  <option value="">— Select —</option>
+                  <option value="<10">&lt;10</option>
+                  <option value="10-24">10-24</option>
+                  <option value="25-49">25-49</option>
+                  <option value="50-100">50-100</option>
+                  <option value="100+">100+</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="website">Website URL <span class="optional-tag">(optional)</span></label>
+                <input type="url" id="website" name="website" placeholder="https://...">
+              </div>
+              <div class="field-group">
+                <label for="phone">Phone <span class="optional-tag">(optional)</span></label>
+                <input type="tel" id="phone" name="phone" placeholder="(555) 123-4567">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-buttons">
+          <button type="button" class="btn btn-back" onclick="goBack()">Back</button>
+          <button type="button" class="btn btn-next" onclick="goNext()" disabled>Next</button>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           STEP 7: A1
+           ============================================================ -->
+      <div class="step" data-step="7">
+        <div class="step-body">
+          <div class="question-card">
+            <span class="question-id">Question 6 of 13</span>
+            <div class="question-text">Thinking of your last 20 inbound leads, about how many were a good fit for you?</div>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="A1" value="0-5">
+                0-5
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="A1" value="6-10">
+                6-10
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="A1" value="11-15">
+                11-15
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="A1" value="16-20">
+                16-20
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="A1" value="Not sure">
+                Not sure
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="nav-buttons">
+          <button type="button" class="btn btn-back" onclick="goBack()">Back</button>
+          <button type="button" class="btn btn-next" onclick="goNext()" disabled>Next</button>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           STEP 8: C1
+           ============================================================ -->
+      <div class="step" data-step="8">
+        <div class="step-body">
+          <div class="question-card">
+            <span class="question-id">Question 7 of 13</span>
+            <div class="question-text">Who responds first most often when a new lead comes in?</div>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="C1" value="Coordinator/Front desk">
+                Coordinator/Front desk
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="C1" value="Sales">
+                Sales
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="C1" value="Specialist">
+                Specialist
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="C1" value="Owner">
+                Owner
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="C1" value="Varies">
+                Varies
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="C1" value="No consistent owner">
+                No consistent owner
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="C1" value="Not sure">
+                Not sure
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="nav-buttons">
+          <button type="button" class="btn btn-back" onclick="goBack()">Back</button>
+          <button type="button" class="btn btn-next" onclick="goNext()" disabled>Next</button>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           STEP 9: C2
+           ============================================================ -->
+      <div class="step" data-step="9">
+        <div class="step-body">
+          <div class="question-card">
+            <span class="question-id">Question 8 of 13</span>
+            <div class="question-text">How long does it usually take from first contact to the first meeting?</div>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="C2" value="Same day">
+                Same day
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="C2" value="1-2 days">
+                1-2 days
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="C2" value="3-7 days">
+                3-7 days
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="C2" value="8-14 days">
+                8-14 days
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="C2" value="15+ days">
+                15+ days
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="C2" value="Not sure">
+                Not sure
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="nav-buttons">
+          <button type="button" class="btn btn-back" onclick="goBack()">Back</button>
+          <button type="button" class="btn btn-next" onclick="goNext()" disabled>Next</button>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           STEP 10: C3
+           ============================================================ -->
+      <div class="step" data-step="10">
+        <div class="step-body">
+          <div class="question-card">
+            <span class="question-id">Question 9 of 13</span>
+            <div class="question-text">What's the biggest reason leads don't book (or don't move forward)?</div>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="C3" value="Can't reach them / slow follow-up">
+                Can't reach them / slow follow-up
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="C3" value="Price objections">
+                Price objections
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="C3" value="Not the right fit">
+                Not the right fit
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="C3" value="They ghost after the quote">
+                They ghost after the quote
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="C3" value="Not sure">
+                Not sure
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="nav-buttons">
+          <button type="button" class="btn btn-back" onclick="goBack()">Back</button>
+          <button type="button" class="btn btn-next" onclick="goNext()" disabled>Next</button>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           STEP 11: C4
+           ============================================================ -->
+      <div class="step" data-step="11">
+        <div class="step-body">
+          <div class="question-card">
+            <span class="question-id">Question 10 of 13</span>
+            <div class="question-text">How long does it usually take to close a deal after first contact?</div>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="C4" value="Same day">
+                Same day
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="C4" value="2-7 days">
+                2-7 days
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="C4" value="8-14 days">
+                8-14 days
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="C4" value="15-30 days">
+                15-30 days
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="C4" value="31-90 days">
+                31-90 days
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="C4" value="90+ days">
+                90+ days
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="C4" value="Not sure">
+                Not sure
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="nav-buttons">
+          <button type="button" class="btn btn-back" onclick="goBack()">Back</button>
+          <button type="button" class="btn btn-next" onclick="goNext()" disabled>Next</button>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           STEP 12: R1
+           ============================================================ -->
+      <div class="step" data-step="12">
+        <div class="step-body">
+          <div class="question-card">
+            <span class="question-id">Question 11 of 13</span>
+            <div class="question-text">How often do you proactively review client accounts or renewals?</div>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="R1" value="Monthly">
+                Monthly
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="R1" value="Quarterly">
+                Quarterly
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="R1" value="Twice per year">
+                Twice per year
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="R1" value="Yearly">
+                Yearly
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="R1" value="Rarely/Never">
+                Rarely/Never
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="R1" value="Not sure">
+                Not sure
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="nav-buttons">
+          <button type="button" class="btn btn-back" onclick="goBack()">Back</button>
+          <button type="button" class="btn btn-next" onclick="goNext()" disabled>Next</button>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           STEP 13: R2
+           ============================================================ -->
+      <div class="step" data-step="13">
+        <div class="step-body">
+          <div class="question-card">
+            <span class="question-id">Question 12 of 13</span>
+            <div class="question-text">Over the last 2 quarters, has revenue from existing clients grown, stayed flat, or shrunk?</div>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="R2" value="Grown">
+                Grown
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="R2" value="Flat">
+                Flat
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="R2" value="Shrunk">
+                Shrunk
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="R2" value="Not sure">
+                Not sure
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="nav-buttons">
+          <button type="button" class="btn btn-back" onclick="goBack()">Back</button>
+          <button type="button" class="btn btn-next" onclick="goNext()" disabled>Next</button>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           STEP 14: R3 (final question)
+           ============================================================ -->
+      <div class="step" data-step="14">
+        <div class="step-body">
+          <div class="question-card">
+            <span class="question-id">Question 13 of 13</span>
+            <div class="question-text">In a typical month, which is more true?</div>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="R3" value="Most revenue comes from new customers">
+                Most revenue comes from new customers
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="R3" value="Roughly split between new and existing customers">
+                Roughly split between new and existing customers
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="R3" value="Most revenue comes from existing customers">
+                Most revenue comes from existing customers
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="R3" value="Not sure">
+                Not sure
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="nav-buttons">
+          <button type="button" class="btn btn-back" onclick="goBack()">Back</button>
+          <button type="submit" class="btn btn-next">See My Results</button>
+        </div>
+      </div>
+
+    </form>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      var steps = document.querySelectorAll('.step');
+      var totalSteps = steps.length;           // 15 (0=intro, 1-14=questions/profile)
+      var totalQuestions = 13;                  // for progress display
+      var currentStep = 0;
+
+      // Profile step index (no radio validation — uses required fields instead)
+      var PROFILE_STEP = 6;
+
+      // Required profile fields
+      var PROFILE_REQUIRED = ['firstName', 'email', 'businessName', 'industry', 'location', 'teamSize'];
+
+      // ---------------------------------------------------------------
+      // Progress bar
+      // ---------------------------------------------------------------
+      function updateProgress() {
+        var fill = document.getElementById('progressFill');
+        var text = document.getElementById('progressText');
+
+        if (currentStep === 0) {
+          fill.style.width = '0%';
+          text.textContent = '';
+          return;
+        }
+
+        // Map step to question number for display
+        var questionNum;
+        if (currentStep <= 5) {
+          questionNum = currentStep;          // V1-V5 = questions 1-5
+        } else if (currentStep === PROFILE_STEP) {
+          questionNum = 5;                    // Profile doesn't advance question count
+        } else {
+          questionNum = currentStep - 1;      // A1 at step 7 = question 6, etc.
+        }
+
+        var pct = Math.round((questionNum / totalQuestions) * 100);
+        fill.style.width = pct + '%';
+
+        if (currentStep === PROFILE_STEP) {
+          text.textContent = 'Your details';
+        } else {
+          text.textContent = questionNum + ' of ' + totalQuestions;
+        }
+      }
+
+      // ---------------------------------------------------------------
+      // Check if current step has a valid selection
+      // ---------------------------------------------------------------
+      function isStepValid(stepIndex) {
+        if (stepIndex === 0) return true;  // intro always valid
+
+        var stepEl = steps[stepIndex];
+
+        if (stepIndex === PROFILE_STEP) {
+          // Check required profile fields
+          for (var i = 0; i < PROFILE_REQUIRED.length; i++) {
+            var field = stepEl.querySelector('[name="' + PROFILE_REQUIRED[i] + '"]');
+            if (!field || !field.value.trim()) return false;
+          }
+          return true;
+        }
+
+        // Radio question — check if one is selected
+        var checked = stepEl.querySelector('input[type="radio"]:checked');
+        return !!checked;
+      }
+
+      // ---------------------------------------------------------------
+      // Update Next button state
+      // ---------------------------------------------------------------
+      function updateNextButton() {
+        var stepEl = steps[currentStep];
+        var nextBtn = stepEl.querySelector('.btn-next');
+        if (!nextBtn) return;
+
+        nextBtn.disabled = !isStepValid(currentStep);
+      }
+
+      // ---------------------------------------------------------------
+      // Navigation
+      // ---------------------------------------------------------------
+      window.goNext = function () {
+        if (currentStep >= totalSteps - 1) return;
+        if (!isStepValid(currentStep)) return;
+
+        steps[currentStep].classList.remove('active');
+        currentStep++;
+        steps[currentStep].classList.add('active');
+        updateProgress();
+        updateNextButton();
+        window.scrollTo(0, 0);
+      };
+
+      window.goBack = function () {
+        if (currentStep <= 0) return;
+
+        steps[currentStep].classList.remove('active');
+        currentStep--;
+        steps[currentStep].classList.add('active');
+        updateProgress();
+        updateNextButton();
+        window.scrollTo(0, 0);
+      };
+
+      // ---------------------------------------------------------------
+      // Listen for radio selections + profile field changes
+      // ---------------------------------------------------------------
+      document.querySelectorAll('input[type="radio"]').forEach(function (radio) {
+        radio.addEventListener('change', function () {
+          updateNextButton();
+        });
+      });
+
+      // Profile field change listeners
+      var profileStep = steps[PROFILE_STEP];
+      if (profileStep) {
+        profileStep.querySelectorAll('input, select').forEach(function (field) {
+          field.addEventListener('input', updateNextButton);
+          field.addEventListener('change', updateNextButton);
+        });
+      }
+
+      // ---------------------------------------------------------------
+      // Keyboard navigation (Enter = Next)
+      // ---------------------------------------------------------------
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && e.target.type !== 'submit') {
+          e.preventDefault();
+          if (isStepValid(currentStep) && currentStep < totalSteps - 1) {
+            goNext();
+          }
+        }
+      });
+
+      // ---------------------------------------------------------------
+      // Init
+      // ---------------------------------------------------------------
+      updateProgress();
+    })();
+  </script>
+</body>
+</html>

@@ -4,7 +4,16 @@
       "Bash(npm test)",
       "Bash(taskkill:*)",
       "Bash(ls:*)",
-      "Bash(node --test:*)"
+      "Bash(node --test:*)",
+      "Read(//c/Users/vwill/Documents/Tyler Project/Project 1/**)",
+      "Bash(python -c:*)",
+      "Bash(python3:*)",
+      "Bash(where:*)",
+      "Bash(C:\\\\Python313\\\\python.exe:*)",
+      "Bash(cmd /c \"C:\\\\Python313\\\\python.exe -c \"\"import zipfile, xml.etree.ElementTree as ET; z=zipfile.ZipFile\\(r''C:\\\\Users\\\\vwill\\\\Documents\\\\Tyler Project\\\\Project 1\\\\Universal_12-Minute_Quiz_Spec_v2_1E_FINAL2 \\(1\\).docx''\\); tree=ET.parse\\(z.open\\(''word/document.xml''\\)\\); ns=''http://schemas.openxmlformats.org/wordprocessingml/2006/main''; paragraphs=[]; [paragraphs.append\\(''''.join\\([t.text for t in para.iter\\(''{''+ns+''}t''\\) if t.text]\\)\\) for para in tree.iter\\(''{''+ns+''}p''\\)]; print\\(chr\\(10\\).join\\([p for p in paragraphs if p]\\)\\)\"\"\")",
+      "Bash(cmd /c \"C:\\\\Python313\\\\python.exe C:\\\\Users\\\\vwill\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-vwill-Documents-Tyler-Project-Project-1-MindTheGapsCodebase-MindTheGaps\\\\6207e5bd-7e20-47d3-bd1c-7c89cbbcfde5\\\\scratchpad\\\\extract_docx.py\":*)",
+      "Bash(cmd /c:*)",
+      "Bash(powershell -Command:*)"
     ]
   }
 }
