@@ -1,0 +1,11 @@
+name = "mtg-calendly-webhook"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# Environment variables (set via wrangler secret or Cloudflare dashboard)
+# CALENDLY_WEBHOOK_SECRET — Calendly webhook signing key
+# HUBSPOT_API_KEY — HubSpot private app token
+
+[vars]
+# Non-secret vars can go here
+# ENVIRONMENT = "production"
