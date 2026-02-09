@@ -11,10 +11,12 @@ Tyler and Jesse working for Marc on MindTheGaps, where we can house all the file
 | Phase 0: Setup + Schema | **Done** | Directory structure, shared constants |
 | Phase 1: Quiz Build | **Done** | All 5 tasks complete, 107 tests passing |
 | UX Polish | **Done** | One-question-per-page quiz, progress bar, spec-exact copy, results page updates |
-| Phase 2: Payment + Booking | Not started | Stripe, Calendly, prefill links |
-| Phase 3: Scan Worksheet | Not started | JotForm worksheet + scan webhook |
-| Phase 4: Plan Generation | **In Progress** | Stop rules + confidence done (112 tests), Claude API/DOCX/R2/Resend remaining |
-| Phase 5: QA + Handoff | Not started | End-to-end testing, runbook, handoff to Marc |
+| Phase 2: Payment + Booking | **Done** | Stripe webhook (16 tests), Calendly webhook (19 tests) |
+| Phase 3: Scan Worksheet | **Partial** | Backend complete (scan webhook + all processing), JotForm form needs Marc's account |
+| Phase 4: Plan Generation | **Done** | Stop rules, confidence, plan generator, DOCX builder, storage, notifications (168 tests) |
+| Phase 5: QA + Handoff | **Blocked** | Needs credentials for end-to-end testing |
+
+**Total: 387 tests passing, 0 failing**
 
 ---
 
@@ -29,6 +31,33 @@ Tyler and Jesse working for Marc on MindTheGaps, where we can house all the file
 | 5 | Results page (static HTML) | **Done** | `pages/results/index.html` | — |
 
 **Phase 1 tests: 107 passing (0 failing)**
+
+---
+
+## Phase 4 — Plan Generation (Complete)
+
+| # | Task | Status | File(s) | Tests |
+|---|------|--------|---------|-------|
+| 1 | Stop rules engine | **Done** | `workers/mtg-scan-webhook/src/stopRules.js` | 76 tests |
+| 2 | Confidence calculator | **Done** | `workers/mtg-scan-webhook/src/confidence.js` | 36 tests |
+| 3 | DOCX builder | **Done** | `workers/mtg-scan-webhook/src/docxBuilder.js` | 51 tests |
+| 4 | Plan generator (Claude API prompt) | **Done** | `workers/mtg-scan-webhook/src/planGenerator.js` | 44 tests |
+| 5 | R2 storage | **Done** | `workers/mtg-scan-webhook/src/storage.js` | 5 tests |
+| 6 | Email notifications | **Done** | `workers/mtg-scan-webhook/src/notifications.js` | 10 tests |
+| 7 | Scan webhook handler | **Done** | `workers/mtg-scan-webhook/src/index.js` | 23 tests |
+
+**Phase 4 tests: 245 passing (0 failing)**
+
+---
+
+## Phase 2 — Payment + Booking (Complete)
+
+| # | Task | Status | File(s) | Tests |
+|---|------|--------|---------|-------|
+| 1 | Stripe webhook handler | **Done** | `workers/mtg-stripe-webhook/src/index.js` | 16 tests |
+| 2 | Calendly webhook handler | **Done** | `workers/mtg-calendly-webhook/src/index.js` | 19 tests |
+
+**Phase 2 tests: 35 passing (0 failing)**
 
 ---
 
@@ -123,6 +152,63 @@ Confidence calculator. Counts "Not sure"/missing Tier-1 baseline answers per pil
 - Med (2-3): must include ≥1 constraint row
 - Low (≥4): must include constraints + "Data gaps to measure" box
 
+### `workers/mtg-scan-webhook/src/docxBuilder.js`
+One-Page Plan DOCX generator. Takes structured plan content from Claude API and produces a `.docx` file buffer.
+- `buildDocx(planContent, scanData, contactInfo, confidenceResult)` → Buffer
+- 6 section builders: What We Found, Baseline Metrics, One Lever, Action Plan (6 rows), Weekly Scorecard, Risks/Constraints
+- Section F is conditional on confidence level (High=optional, Med=constraints required, Low=constraints + data gaps box)
+- Professional styling: Calibri, 11pt body, 14pt headers, dark blue headings, gray table headers, 1" margins
+- Exports `BASELINE_LABELS` (human-readable names for all 20 baseline field keys)
+
+### `workers/mtg-scan-webhook/src/planGenerator.js`
+Claude API prompt builder + response parser. Constructs the prompt from scan data, calls the API, parses JSON response.
+- `generatePlan(scanData, contactInfo, confidenceResult, env)` → planContent JSON
+- System prompt defines the exact JSON schema contract + content rules (plain language, no jargon, no upsell)
+- User prompt includes: business profile, diagnosis, baseline metrics, actions, scorecard, confidence level
+- `parseResponse()` handles raw JSON, markdown-fenced JSON, validates all 6 sections present
+- `buildSectionBData()` filters baseline to exclude "Not sure" values (shared logic with docxBuilder)
+- API call requires `CLAUDE_API_KEY` — throws without it
+
+### `workers/mtg-scan-webhook/src/storage.js`
+R2 upload wrapper. Uploads DOCX plan buffers to Cloudflare R2.
+- `uploadPlan(env, email, buffer)` → object key string
+- Key format: `plans/{sanitized-email}/{timestamp}.docx`
+- Requires `R2_BUCKET` binding — throws without it
+
+### `workers/mtg-scan-webhook/src/notifications.js`
+Resend email notification sender. Notifies Marc when plans are ready or stopped.
+- `notifyPlanReady(env, { email, businessName, planUrl, confidence })` — "Plan draft ready, review within 24h"
+- `notifyStopRule(env, { email, businessName, stopReasons })` — "Manual plan required"
+- Silently skips when `RESEND_API_KEY` is missing (same pattern as HubSpot)
+
+### `workers/mtg-scan-webhook/src/index.js`
+Scan webhook handler — the main orchestrator for the scan-to-plan pipeline:
+1. Parses JotForm scan worksheet payload
+2. Extracts contact info + scan data (baseline fields, actions, metrics) via configurable field map
+3. Validates email
+4. Runs stop rules — if stopped, writes reason to HubSpot + notifies Marc
+5. Calculates confidence level
+6. Generates plan via Claude API
+7. Builds DOCX from plan content
+8. Uploads DOCX to R2
+9. Writes all results to HubSpot
+10. Notifies Marc with plan link + confidence level
+- All external calls gracefully skip when credentials are missing
+
+### `workers/mtg-stripe-webhook/src/index.js`
+Stripe webhook handler. Receives `checkout.session.completed` events from Stripe.
+- Verifies webhook signature (HMAC-SHA256 via Web Crypto)
+- Extracts: email, amount, currency, payment intent ID
+- Updates HubSpot: `mtg_payment_status=Paid`, amount, currency, payment ID, timestamp
+- Skips signature verification in dev mode (no secret)
+
+### `workers/mtg-calendly-webhook/src/index.js`
+Calendly webhook handler. Receives `invitee.created` events from Calendly.
+- Verifies webhook signature (HMAC-SHA256 via Web Crypto)
+- Extracts: email, name, event URI, scheduled time, cancel/reschedule URLs
+- Updates HubSpot: `mtg_scan_booked=true`, scheduled time, event URI
+- Skips signature verification in dev mode (no secret)
+
 ### `tests/testCases.js`
 12 reusable quiz fixtures with a `buildAnswers()` helper (sparse overrides on neutral defaults). Covers:
 - Clear wins for each pillar
@@ -139,30 +225,28 @@ Scan worksheet test fixtures with `buildScanData()` and `buildBaselineWithNotSur
 
 ---
 
-## What's Next
+## What's Left — Credential-Dependent Work Only
 
-### Plug-and-play items (need credentials / config):
-1. **HUBSPOT_API_KEY** — Set as Cloudflare Worker secret. HubSpot client is ready.
-2. **JotForm field mapping** — Update `JOTFORM_FIELD_MAP` in index.js once the quiz form is built
-3. **RESULTS_PAGE_URL** — Set as Worker env var once the results page is deployed
-4. **Stripe checkout URL** — Update the CTA link in results page once Stripe is configured
+All pure-logic code is complete. The remaining work requires Marc's accounts/credentials:
 
-### Phase 2: Payment + Booking
-- Stripe checkout integration ($295 CAD)
-- Calendly webhook handler (booking confirmation → HubSpot update)
-- Prefill link generator for scan worksheet
+### Plug-and-play credential swaps (minutes each):
+| Service | What to do | Time estimate |
+|---------|-----------|---------------|
+| HubSpot | Set `HUBSPOT_API_KEY` env var + create ~20 `mtg_*` properties in UI | ~15 min |
+| JotForm | Update `JOTFORM_FIELD_MAP` / `JOTFORM_SCAN_FIELD_MAP` with real field names | ~30 min |
+| Stripe | Set `STRIPE_WEBHOOK_SECRET` env var | ~2 min |
+| Calendly | Set `CALENDLY_WEBHOOK_SECRET` env var | ~2 min |
+| Claude API | Set `CLAUDE_API_KEY` env var | ~2 min |
+| Resend | Set `RESEND_API_KEY` + `MARC_EMAIL` env vars | ~2 min |
+| R2 | Create `mtg-plan-drafts` bucket + bind in wrangler.toml | ~5 min |
+| Cloudflare | Deploy workers via `wrangler publish` (needs account access) | ~15 min |
 
-### Phase 3: Scan Worksheet
-- JotForm scan worksheet build (7 sections, heavy conditionals)
-- Scan webhook Worker
-
-### Phase 4: Plan Generation (remaining)
-- ~~Stop rules engine~~ **Done** (76 tests)
-- ~~Confidence calculator~~ **Done** (36 tests)
-- Claude API plan generator
-- DOCX builder
-- R2 upload
-- Resend notification
+### Still needs building (requires Marc's accounts):
+1. **JotForm Quiz form** — Build in Marc's JotForm account, get field names for `JOTFORM_FIELD_MAP`
+2. **JotForm Scan Worksheet form** — Build 7-section form in Marc's account, get field names for `JOTFORM_SCAN_FIELD_MAP`
+3. **HubSpot custom properties** — Create ~20 `mtg_*` contact properties in Marc's HubSpot
+4. **End-to-end integration testing** — Test the full flow with real services connected
+5. **Marc's runbook** — Ops documentation for day-to-day use
 
 ---
 
@@ -182,15 +266,21 @@ npm run dev     # Start at http://localhost:3000
 ## Running Tests
 
 ```bash
-npm test                    # Run all tests (219)
+npm test                    # Run all tests (387)
 npm run test:scoring        # Scoring engine only (51)
 npm run test:results        # Results generator only (25)
 npm run test:eligibility    # Eligibility check only (31)
 npm run test:stoprules      # Stop rules engine only (76)
 npm run test:confidence     # Confidence calculator only (36)
+npm run test:docxbuilder    # DOCX builder only (51)
+npm run test:plangenerator  # Plan generator only (44)
+npm run test:notifications  # Storage + notifications (15)
+npm run test:scanwebhook    # Scan webhook handler (23)
+npm run test:stripewebhook  # Stripe webhook handler (16)
+npm run test:calendlywebhook # Calendly webhook handler (19)
 ```
 
-Requires Node >= 18 (uses built-in `node:test` runner, zero external dependencies).
+Requires Node >= 18 (uses built-in `node:test` runner, zero external dependencies except `docx`).
 
 ---
 

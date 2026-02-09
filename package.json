@@ -10,9 +10,18 @@
     "test:results": "node --test tests/results.test.js",
     "test:eligibility": "node --test tests/eligibility.test.js",
     "test:stoprules": "node --test tests/stopRules.test.js",
-    "test:confidence": "node --test tests/confidence.test.js"
+    "test:confidence": "node --test tests/confidence.test.js",
+    "test:docxbuilder": "node --test tests/docxBuilder.test.js",
+    "test:plangenerator": "node --test tests/planGenerator.test.js",
+    "test:scanwebhook": "node --test tests/scanWebhook.test.js",
+    "test:stripewebhook": "node --test tests/stripeWebhook.test.js",
+    "test:calendlywebhook": "node --test tests/calendlyWebhook.test.js",
+    "test:notifications": "node --test tests/notifications.test.js"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "docx": "^9.5.1"
   }
 }
