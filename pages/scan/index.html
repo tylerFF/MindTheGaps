@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindtheGaps — Book The 45-Minute Growth Gap Scan</title>
+<meta name="description" content="A working session to pick the ONE lever to fix first and map the next 60 days. $295 CAD — includes a 1-page action plan within 24 hours.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Base ──────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;color:#4A5D73;line-height:1.6;font-size:16px;background:#fff;overflow-x:hidden}
+img,svg{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+ul,ol{list-style:none}
+
+/* ── Custom Properties ─────────────────────────────────────────── */
+:root{
+  --red:#F00000;
+  --red-hover:#C80000;
+  --dark-blue-gray:#4A5D73;
+  --medium-blue-gray:#5B7D99;
+  --light-pink:#FFF0F0;
+  --light-pink-2:#FFE8E8;
+  --light-gray:#F5F6F8;
+  --dark-bg:#1C2333;
+  --text-heading:#1A1A2E;
+  --text-body:#4A5D73;
+  --text-light:#7A8A9B;
+  --white:#FFFFFF;
+  --shadow:0 2px 16px rgba(0,0,0,0.07);
+  --shadow-lg:0 8px 32px rgba(0,0,0,0.10);
+  --radius:16px;
+  --radius-sm:12px;
+  --radius-pill:30px;
+  --container:1180px;
+}
+
+/* ── Utility ───────────────────────────────────────────────────── */
+.container{max-width:var(--container);margin:0 auto;padding:0 24px}
+.section-pad{padding:80px 0}
+.text-center{text-align:center}
+h1,h2,h3,h4{color:var(--text-heading);line-height:1.25}
+h1{font-size:clamp(32px,5vw,46px);font-weight:800;letter-spacing:-0.02em}
+h2{font-size:clamp(26px,4vw,38px);font-weight:700;letter-spacing:-0.01em}
+h3{font-size:20px;font-weight:600}
+.subtext{font-size:14px;color:var(--text-light);margin-top:8px}
+
+/* ── Buttons ───────────────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:inherit;font-weight:600;font-size:16px;border:none;cursor:pointer;border-radius:var(--radius-pill);padding:14px 32px;transition:all .2s ease}
+.btn-primary{background:var(--red);color:#fff}
+.btn-primary:hover{background:var(--red-hover);box-shadow:0 4px 16px rgba(240,0,0,0.3)}
+.btn-white{background:#fff;color:var(--red);font-weight:700}
+.btn-white:hover{background:#fef5f5;box-shadow:0 4px 16px rgba(0,0,0,0.1)}
+.cta-block{text-align:center;margin-top:40px}
+.cta-block .subtext{margin-top:10px}
+
+/* ── Navigation ────────────────────────────────────────────────── */
+.nav{position:sticky;top:0;z-index:100;background:#fff;box-shadow:0 1px 8px rgba(0,0,0,0.06)}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;height:68px}
+.nav-logo{font-size:22px;font-weight:800;color:var(--red);letter-spacing:-0.02em}
+.nav-logo span{color:var(--text-heading)}
+.nav-links{display:flex;align-items:center;gap:28px}
+.nav-links a{font-size:15px;font-weight:500;color:var(--text-body);transition:color .2s}
+.nav-links a:hover{color:var(--red)}
+.nav-cta .btn{padding:10px 24px;font-size:14px}
+.nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:8px}
+.nav-hamburger span{display:block;width:24px;height:2.5px;background:var(--text-heading);border-radius:2px;transition:all .3s}
+.mobile-menu{display:none;position:absolute;top:68px;left:0;right:0;background:#fff;padding:20px 24px;box-shadow:0 8px 24px rgba(0,0,0,0.1);flex-direction:column;gap:16px}
+.mobile-menu a{font-size:16px;font-weight:500;color:var(--text-body);padding:8px 0}
+.mobile-menu .btn{width:100%;text-align:center;margin-top:8px}
+
+@media(max-width:768px){
+  .nav-links,.nav-cta{display:none}
+  .nav-hamburger{display:flex}
+  .mobile-menu.open{display:flex}
+}
+
+/* ── Hero ──────────────────────────────────────────────────────── */
+.hero{background:var(--light-pink);position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:60px;background:var(--white);clip-path:ellipse(55% 100% at 50% 100%)}
+.hero-inner{display:flex;align-items:center;gap:48px;padding:64px 0 80px}
+.hero-content{flex:1;min-width:0}
+.hero-content h1{margin-bottom:16px}
+.hero-content .lead{font-size:17px;color:var(--text-body);margin-bottom:16px;max-width:520px}
+.hero-content .price-line{font-size:16px;font-weight:700;color:var(--text-heading);margin-bottom:24px}
+.hero-content .price-line strong{color:var(--red)}
+.hero-content .what-you-get{margin-bottom:28px}
+.hero-content .what-you-get h4{font-size:16px;font-weight:700;color:var(--text-heading);margin-bottom:12px}
+.what-you-get ul{display:flex;flex-direction:column;gap:10px}
+.what-you-get li{display:flex;align-items:flex-start;gap:10px;font-size:15px;color:var(--text-body)}
+.what-you-get li svg{flex-shrink:0;margin-top:2px}
+.hero-cta{margin-bottom:10px}
+.hero-visual{flex:0 0 400px;position:relative}
+
+/* Hero illustration: plan card mockup */
+.plan-mockup{position:relative;width:100%;max-width:380px;margin:0 auto}
+.plan-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow-lg);padding:28px 24px;position:relative;z-index:2}
+.plan-card-title{font-size:15px;font-weight:700;color:var(--red);margin-bottom:16px;text-align:center;padding-bottom:12px;border-bottom:2px solid var(--light-pink)}
+.plan-line{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:13px;color:var(--text-body)}
+.plan-line .plan-dot{width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0}
+.plan-line.muted .plan-dot{background:var(--medium-blue-gray);opacity:0.4}
+.plan-line.muted{color:var(--text-light);opacity:0.5}
+.plan-section-label{font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:0.06em;margin-top:12px;margin-bottom:4px}
+.hero-person-scan{position:absolute;top:10px;right:-40px;z-index:1;opacity:0.85}
+
+@media(max-width:900px){
+  .hero-inner{flex-direction:column;text-align:center;padding:48px 0 70px}
+  .hero-content .lead,.hero-content .price-line{margin-left:auto;margin-right:auto}
+  .hero-content .what-you-get{text-align:left;max-width:440px;margin-left:auto;margin-right:auto}
+  .hero-visual{flex:none;width:100%;max-width:360px}
+  .hero-person-scan{display:none}
+}
+
+/* ── Trust Section (What We Don't Ask For) ─────────────────────── */
+.trust-section{background:var(--white);position:relative}
+.trust-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:28px;margin-top:48px}
+.trust-item{text-align:center;flex:0 0 175px}
+.trust-icon{width:64px;height:64px;margin:0 auto 12px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.trust-icon svg{width:28px;height:28px}
+.trust-item h4{font-size:14px;font-weight:700;color:var(--text-heading);margin-bottom:4px}
+.trust-item p{font-size:12px;color:var(--text-light);line-height:1.4}
+@media(max-width:640px){
+  .trust-grid{gap:16px}
+  .trust-item{flex:0 0 140px}
+}
+
+/* ── 3-Step Process ────────────────────────────────────────────── */
+.process-section{background:var(--light-pink);position:relative;overflow:hidden}
+.process-section::before{content:'';position:absolute;top:-2px;left:0;right:0;height:60px;background:var(--white);clip-path:ellipse(55% 100% at 50% 0%)}
+.process-section::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:60px;background:var(--white);clip-path:ellipse(55% 100% at 50% 100%)}
+.process-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;margin-top:48px;position:relative}
+/* Connecting line behind steps */
+.process-grid::before{content:'';position:absolute;top:60px;left:15%;right:15%;height:3px;background:var(--red);opacity:0.15;z-index:0}
+.process-step{text-align:center;position:relative;z-index:1}
+.process-number{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:var(--red);color:#fff;font-size:14px;font-weight:700;margin-bottom:12px}
+.process-illus{width:120px;height:120px;margin:0 auto 16px;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.process-illus svg{width:60px;height:60px}
+.process-step h3{font-size:15px;font-weight:700;color:var(--text-heading);margin-bottom:4px}
+.process-step p{font-size:13px;color:var(--text-light)}
+.process-note{text-align:center;margin-top:32px;font-size:14px;color:var(--text-body);font-style:italic}
+@media(max-width:640px){
+  .process-grid{grid-template-columns:1fr;gap:28px;max-width:320px;margin-left:auto;margin-right:auto}
+  .process-grid::before{display:none}
+}
+
+/* ── Pricing Section ───────────────────────────────────────────── */
+.pricing-section{background:var(--white)}
+.pricing-inner{display:flex;align-items:center;gap:64px}
+.pricing-content{flex:1}
+.pricing-content h2{margin-bottom:16px}
+.pricing-content .lead{font-size:17px;color:var(--text-body);max-width:400px}
+.pricing-pen{margin-top:32px;opacity:0.15}
+.pricing-card{flex:0 0 380px;background:linear-gradient(135deg, #F00000 0%, #cc0000 100%);border-radius:var(--radius);padding:40px 36px;text-align:center;color:#fff;box-shadow:0 12px 40px rgba(240,0,0,0.25)}
+.pricing-amount{font-size:clamp(42px,6vw,56px);font-weight:800;letter-spacing:-0.03em;margin-bottom:4px}
+.pricing-currency{font-size:20px;font-weight:700;opacity:0.9}
+.pricing-desc{font-size:15px;opacity:0.9;line-height:1.5;margin:16px 0 28px;max-width:300px;margin-left:auto;margin-right:auto}
+@media(max-width:900px){
+  .pricing-inner{flex-direction:column;text-align:center}
+  .pricing-content .lead{margin-left:auto;margin-right:auto}
+  .pricing-card{flex:none;width:100%;max-width:400px}
+  .pricing-pen{display:none}
+}
+
+/* ── FAQ ───────────────────────────────────────────────────────── */
+.faq-section{background:var(--light-gray)}
+.faq-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;max-width:880px;margin:48px auto 0}
+.faq-item{background:#fff;border-radius:var(--radius-sm);box-shadow:0 1px 4px rgba(0,0,0,0.04);overflow:hidden}
+.faq-question{width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 20px;font-family:inherit;font-size:14px;font-weight:600;color:var(--text-heading);background:none;border:none;cursor:pointer;text-align:left;gap:12px;transition:background .2s}
+.faq-question:hover{background:#fafafa}
+.faq-chevron{flex-shrink:0;width:18px;height:18px;transition:transform .3s}
+.faq-item.open .faq-chevron{transform:rotate(180deg)}
+.faq-answer{max-height:0;overflow:hidden;transition:max-height .3s ease}
+.faq-item.open .faq-answer{max-height:200px}
+.faq-answer-inner{padding:0 20px 16px;font-size:13px;color:var(--text-body);line-height:1.6}
+@media(max-width:640px){
+  .faq-grid{grid-template-columns:1fr;gap:8px}
+}
+
+/* ── Footer ────────────────────────────────────────────────────── */
+.footer{background:var(--dark-bg);color:rgba(255,255,255,0.6);padding:32px 0}
+.footer-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;font-size:13px}
+.footer-email{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.8)}
+.footer-email svg{width:16px;height:16px}
+.footer-links{display:flex;gap:8px}
+.footer-links a{color:rgba(255,255,255,0.6);transition:color .2s}
+.footer-links a:hover{color:#fff}
+.footer-links span{color:rgba(255,255,255,0.3)}
+@media(max-width:640px){
+  .footer-inner{flex-direction:column;text-align:center;gap:12px}
+}
+
+/* ── Animations ────────────────────────────────────────────────── */
+@media(prefers-reduced-motion:no-preference){
+  .fade-in{opacity:0;transform:translateY(20px);transition:opacity .5s ease,transform .5s ease}
+  .fade-in.visible{opacity:1;transform:translateY(0)}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ Navigation ═══════════════════════════════════════════════ -->
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="/pages/landing/" class="nav-logo"><span>Mind</span>the<span>Gaps</span></a>
+    <div class="nav-links">
+      <a href="#how-it-works">How it works</a>
+      <a href="#what-you-get">What you get</a>
+      <a href="#faq">FAQ</a>
+      <a href="/pages/landing/">Home</a>
+    </div>
+    <div class="nav-cta">
+      <a href="#book" class="btn btn-primary">Book the Growth Gap Scan</a>
+    </div>
+    <button class="nav-hamburger" aria-label="Menu" onclick="document.getElementById('mobile-menu').classList.toggle('open')">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="#how-it-works" onclick="this.parentElement.classList.remove('open')">How it works</a>
+    <a href="#what-you-get" onclick="this.parentElement.classList.remove('open')">What you get</a>
+    <a href="#faq" onclick="this.parentElement.classList.remove('open')">FAQ</a>
+    <a href="/pages/landing/" onclick="this.parentElement.classList.remove('open')">Home</a>
+    <a href="#book" class="btn btn-primary" onclick="this.parentElement.classList.remove('open')">Book the Growth Gap Scan</a>
+  </div>
+</nav>
+
+<!-- ═══ Hero ═════════════════════════════════════════════════════ -->
+<section class="hero" id="book">
+  <div class="container hero-inner">
+    <div class="hero-content">
+      <h1>Book The 45-Minute Growth Gap Scan</h1>
+      <p class="lead">A working session to pick the ONE lever to fix first and map the next 60 days.</p>
+      <p class="price-line"><strong>$295 CAD</strong> — includes a 1-page action plan delivered within 24 hours (after human review).</p>
+      <div class="what-you-get" id="what-you-get">
+        <h4>What you'll get:</h4>
+        <ul>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="10" fill="#F00000"/><path d="M6 10l3 3 5-6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>One ideal lever to focus on (Acquire OR Convert OR Retain)</span>
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="10" fill="#F00000"/><path d="M6 10l3 3 5-6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>6 actions with owners + 14/30/60-day due dates</span>
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="10" fill="#F00000"/><path d="M6 10l3 3 5-6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>A weekly scorecard (2-4 metrics) + your 1-page plan within 24 hours</span>
+          </li>
+        </ul>
+      </div>
+      <div class="hero-cta">
+        <a href="#book" class="btn btn-primary">Book the Growth Gap Scan</a>
+      </div>
+      <p class="subtext">No logins. No customer lists. Ranges are fine.</p>
+    </div>
+
+    <div class="hero-visual">
+      <div class="plan-mockup">
+        <div class="plan-card">
+          <div class="plan-card-title">Your Growth Plan</div>
+          <div class="plan-line"><div class="plan-dot"></div><span>Primary gap identified</span></div>
+          <div class="plan-line"><div class="plan-dot"></div><span>One lever selected</span></div>
+          <div class="plan-section-label">Actions</div>
+          <div class="plan-line"><div class="plan-dot"></div><span>Action 1 — Owner — 14 days</span></div>
+          <div class="plan-line"><div class="plan-dot"></div><span>Action 2 — Owner — 14 days</span></div>
+          <div class="plan-line"><div class="plan-dot"></div><span>Action 3 — Owner — 30 days</span></div>
+          <div class="plan-line muted"><div class="plan-dot"></div><span>Action 4 — Owner — 30 days</span></div>
+          <div class="plan-line muted"><div class="plan-dot"></div><span>Action 5 — Owner — 60 days</span></div>
+          <div class="plan-line muted"><div class="plan-dot"></div><span>Action 6 — Owner — 60 days</span></div>
+        </div>
+        <!-- Person illustration -->
+        <svg class="hero-person-scan" width="120" height="200" viewBox="0 0 120 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="60" cy="190" rx="40" ry="8" fill="#4A5D73" opacity="0.08"/>
+          <!-- Body standing -->
+          <rect x="35" y="80" width="50" height="70" rx="10" fill="#4A5D73" opacity="0.18"/>
+          <!-- Head -->
+          <circle cx="60" cy="55" r="22" fill="#4A5D73" opacity="0.18"/>
+          <!-- Legs -->
+          <rect x="40" y="145" width="14" height="45" rx="6" fill="#5B7D99" opacity="0.12"/>
+          <rect x="66" y="145" width="14" height="45" rx="6" fill="#5B7D99" opacity="0.12"/>
+          <!-- Arm pointing -->
+          <rect x="15" y="90" width="30" height="10" rx="5" fill="#4A5D73" opacity="0.15" transform="rotate(-15 15 90)"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ What We Do Not Ask For ═══════════════════════════════════ -->
+<section class="trust-section section-pad">
+  <div class="container text-center">
+    <h2 class="fade-in">What We Do Not Ask for</h2>
+    <div class="trust-grid fade-in">
+      <div class="trust-item">
+        <div class="trust-icon">
+          <svg viewBox="0 0 28 28" fill="none"><rect x="6" y="12" width="16" height="12" rx="2" stroke="#fff" stroke-width="2"/><path d="M10 12V8a4 4 0 118 0v4" stroke="#fff" stroke-width="2" stroke-linecap="round"/><line x1="6" y1="6" x2="22" y2="22" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <h4>No logins</h4>
+        <p>(No ad accounts, no CRM access)</p>
+      </div>
+      <div class="trust-item">
+        <div class="trust-icon">
+          <svg viewBox="0 0 28 28" fill="none"><rect x="6" y="4" width="16" height="20" rx="2" stroke="#fff" stroke-width="2"/><path d="M10 9h8M10 13h8M10 17h5" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/><line x1="6" y1="4" x2="22" y2="24" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <h4>No customer lists</h4>
+        <p>(No exports, no uploads)</p>
+      </div>
+      <div class="trust-item">
+        <div class="trust-icon">
+          <svg viewBox="0 0 28 28" fill="none"><path d="M14 4v10l6 3" stroke="#fff" stroke-width="2" stroke-linecap="round"/><rect x="5" y="17" width="18" height="7" rx="2" stroke="#fff" stroke-width="1.5"/><line x1="8" y1="8" x2="22" y2="22" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <h4>No sensitive files</h4>
+        <p>(No spreadsheets, no P/L)</p>
+      </div>
+      <div class="trust-item">
+        <div class="trust-icon">
+          <svg viewBox="0 0 28 28" fill="none"><text x="4" y="17" font-size="10" font-weight="700" fill="#fff">1-5</text><text x="16" y="17" font-size="10" font-weight="700" fill="#fff">&#x2713;</text></svg>
+        </div>
+        <h4>Ranges are fine</h4>
+        <p>(Examples: "10-20 leads/week" or "1-3 calls/month")</p>
+      </div>
+      <div class="trust-item">
+        <div class="trust-icon">
+          <svg viewBox="0 0 28 28" fill="none"><circle cx="14" cy="10" r="5" stroke="#fff" stroke-width="2"/><path d="M6 24c0-5 4-8 8-8s8 3 8 8" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M18 13l3 3 4-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h4>You Stay In Control</h4>
+        <p>We give you a plan; you decide what to do.</p>
+      </div>
+    </div>
+    <div class="cta-block fade-in">
+      <a href="#book" class="btn btn-primary">Book the Growth Gap Scan</a>
+      <p class="subtext">No logins. No customer lists. Ranges are fine.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 3-Step Process ═══════════════════════════════════════════ -->
+<section class="process-section section-pad" id="how-it-works">
+  <div class="container text-center">
+    <h2 class="fade-in">Our 3-Step Growth Gap Scan Process</h2>
+    <div class="process-grid fade-in">
+      <div class="process-step">
+        <div class="process-number">01</div>
+        <div class="process-illus">
+          <svg viewBox="0 0 60 60" fill="none">
+            <rect x="12" y="8" width="36" height="44" rx="4" stroke="#F00000" stroke-width="2"/>
+            <path d="M20 20h20M20 26h20M20 32h12" stroke="#F00000" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="42" cy="14" r="8" fill="#F00000" opacity="0.12"/>
+            <text x="42" y="17" text-anchor="middle" font-size="9" font-weight="700" fill="#F00000">$</text>
+          </svg>
+        </div>
+        <h3>Pay $295 And Book Your Time</h3>
+      </div>
+      <div class="process-step">
+        <div class="process-number">02</div>
+        <div class="process-illus">
+          <svg viewBox="0 0 60 60" fill="none">
+            <circle cx="20" cy="20" r="8" stroke="#F00000" stroke-width="2"/>
+            <circle cx="40" cy="20" r="8" stroke="#F00000" stroke-width="2"/>
+            <path d="M12 40c0-4 4-7 8-7s8 3 8 7" stroke="#F00000" stroke-width="2"/>
+            <path d="M32 40c0-4 4-7 8-7s8 3 8 7" stroke="#F00000" stroke-width="2"/>
+            <rect x="22" y="44" width="16" height="8" rx="3" stroke="#F00000" stroke-width="1.5"/>
+            <text x="30" y="51" text-anchor="middle" font-size="7" font-weight="600" fill="#F00000">45m</text>
+          </svg>
+        </div>
+        <h3>45-Minute Working Session (Live)</h3>
+      </div>
+      <div class="process-step">
+        <div class="process-number">03</div>
+        <div class="process-illus">
+          <svg viewBox="0 0 60 60" fill="none">
+            <rect x="10" y="8" width="28" height="36" rx="3" stroke="#F00000" stroke-width="2"/>
+            <path d="M16 16h16M16 22h16M16 28h10" stroke="#F00000" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="42" cy="38" r="12" fill="#F00000" opacity="0.12"/>
+            <path d="M37 38l3 3 7-7" stroke="#F00000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <text x="30" y="54" text-anchor="middle" font-size="6" font-weight="600" fill="#F00000">24h</text>
+          </svg>
+        </div>
+        <h3>Get Your 1-Page Plan Within 24 Hours</h3>
+        <p>(After Human Review)</p>
+      </div>
+    </div>
+    <p class="process-note fade-in">If you're missing numbers, we'll work with ranges and mark assumptions.</p>
+    <div class="cta-block fade-in">
+      <a href="#book" class="btn btn-primary">Book the Growth Gap Scan</a>
+      <p class="subtext">No logins. No customer lists. Ranges are fine.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Simple Pricing ═══════════════════════════════════════════ -->
+<section class="pricing-section section-pad">
+  <div class="container">
+    <div class="pricing-inner fade-in">
+      <div class="pricing-content">
+        <h2>Simple Pricing.<br>Clear Next Steps.</h2>
+        <p class="lead">One flat fee. One focused session. One actionable plan you can use immediately.</p>
+        <!-- Pen illustration -->
+        <svg class="pricing-pen" width="100" height="100" viewBox="0 0 100 100" fill="none">
+          <path d="M20 80L70 30l10 10L30 90z" stroke="#4A5D73" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M70 30l8-8 10 10-8 8" stroke="#4A5D73" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M20 80l-5 15 15-5" stroke="#4A5D73" stroke-width="3" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="pricing-card">
+        <div class="pricing-amount">$295 <span class="pricing-currency">CAD</span></div>
+        <p class="pricing-desc">pay once, book your time, and receive your personalized 1-page growth plan within 24 hours.</p>
+        <a href="#book" class="btn btn-white">Book the Growth Gap Scan</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FAQ ══════════════════════════════════════════════════════ -->
+<section class="faq-section section-pad" id="faq">
+  <div class="container">
+    <h2 class="text-center fade-in">Frequently Asked Questions</h2>
+    <div class="faq-grid fade-in">
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          <span>Who Should Attend The Scan?</span>
+          <svg class="faq-chevron" viewBox="0 0 20 20" fill="none"><path d="M5 7.5l5 5 5-5" stroke="#4A5D73" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Someone who can approve changes. Owner/GM is best. Or a lead who owns growth and can act.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          <span>What Do I Need To Prepare?</span>
+          <svg class="faq-chevron" viewBox="0 0 20 20" fill="none"><path d="M5 7.5l5 5 5-5" stroke="#4A5D73" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Nothing fancy. If you can share rough ranges, that's enough.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          <span>Will You Ask For Logins Or Access?</span>
+          <svg class="faq-chevron" viewBox="0 0 20 20" fill="none"><path d="M5 7.5l5 5 5-5" stroke="#4A5D73" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">No. We never ask for logins, CRM access, ad accounts, or customer lists. Everything is ranges and multiple choice.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          <span>What If I'm Not Sure About My Numbers?</span>
+          <svg class="faq-chevron" viewBox="0 0 20 20" fill="none"><path d="M5 7.5l5 5 5-5" stroke="#4A5D73" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">That's fine. We work with ranges and mark assumptions. You don't need exact data — rough estimates are enough to build a useful plan.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          <span>How Do I Receive The Plan?</span>
+          <svg class="faq-chevron" viewBox="0 0 20 20" fill="none"><path d="M5 7.5l5 5 5-5" stroke="#4A5D73" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Your 1-page plan is delivered as a DOCX file within 24 hours of your scan session, after human review.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          <span>Can I Reschedule?</span>
+          <svg class="faq-chevron" viewBox="0 0 20 20" fill="none"><path d="M5 7.5l5 5 5-5" stroke="#4A5D73" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Yes. You can reschedule through Calendly up to 24 hours before your session.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          <span>Is There A Refund?</span>
+          <svg class="faq-chevron" viewBox="0 0 20 20" fill="none"><path d="M5 7.5l5 5 5-5" stroke="#4A5D73" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">If you're not satisfied after the session, reach out within 7 days and we'll make it right.</div>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          <span>What Happens After The Plan?</span>
+          <svg class="faq-chevron" viewBox="0 0 20 20" fill="none"><path d="M5 7.5l5 5 5-5" stroke="#4A5D73" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">You implement the plan on your own terms. If you want ongoing support, we'll share options after delivery — but there's zero pressure.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="cta-block fade-in">
+      <a href="#book" class="btn btn-primary">Book the Growth Gap Scan</a>
+      <p class="subtext">No logins. No customer lists. Ranges are fine.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Footer ═══════════════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="container footer-inner">
+    <div class="footer-email">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M1 5l7 4 7-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <span>info@mindthegaps.biz</span>
+    </div>
+    <div>Cookies for analytics only: GA4/GTM. Privacy.</div>
+    <div>
+      <span>Copyright &copy; MindtheGaps 2024. All Rights Reserved.</span>
+      <span style="margin-left:16px" class="footer-links">
+        <a href="#">Privacy Policy</a> <span>|</span> <a href="#">Terms &amp; Conditions</a>
+      </span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// FAQ toggle
+function toggleFaq(btn){
+  const item=btn.closest('.faq-item');
+  const wasOpen=item.classList.contains('open');
+  // Close all in same grid
+  item.parentElement.querySelectorAll('.faq-item').forEach(i=>i.classList.remove('open'));
+  if(!wasOpen) item.classList.add('open');
+}
+
+// Scroll-triggered fade-in
+const observer=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');observer.unobserve(e.target)}})
+},{threshold:0.15});
+document.querySelectorAll('.fade-in').forEach(el=>observer.observe(el));
+</script>
+</body>
+</html>
