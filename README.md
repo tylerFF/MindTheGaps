@@ -11,6 +11,7 @@ Tyler and Jesse working for Marc on MindTheGaps, where we can house all the file
 | Phase 0: Setup + Schema | **Done** | Directory structure, shared constants |
 | Phase 1: Quiz Build | **Done** | All 5 tasks complete, 107 tests passing |
 | UX Polish | **Done** | One-question-per-page quiz, progress bar, spec-exact copy, results page updates |
+| Landing + Scan Pages | **Done** | Static marketing pages built from Figma designs, responsive, brand colors applied |
 | Phase 2: Payment + Booking | **Done** | Stripe webhook (16 tests), Calendly webhook (19 tests) |
 | Phase 3: Scan Worksheet | **Partial** | Backend complete (scan webhook + all processing), JotForm form needs Marc's account |
 | Phase 4: Plan Generation | **Done** | Stop rules, confidence, plan generator, DOCX builder, storage, notifications (168 tests) |
@@ -137,6 +138,24 @@ Static results page (Cloudflare Pages). Reads base64-encoded results from URL ha
 - Not-eligible prospects see fix-first reason + actionable advice + re-check eligibility link
 - Mobile-responsive, no external dependencies, pillar-specific color themes
 
+### `pages/landing/index.html`
+Marketing landing page for the free Growth Gap Quiz. Built from Figma design.
+- Hero section with quiz card mockup and CTA
+- "How It Works" 3-step process with dashed connector arrows
+- "What We Do Not Ask For" trust section — 5 icon cards on light pink grid background (dark burgundy rounded-square icons)
+- "Who This Is (and Isn't) For" — two-column fit/not-fit cards
+- FAQ accordion (6 questions)
+- Responsive, self-contained (no external dependencies beyond Google Fonts)
+
+### `pages/scan/index.html`
+Scan booking page for the $295 CAD Growth Gap Scan. Built from Figma design.
+- Hero section with pricing, plan document mockup, and booking CTA
+- "What We Do Not Ask For" trust section (shared design with landing page)
+- "Our 3-Step Growth Gap Scan Process" — numbered steps with illustrations
+- "Simple Pricing. Clear Next Steps." — split layout with red pricing card
+- FAQ accordion (8 questions, 2-column layout)
+- Responsive, self-contained
+
 ### `workers/mtg-scan-webhook/src/stopRules.js`
 Stop rules engine. Pure function, checks scan worksheet data against 3 stop conditions.
 - `checkStopRules(scanData)` — takes processed scan data, returns `{ stopped, reasons[], details[] }`
@@ -260,6 +279,11 @@ npm run dev     # Start at http://localhost:3000
 - **Results page:** http://localhost:3000/results/ — displays after quiz submit
 - Runs the production scoring pipeline locally (scoring → results → eligibility)
 - Profile fields + scoring output logged to console on each submission
+
+To preview the static marketing pages separately:
+```bash
+npx serve pages    # Then visit /landing/ and /scan/
+```
 
 ---
 
