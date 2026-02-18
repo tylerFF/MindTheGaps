@@ -1,271 +1,376 @@
 # MindTheGaps MVP
 
-Tyler and Jesse working for Marc on MindTheGaps, where we can house all the files and seamlessly work together!
+Consulting automation system for Marc (marc@mindthegaps.biz). Automates the full pipeline from quiz intake through plan delivery.
+
+**Customer flow:** Quiz → Results Page → Stripe Payment → Calendly Booking → Scan Worksheet → One-Page Plan (DOCX)
 
 ---
 
-## Build Status
+## Current Status (Feb 18, 2026)
 
-| Phase | Status | Notes |
-|-------|--------|-------|
-| Phase 0: Setup + Schema | **Done** | Directory structure, shared constants |
-| Phase 1: Quiz Build | **Done** | All 5 tasks complete, 107 tests passing |
-| UX Polish | **Done** | One-question-per-page quiz, progress bar, spec-exact copy, results page updates |
-| Landing + Scan Pages | **Done** | Static marketing pages built from Figma designs, responsive, brand colors applied |
-| Phase 2: Payment + Booking | **Done** | Stripe webhook (16 tests), Calendly webhook (19 tests) |
-| Phase 3: Scan Worksheet | **Partial** | Backend complete (scan webhook + all processing), JotForm form needs Marc's account |
-| Phase 4: Plan Generation | **Done** | Stop rules, confidence, plan generator, DOCX builder, storage, notifications (168 tests) |
-| Phase 5: QA + Handoff | **Blocked** | Needs credentials for end-to-end testing |
+| Component | Status | Details |
+|-----------|--------|---------|
+| Quiz + Scoring Engine | **Deployed** | 13-question quiz, scoring, results, eligibility |
+| Results Page | **Deployed** | Gap diagnosis, score, CTA with Stripe link |
+| Stripe Payment Webhook | **Deployed** | Receives checkout.session.completed, updates HubSpot |
+| Calendly Booking Webhook | **Deployed** | Receives invitee.created, updates HubSpot |
+| Scan Worksheet Processing | **Deployed** | Stop rules, confidence, plan generation, DOCX builder |
+| HubSpot Integration | **Deployed** | 54 custom `mtg_` properties created and populated |
+| R2 Storage | **Deployed** | `mtg-plan-drafts` bucket for DOCX plans |
+| Email Notifications | **Partial** | Code complete, Resend API key not yet configured |
 
-**Total: 387 tests passing, 0 failing**
-
----
-
-## Phase 1 — Quiz Build (Complete)
-
-| # | Task | Status | File(s) | Tests |
-|---|------|--------|---------|-------|
-| 1 | Scoring engine | **Done** | `workers/mtg-quiz-webhook/src/scoring.js` | 51 tests |
-| 2 | Results content generator | **Done** | `workers/mtg-quiz-webhook/src/results.js` | 25 tests |
-| 3 | Eligibility check | **Done** | `workers/mtg-quiz-webhook/src/eligibility.js` | 31 tests |
-| 4 | Webhook handler (index.js) | **Done** | `workers/mtg-quiz-webhook/src/index.js` | — |
-| 5 | Results page (static HTML) | **Done** | `pages/results/index.html` | — |
-
-**Phase 1 tests: 107 passing (0 failing)**
+**390 tests passing, 0 failing**
 
 ---
 
-## Phase 4 — Plan Generation (Complete)
+## Quick Start: How to Test Everything
 
-| # | Task | Status | File(s) | Tests |
-|---|------|--------|---------|-------|
-| 1 | Stop rules engine | **Done** | `workers/mtg-scan-webhook/src/stopRules.js` | 76 tests |
-| 2 | Confidence calculator | **Done** | `workers/mtg-scan-webhook/src/confidence.js` | 36 tests |
-| 3 | DOCX builder | **Done** | `workers/mtg-scan-webhook/src/docxBuilder.js` | 51 tests |
-| 4 | Plan generator (Claude API prompt) | **Done** | `workers/mtg-scan-webhook/src/planGenerator.js` | 44 tests |
-| 5 | R2 storage | **Done** | `workers/mtg-scan-webhook/src/storage.js` | 5 tests |
-| 6 | Email notifications | **Done** | `workers/mtg-scan-webhook/src/notifications.js` | 10 tests |
-| 7 | Scan webhook handler | **Done** | `workers/mtg-scan-webhook/src/index.js` | 23 tests |
+### Option 1: Local Test (no external services, fastest)
 
-**Phase 4 tests: 245 passing (0 failing)**
+This runs the quiz + scoring + results locally on your machine. No HubSpot, no Stripe, no internet needed.
 
----
+```bash
+# 1. Open a terminal in the project folder
+cd "C:\Users\vwill\Documents\Tyler Project\Project 1\MindTheGapsCodebase\MindTheGaps"
 
-## Phase 2 — Payment + Booking (Complete)
+# 2. Start the dev server
+npm run dev
+```
 
-| # | Task | Status | File(s) | Tests |
-|---|------|--------|---------|-------|
-| 1 | Stripe webhook handler | **Done** | `workers/mtg-stripe-webhook/src/index.js` | 16 tests |
-| 2 | Calendly webhook handler | **Done** | `workers/mtg-calendly-webhook/src/index.js` | 19 tests |
+Then open this in your browser: **http://localhost:3000**
 
-**Phase 2 tests: 35 passing (0 failing)**
+Fill out the quiz, click "See My Results", and you'll see the results page. The terminal will log the scoring output. This does NOT write to HubSpot or charge anything.
 
----
+### Option 2: Full Production Test (deployed workers, writes to HubSpot)
 
-## What's Been Built
+This tests the real deployed system. Your quiz answers hit the Cloudflare Worker, get scored, written to HubSpot, and you see the real results page.
 
-### `workers/shared/constants.js`
-Single source of truth for the entire project. Contains:
-- Pillar enums (Acquisition, Conversion, Retention)
-- All 13 scoring rules with point values and answer text
-- C3 special routing table (MIXED question)
-- Tie-break signal definitions and V1 answer mapping
-- HubSpot field name prefixes
-- Scan worksheet Tier-1 baseline field keys per pillar (Conv=7, Acq=7, Ret=6)
-- Sub-path options per pillar
-- Scan thresholds (required actions=6, baseline answers=5, metrics=2)
+**Step 1 — Take the quiz:** Open this link in your browser:
 
-### `workers/shared/validation.js`
-Shared validation utilities used by webhook handlers:
-- Email validation (format check) and normalization (trim + lowercase)
-- Required field presence checks
-- JotForm answer extraction with field mapping
-- String sanitization (control chars, whitespace)
+```
+https://mtg-pages-3yo.pages.dev/quiz/
+```
 
-### `workers/shared/hubspot.js`
-HubSpot Contacts v3 API client. Plug-and-play — pass `env.HUBSPOT_API_KEY` at runtime.
-- `createHubSpotClient(apiKey)` factory returns `{ upsertContact, getContactByEmail, updateContact }`
-- Deduplicates by email (search → create or update, never duplicate)
-- Contact-only — no Deals pipeline (per spec)
+Fill it out with a test email you can look up in HubSpot later (e.g. `testuser@example.com`). Click "See My Results". You should be redirected to the results page with your diagnosis.
 
-### `workers/mtg-quiz-webhook/src/scoring.js`
-Complete quiz scoring engine. Pure functions, zero side effects.
-- `scoreQuiz(answers)` — takes `{ questionId: answerText }`, returns pillar totals, primary gap, baseline score (0-100), tie-break info, C3 route, max-possible per pillar
-- Handles all C3 routing (5 answer variants route to different pillars)
-- Implements full 4-level tie-break cascade: Conv signals → Acq signals (needs BOTH) → Ret signals (needs BOTH) → V1 answer → alphabetical fallback
-- Baseline formula: `ROUND(100 * gap_total / max_possible, 0)`
+**Step 2 — Check HubSpot:** Log into HubSpot, search for the email you used. You should see all `mtg_` properties populated (quiz score, primary gap, eligibility, etc.).
 
-### `workers/mtg-quiz-webhook/src/results.js`
-Results content generator. Takes scoring output + raw answers, returns all display text.
-- Sub-diagnosis selection (priority by highest contributing score, then definition order)
-- Key signal picking (top 1-2 answers that scored +2)
-- "Based on your answers: ..." line formatting
-- Cost-of-leak text and advice per gap
-- Fastest-next-step bullet templates per gap
-- Primary gap statement templates
+**Step 3 — Test Stripe payment (optional):** On the results page, click the "Book the 45-Minute Growth Gap Scan" button. Use this test credit card:
 
-### `workers/mtg-quiz-webhook/src/eligibility.js`
-Scan eligibility check. Pure function, determines if prospect qualifies for the $295 CAD paid scan.
-- 3 automated checks from quiz data: basic numbers available, active demand/client base, offer clarity
-- Returns `{ eligible, fixFirstReason, fixFirstAdvice, allReasons }`
-- "Decision-maker will attend" assumed true for MVP (can't infer from quiz answers)
-- Configurable thresholds (NOT_SURE_THRESHOLD = 5, CLARITY_NOT_SURE_THRESHOLD = 8)
+```
+Card number:  4242 4242 4242 4242
+Expiry:       Any future date (e.g. 12/30)
+CVC:          Any 3 digits (e.g. 123)
+Name/address: Anything
+```
 
-### `workers/mtg-quiz-webhook/src/index.js`
-Webhook handler — the main Cloudflare Worker entry point. Wires everything together:
-1. Parses JotForm webhook payload (form-encoded or JSON, handles rawRequest)
-2. Extracts contact info + quiz answers via configurable field map
-3. Validates email
-4. Runs scoring → results → eligibility pipeline
-5. Builds HubSpot properties (all `mtg_*` fields) and upserts contact
-6. Returns full results JSON + `resultsUrl` (base64-encoded data for results page)
+After payment, check HubSpot again — `mtg_payment_status` should be "Paid".
 
-### `pages/quiz/index.html`
-Full quiz form with one-question-per-page UX (card layout). Spec-ready for Cloudflare Pages deployment.
-- **15 steps:** intro screen, V1-V5, profile block (P1-P6), A1, C1-C4, R1-R3
-- Radio buttons for all diagnostic questions (large tappable targets, all options visible)
-- Progress bar at top fills as user advances
-- Back/Next navigation with Next disabled until answer selected
-- Profile block captures: name, email, business, industry, location, team size, website (optional), phone (optional)
-- All question text and options are spec-exact (from Quiz Spec v2.1E)
-- Mobile-responsive, Enter key advances to next question
-- Traditional form POST on submit (feeds into the same scoring pipeline)
+**Step 4 — Test Calendly booking (optional):** Book a test appointment on Marc's Calendly. After booking, check HubSpot — `mtg_scan_booked` should be "true".
 
-### `pages/results/index.html`
-Static results page (Cloudflare Pages). Reads base64-encoded results from URL hash fragment.
-- Displays: primary gap statement, score badge, sub-diagnosis, key signals, cost-of-leak, fastest next steps
-- Eligible prospects see spec-exact CTA: "Book the 45-Minute Growth Gap Scan — CAD $295"
-- Not-eligible prospects see fix-first reason + actionable advice + re-check eligibility link
-- Mobile-responsive, no external dependencies, pillar-specific color themes
+### Option 3: Run the Automated Tests
 
-### `pages/landing/index.html`
-Marketing landing page for the free Growth Gap Quiz. Built from Figma design.
-- Hero section with quiz card mockup and CTA
-- "How It Works" 3-step process with dashed connector arrows
-- "What We Do Not Ask For" trust section — 5 icon cards on light pink grid background (dark burgundy rounded-square icons)
-- "Who This Is (and Isn't) For" — two-column fit/not-fit cards
-- FAQ accordion (6 questions)
-- Responsive, self-contained (no external dependencies beyond Google Fonts)
+```bash
+# Run ALL 390 tests
+npm test
 
-### `pages/scan/index.html`
-Scan booking page for the $295 CAD Growth Gap Scan. Built from Figma design.
-- Hero section with pricing, plan document mockup, and booking CTA
-- "What We Do Not Ask For" trust section (shared design with landing page)
-- "Our 3-Step Growth Gap Scan Process" — numbered steps with illustrations
-- "Simple Pricing. Clear Next Steps." — split layout with red pricing card
-- FAQ accordion (8 questions, 2-column layout)
-- Responsive, self-contained
+# Or run tests for a specific module:
+npm run test:scoring         # Quiz scoring engine (51 tests)
+npm run test:results         # Results content generator (25 tests)
+npm run test:eligibility     # Eligibility check (31 tests)
+npm run test:stoprules       # Stop rules engine (76 tests)
+npm run test:confidence      # Confidence calculator (36 tests)
+npm run test:docxbuilder     # DOCX builder (51 tests)
+npm run test:plangenerator   # Plan generator (44 tests)
+npm run test:notifications   # Storage + notifications (15 tests)
+npm run test:scanwebhook     # Scan webhook handler (23 tests)
+npm run test:stripewebhook   # Stripe webhook handler (16 tests)
+npm run test:calendlywebhook # Calendly webhook handler (19 tests)
+```
 
-### `workers/mtg-scan-webhook/src/stopRules.js`
-Stop rules engine. Pure function, checks scan worksheet data against 3 stop conditions.
-- `checkStopRules(scanData)` — takes processed scan data, returns `{ stopped, reasons[], details[] }`
-- Rule 1: Sub-path = "Not sure" or "Other (manual)" → halt
-- Rule 2: Primary gap changed from quiz without explanation → halt
-- Rule 3: Missing required fields (primary gap + sub-path + lever + ≥5 baseline + 6 actions + ≥2 metrics)
-- Collects ALL stop reasons at once (doesn't short-circuit)
-
-### `workers/mtg-scan-webhook/src/confidence.js`
-Confidence calculator. Counts "Not sure"/missing Tier-1 baseline answers per pillar.
-- `calculateConfidence(baselineFields, primaryGap)` → `{ level, notSureCount, totalFields, answeredCount, includeConstraints, includeDataGaps }`
-- High (0-1 "Not sure"): constraints optional
-- Med (2-3): must include ≥1 constraint row
-- Low (≥4): must include constraints + "Data gaps to measure" box
-
-### `workers/mtg-scan-webhook/src/docxBuilder.js`
-One-Page Plan DOCX generator. Takes structured plan content from Claude API and produces a `.docx` file buffer.
-- `buildDocx(planContent, scanData, contactInfo, confidenceResult)` → Buffer
-- 6 section builders: What We Found, Baseline Metrics, One Lever, Action Plan (6 rows), Weekly Scorecard, Risks/Constraints
-- Section F is conditional on confidence level (High=optional, Med=constraints required, Low=constraints + data gaps box)
-- Professional styling: Calibri, 11pt body, 14pt headers, dark blue headings, gray table headers, 1" margins
-- Exports `BASELINE_LABELS` (human-readable names for all 20 baseline field keys)
-
-### `workers/mtg-scan-webhook/src/planGenerator.js`
-Claude API prompt builder + response parser. Constructs the prompt from scan data, calls the API, parses JSON response.
-- `generatePlan(scanData, contactInfo, confidenceResult, env)` → planContent JSON
-- System prompt defines the exact JSON schema contract + content rules (plain language, no jargon, no upsell)
-- User prompt includes: business profile, diagnosis, baseline metrics, actions, scorecard, confidence level
-- `parseResponse()` handles raw JSON, markdown-fenced JSON, validates all 6 sections present
-- `buildSectionBData()` filters baseline to exclude "Not sure" values (shared logic with docxBuilder)
-- API call requires `CLAUDE_API_KEY` — throws without it
-
-### `workers/mtg-scan-webhook/src/storage.js`
-R2 upload wrapper. Uploads DOCX plan buffers to Cloudflare R2.
-- `uploadPlan(env, email, buffer)` → object key string
-- Key format: `plans/{sanitized-email}/{timestamp}.docx`
-- Requires `R2_BUCKET` binding — throws without it
-
-### `workers/mtg-scan-webhook/src/notifications.js`
-Resend email notification sender. Notifies Marc when plans are ready or stopped.
-- `notifyPlanReady(env, { email, businessName, planUrl, confidence })` — "Plan draft ready, review within 24h"
-- `notifyStopRule(env, { email, businessName, stopReasons })` — "Manual plan required"
-- Silently skips when `RESEND_API_KEY` is missing (same pattern as HubSpot)
-
-### `workers/mtg-scan-webhook/src/index.js`
-Scan webhook handler — the main orchestrator for the scan-to-plan pipeline:
-1. Parses JotForm scan worksheet payload
-2. Extracts contact info + scan data (baseline fields, actions, metrics) via configurable field map
-3. Validates email
-4. Runs stop rules — if stopped, writes reason to HubSpot + notifies Marc
-5. Calculates confidence level
-6. Generates plan via Claude API
-7. Builds DOCX from plan content
-8. Uploads DOCX to R2
-9. Writes all results to HubSpot
-10. Notifies Marc with plan link + confidence level
-- All external calls gracefully skip when credentials are missing
-
-### `workers/mtg-stripe-webhook/src/index.js`
-Stripe webhook handler. Receives `checkout.session.completed` events from Stripe.
-- Verifies webhook signature (HMAC-SHA256 via Web Crypto)
-- Extracts: email, amount, currency, payment intent ID
-- Updates HubSpot: `mtg_payment_status=Paid`, amount, currency, payment ID, timestamp
-- Skips signature verification in dev mode (no secret)
-
-### `workers/mtg-calendly-webhook/src/index.js`
-Calendly webhook handler. Receives `invitee.created` events from Calendly.
-- Verifies webhook signature (HMAC-SHA256 via Web Crypto)
-- Extracts: email, name, event URI, scheduled time, cancel/reschedule URLs
-- Updates HubSpot: `mtg_scan_booked=true`, scheduled time, event URI
-- Skips signature verification in dev mode (no secret)
-
-### `tests/testCases.js`
-12 reusable quiz fixtures with a `buildAnswers()` helper (sparse overrides on neutral defaults). Covers:
-- Clear wins for each pillar
-- All tie-break levels (Conv signal, Acq dual signal, Ret dual signal, V1, alphabetical)
-- C3 routing variants (price objections, not right fit)
-- Mixed realistic scenario
-- Partial / missing answers
-
-### `tests/scanTestCases.js`
-Scan worksheet test fixtures with `buildScanData()` and `buildBaselineWithNotSure()` helpers.
-- Default baseline field sets for all 3 pillars (Conv=7, Acq=7, Ret=6)
-- Default actions (6 filled), metrics (3 filled)
-- Sparse override pattern (uses `in` operator to properly handle empty-string overrides)
+Requires Node 18+ (uses built-in `node:test` runner). Only external dependency: `docx`.
 
 ---
 
-## What's Left — Credential-Dependent Work Only
+## Architecture
 
-All pure-logic code is complete. The remaining work requires Marc's accounts/credentials:
+```
+                    ┌──────────────────┐
+                    │  Quiz Page       │  Cloudflare Pages
+                    │  (pages/quiz/)   │  https://mtg-pages-3yo.pages.dev/quiz/
+                    └────────┬─────────┘
+                             │ POST (JSON)
+                             ▼
+                    ┌──────────────────┐
+                    │  Quiz Webhook    │  Cloudflare Worker
+                    │  Scores quiz,    │  https://mtg-quiz-webhook.mindthegaps-biz-account.workers.dev
+                    │  writes HubSpot, │
+                    │  returns results │
+                    └────────┬─────────┘
+                             │ Redirect (base64 in URL hash)
+                             ▼
+                    ┌──────────────────┐
+                    │  Results Page    │  Cloudflare Pages
+                    │  Shows diagnosis │  https://mtg-pages-3yo.pages.dev/results/
+                    │  + Stripe CTA    │
+                    └────────┬─────────┘
+                             │ Customer clicks "Book Scan"
+                             ▼
+                    ┌──────────────────┐
+                    │  Stripe Checkout │  Stripe (TEST mode)
+                    │  $295 CAD        │  https://book.stripe.com/test_bJebJ28Jl30W3yL8Q81sQ01
+                    └────────┬─────────┘
+                             │ checkout.session.completed webhook
+                             ▼
+                    ┌──────────────────┐
+                    │  Stripe Webhook  │  Cloudflare Worker
+                    │  Updates HubSpot │  https://mtg-stripe-webhook.mindthegaps-biz-account.workers.dev
+                    │  payment status  │
+                    └────────┬─────────┘
+                             │ Customer books scan appointment
+                             ▼
+                    ┌──────────────────┐
+                    │  Calendly        │  Calendly
+                    │  Booking page    │
+                    └────────┬─────────┘
+                             │ invitee.created webhook
+                             ▼
+                    ┌──────────────────┐
+                    │  Calendly        │  Cloudflare Worker
+                    │  Webhook         │  https://mtg-calendly-webhook.mindthegaps-biz-account.workers.dev
+                    │  Updates HubSpot │
+                    └────────┬─────────┘
+                             │ Marc conducts scan, fills worksheet
+                             ▼
+                    ┌──────────────────┐
+                    │  Scan Webhook    │  Cloudflare Worker
+                    │  Stop rules →    │  https://mtg-scan-webhook.mindthegaps-biz-account.workers.dev
+                    │  Plan gen →      │
+                    │  DOCX → R2 →     │
+                    │  HubSpot + Email │
+                    └──────────────────┘
+```
 
-### Plug-and-play credential swaps (minutes each):
-| Service | What to do | Time estimate |
-|---------|-----------|---------------|
-| HubSpot | Set `HUBSPOT_API_KEY` env var + create ~20 `mtg_*` properties in UI | ~15 min |
-| JotForm | Update `JOTFORM_FIELD_MAP` / `JOTFORM_SCAN_FIELD_MAP` with real field names | ~30 min |
-| Stripe | Set `STRIPE_WEBHOOK_SECRET` env var | ~2 min |
-| Calendly | Set `CALENDLY_WEBHOOK_SECRET` env var | ~2 min |
-| Claude API | Set `CLAUDE_API_KEY` env var | ~2 min |
-| Resend | Set `RESEND_API_KEY` + `MARC_EMAIL` env vars | ~2 min |
-| R2 | Create `mtg-plan-drafts` bucket + bind in wrangler.toml | ~5 min |
-| Cloudflare | Deploy workers via `wrangler publish` (needs account access) | ~15 min |
+---
 
-### Still needs building (requires Marc's accounts):
-1. **JotForm Quiz form** — Build in Marc's JotForm account, get field names for `JOTFORM_FIELD_MAP`
-2. **JotForm Scan Worksheet form** — Build 7-section form in Marc's account, get field names for `JOTFORM_SCAN_FIELD_MAP`
-3. **HubSpot custom properties** — Create ~20 `mtg_*` contact properties in Marc's HubSpot
-4. **End-to-end integration testing** — Test the full flow with real services connected
-5. **Marc's runbook** — Ops documentation for day-to-day use
+## Deployed Services
+
+| Service | URL / ID |
+|---------|----------|
+| Quiz Page | `https://mtg-pages-3yo.pages.dev/quiz/` |
+| Results Page | `https://mtg-pages-3yo.pages.dev/results/` |
+| Quiz Webhook | `https://mtg-quiz-webhook.mindthegaps-biz-account.workers.dev` |
+| Stripe Webhook | `https://mtg-stripe-webhook.mindthegaps-biz-account.workers.dev` |
+| Calendly Webhook | `https://mtg-calendly-webhook.mindthegaps-biz-account.workers.dev` |
+| Scan Webhook | `https://mtg-scan-webhook.mindthegaps-biz-account.workers.dev` |
+| R2 Bucket | `mtg-plan-drafts` |
+| Cloudflare Account | `29b45c8200ab5ef930e08946b9fad67a` |
+| Stripe Checkout | `https://book.stripe.com/test_bJebJ28Jl30W3yL8Q81sQ01` (TEST mode) |
+
+### Secrets configured on workers
+
+| Worker | Secrets Set |
+|--------|------------|
+| mtg-quiz-webhook | `HUBSPOT_API_KEY`, `RESULTS_PAGE_URL` |
+| mtg-stripe-webhook | `HUBSPOT_API_KEY`, `STRIPE_WEBHOOK_SECRET` |
+| mtg-calendly-webhook | `HUBSPOT_API_KEY` |
+| mtg-scan-webhook | `HUBSPOT_API_KEY` |
+
+### Not yet configured
+
+| Secret | Worker | What it does |
+|--------|--------|-------------|
+| `RESEND_API_KEY` | mtg-scan-webhook | Sends email notifications to Marc when plans are ready |
+| `MARC_EMAIL` | mtg-scan-webhook | Marc's email for notifications (marc@mindthegaps.biz) |
+| `FROM_EMAIL` | mtg-scan-webhook | Sender email address for Resend |
+
+---
+
+## Key Design Decisions
+
+### Plan generation is DETERMINISTIC (no AI)
+
+`planGenerator.js` uses **lookup tables and computed rules** — not Claude or any AI API. This was a deliberate decision (Feb 2026). The plan generator:
+- Maps sub-paths to 30-day targets via lookup tables
+- Computes personalization insights from scan data using rule-based logic
+- Selects action plan templates based on primary gap + sub-path
+- Produces structured JSON that the DOCX builder renders
+
+### HubSpot property naming
+
+All 54 custom properties use the `mtg_` prefix and live in the "mindthegaps" property group:
+- Quiz fields: `mtg_quiz_v1`, `mtg_quiz_completed`, `mtg_primary_gap`, etc.
+- Payment fields: `mtg_payment_status`, `mtg_stripe_payment_id`, `mtg_payment_date`
+- Booking fields: `mtg_scan_booked`, `mtg_scan_scheduled_for`, `mtg_calendly_event_id`
+- Scan fields: `mtg_scan_completed`, `mtg_scan_confidence`, `mtg_scan_primary_gap_confirmed`
+- Plan fields: `mtg_plan_draft_link`, `mtg_plan_status`, `mtg_plan_review_status`
+
+### Dual field name support
+
+The quiz webhook accepts BOTH JotForm-prefixed field names (`q3_quiz_V1`, `q14_quiz_firstName`) and simple names (`V1`, `firstName`). This allows:
+- The custom quiz page (`pages/quiz/`) to submit directly with simple names
+- JotForm webhooks to work with prefixed names if JotForm is used later
+
+### Non-blocking HubSpot writes
+
+All webhook handlers use `ctx.waitUntil()` for HubSpot writes. The customer-facing response returns immediately; HubSpot updates happen in the background. If HubSpot fails, the customer experience is unaffected.
+
+---
+
+## What Changed Since Phase 4 (Feb 7 → Feb 18)
+
+These changes were made by Jesse (Williamsjesse22) working with Claude in the Feb 18 session:
+
+### 1. HubSpot Property Name Alignment
+Fixed 9 property name mismatches between code and PROJECT_CONTEXT.md spec:
+- **Scan webhook**: `mtg_primary_gap_confirmed` → `mtg_scan_primary_gap_confirmed`, `mtg_sub_path` → `mtg_scan_sub_path`, `mtg_one_lever` → `mtg_scan_one_lever`, `mtg_confidence_level` → `mtg_scan_confidence`, `mtg_plan_url` → `mtg_plan_draft_link`
+- **Stripe webhook**: `mtg_payment_id` → `mtg_stripe_payment_id`, `mtg_payment_completed_at` → `mtg_payment_date`
+- **Calendly webhook**: `mtg_scan_scheduled_time` → `mtg_scan_scheduled_for`, `mtg_calendly_event_uri` → `mtg_calendly_event_id`
+- Added 4 new logging fields to scan webhook: `mtg_plan_drafted_at`, `mtg_plan_status`, `mtg_plan_generation_mode`, `mtg_scan_one_lever_sentence`
+
+### 2. Plan Generator Rewrite (Deterministic)
+Rewrote `planGenerator.js` to use lookup tables instead of Claude API. No AI dependency.
+
+### 3. Setup Scripts Created
+- `scripts/setup-hubspot-properties.js` — Creates all 54 `mtg_` HubSpot contact properties via API. Safe to re-run (skips existing).
+- `scripts/setup-calendly-webhook.js` — Creates Calendly webhook subscription via API. Checks for existing subscriptions first.
+
+### 4. Full Deployment
+- Deployed all 4 Cloudflare Workers with secrets configured
+- Created R2 bucket `mtg-plan-drafts` and bound to scan webhook
+- Ran HubSpot setup script (54 properties created)
+- Created Calendly webhook subscription (invitee.created)
+- Added `nodejs_compat` compatibility flag to all workers (required for CJS imports)
+
+### 5. Quiz Page Production Wiring
+- Added `fetch()` submission to quiz page — auto-detects localhost vs production endpoint
+- Added simple field name fallback to quiz webhook (accepts both JotForm and direct names)
+- Updated dev server to return JSON (matches production worker response format)
+- Deployed quiz + results pages to Cloudflare Pages (`mtg-pages-3yo.pages.dev`)
+- Set `RESULTS_PAGE_URL` on quiz worker
+
+### 6. Test Count Update
+All tests updated to match new property names. **390 tests passing** (up from 387).
+
+---
+
+## Project Structure
+
+```
+MindTheGaps/
+├── pages/
+│   ├── quiz/index.html          # Multi-step quiz (15 steps, progress bar)
+│   ├── results/index.html       # Results page (reads base64 from URL hash)
+│   ├── landing/index.html       # Marketing landing page (from Figma)
+│   └── scan/index.html          # Scan booking page (from Figma)
+│
+├── workers/
+│   ├── shared/
+│   │   ├── constants.js         # All enums, scoring rules, thresholds
+│   │   ├── hubspot.js           # HubSpot API client (upsert by email)
+│   │   └── validation.js        # Email, string sanitization utilities
+│   │
+│   ├── mtg-quiz-webhook/
+│   │   ├── src/
+│   │   │   ├── worker.js        # ESM entry point (imports index.js)
+│   │   │   ├── index.js         # Main handler — parse, score, results, HubSpot
+│   │   │   ├── scoring.js       # Quiz scoring engine (pillar totals, tie-breaks)
+│   │   │   ├── results.js       # Results content generator (diagnosis, cost of leak)
+│   │   │   └── eligibility.js   # Scan eligibility check
+│   │   └── wrangler.toml
+│   │
+│   ├── mtg-stripe-webhook/
+│   │   ├── src/
+│   │   │   ├── worker.js        # ESM entry point
+│   │   │   └── index.js         # Stripe signature verify → HubSpot update
+│   │   └── wrangler.toml
+│   │
+│   ├── mtg-calendly-webhook/
+│   │   ├── src/
+│   │   │   ├── worker.js        # ESM entry point
+│   │   │   └── index.js         # Calendly webhook → HubSpot update
+│   │   └── wrangler.toml
+│   │
+│   └── mtg-scan-webhook/
+│       ├── src/
+│       │   ├── worker.js        # ESM entry point
+│       │   ├── index.js         # Main orchestrator — parse → stop rules → plan → DOCX → R2
+│       │   ├── stopRules.js     # 3 stop conditions (sub-path, gap change, missing fields)
+│       │   ├── confidence.js    # Not-sure count → High/Med/Low confidence
+│       │   ├── planGenerator.js # DETERMINISTIC plan generation (lookup tables, no AI)
+│       │   ├── docxBuilder.js   # One-Page Plan DOCX generator
+│       │   ├── storage.js       # R2 upload wrapper
+│       │   └── notifications.js # Resend email to Marc
+│       └── wrangler.toml
+│
+├── scripts/
+│   ├── setup-hubspot-properties.js  # Creates 54 mtg_ properties via HubSpot API
+│   └── setup-calendly-webhook.js    # Creates Calendly webhook subscription
+│
+├── tests/
+│   ├── testCases.js             # 12 quiz fixtures + buildAnswers() helper
+│   ├── scanTestCases.js         # Scan worksheet fixtures + helpers
+│   ├── scoring.test.js          # 51 tests
+│   ├── results.test.js          # 25 tests
+│   ├── eligibility.test.js      # 31 tests
+│   ├── stopRules.test.js        # 76 tests
+│   ├── confidence.test.js       # 36 tests
+│   ├── docxBuilder.test.js      # 51 tests
+│   ├── planGenerator.test.js    # 44 tests
+│   ├── notifications.test.js    # 15 tests (storage + notifications)
+│   ├── scanWebhook.test.js      # 23 tests
+│   ├── stripeWebhook.test.js    # 16 tests
+│   └── calendlyWebhook.test.js  # 19 tests
+│
+├── dev-server.js                # Local dev server (http://localhost:3000)
+├── package.json
+├── CLAUDE.md                    # Architecture guide for AI assistants
+├── PROJECT_CONTEXT.md           # Complete technical spec (scoring matrix, etc.)
+└── README.md                    # This file
+```
+
+---
+
+## How Each Component Works
+
+### Quiz Page → Quiz Webhook → Results Page
+
+1. Customer opens `https://mtg-pages-3yo.pages.dev/quiz/`
+2. Fills out 13 questions + profile info (one question per page, progress bar)
+3. Clicks "See My Results" → JavaScript sends `fetch()` POST to the quiz webhook worker
+4. Worker runs: `parsePayload()` → `extractContactInfo()` → `extractQuizAnswers()` → `scoreQuiz()` → `generateResults()` → `checkEligibility()`
+5. Worker writes all data to HubSpot (non-blocking via `ctx.waitUntil()`)
+6. Worker returns JSON with `resultsUrl` (results data is base64-encoded in the URL hash)
+7. Quiz page JavaScript redirects to the results URL
+8. Results page decodes the hash, renders diagnosis with pillar-specific colors
+
+### Stripe Payment Webhook
+
+1. Customer clicks "Book the 45-Minute Growth Gap Scan — CAD $295" on results page
+2. Stripe handles checkout, sends `checkout.session.completed` event to stripe webhook
+3. Worker verifies HMAC-SHA256 signature, extracts payment data
+4. Updates HubSpot: `mtg_payment_status=Paid`, amount, currency, payment ID, timestamp
+
+### Calendly Booking Webhook
+
+1. Customer books scan appointment on Calendly
+2. Calendly sends `invitee.created` event to calendly webhook
+3. Worker extracts booking data (email, scheduled time, event URI)
+4. Updates HubSpot: `mtg_scan_booked=true`, scheduled time, event ID
+
+### Scan Worksheet → Plan Generation
+
+1. Marc conducts the scan, fills out JotForm scan worksheet (Form ID: `260435948553162`)
+2. JotForm sends webhook to scan webhook worker
+3. Worker extracts scan data (baseline fields, actions, metrics, sub-path, one lever)
+4. **Stop rules check**: Sub-path = "Not sure"/"Other"? Gap changed without reason? Missing required fields?
+   - If stopped → writes stop reason to HubSpot, emails Marc "Manual plan required"
+5. **Confidence calculation**: Counts "Not sure" baseline answers → High/Med/Low
+6. **Plan generation** (deterministic): Lookup tables map sub-path → 30-day targets, compute personalization insights
+7. **DOCX builder**: Generates One-Page Plan with 6 sections (What We Found, Baseline, One Lever, Action Plan, Scorecard, Risks)
+8. **R2 upload**: Stores DOCX at `plans/{email}/{timestamp}.docx`
+9. **HubSpot update**: Plan URL, confidence level, status, timestamps
+10. **Email Marc**: "Plan draft ready for review" (via Resend, when configured)
 
 ---
 
@@ -275,40 +380,98 @@ All pure-logic code is complete. The remaining work requires Marc's accounts/cre
 npm run dev     # Start at http://localhost:3000
 ```
 
-- **Quiz form:** http://localhost:3000/ — full one-question-per-page quiz with progress bar
-- **Results page:** http://localhost:3000/results/ — displays after quiz submit
-- Runs the production scoring pipeline locally (scoring → results → eligibility)
-- Profile fields + scoring output logged to console on each submission
-
-To preview the static marketing pages separately:
-```bash
-npx serve pages    # Then visit /landing/ and /scan/
-```
+- **Quiz form:** http://localhost:3000/ — full quiz UI
+- **Results page:** http://localhost:3000/results/ — renders after submit
+- Runs the same scoring/results/eligibility pipeline as production
+- Returns JSON response (same format as the production Cloudflare Worker)
+- Logs quiz results to console on each submission
+- Does NOT write to HubSpot (local only)
 
 ---
 
 ## Running Tests
 
 ```bash
-npm test                    # Run all tests (387)
-npm run test:scoring        # Scoring engine only (51)
-npm run test:results        # Results generator only (25)
-npm run test:eligibility    # Eligibility check only (31)
-npm run test:stoprules      # Stop rules engine only (76)
-npm run test:confidence     # Confidence calculator only (36)
-npm run test:docxbuilder    # DOCX builder only (51)
-npm run test:plangenerator  # Plan generator only (44)
-npm run test:notifications  # Storage + notifications (15)
-npm run test:scanwebhook    # Scan webhook handler (23)
-npm run test:stripewebhook  # Stripe webhook handler (16)
+npm test                     # Run all 390 tests
+npm run test:scoring         # Scoring engine (51)
+npm run test:results         # Results generator (25)
+npm run test:eligibility     # Eligibility check (31)
+npm run test:stoprules       # Stop rules (76)
+npm run test:confidence      # Confidence calculator (36)
+npm run test:docxbuilder     # DOCX builder (51)
+npm run test:plangenerator   # Plan generator (44)
+npm run test:notifications   # Storage + notifications (15)
+npm run test:scanwebhook     # Scan webhook handler (23)
+npm run test:stripewebhook   # Stripe webhook handler (16)
 npm run test:calendlywebhook # Calendly webhook handler (19)
 ```
 
-Requires Node >= 18 (uses built-in `node:test` runner, zero external dependencies except `docx`).
+Requires Node >= 18 (uses built-in `node:test` runner). Only external dependency: `docx` (for DOCX generation).
+
+---
+
+## Deploying Changes
+
+Each worker deploys independently via Wrangler:
+
+```bash
+cd workers/mtg-quiz-webhook && npx wrangler deploy
+cd workers/mtg-stripe-webhook && npx wrangler deploy
+cd workers/mtg-calendly-webhook && npx wrangler deploy
+cd workers/mtg-scan-webhook && npx wrangler deploy
+```
+
+To redeploy the static pages:
+
+```bash
+npx wrangler pages deploy pages/ --project-name mtg-pages
+```
+
+To set secrets on a worker:
+
+```bash
+cd workers/mtg-quiz-webhook && echo "your-value" | npx wrangler secret put SECRET_NAME
+```
+
+---
+
+## Setup Scripts
+
+### HubSpot Properties
+
+```bash
+HUBSPOT_API_KEY=pat-xxx node scripts/setup-hubspot-properties.js
+```
+
+Creates all 54 `mtg_` contact properties in the "mindthegaps" group. Safe to re-run — skips properties that already exist.
+
+### Calendly Webhook
+
+```bash
+CALENDLY_API_TOKEN=your-token WEBHOOK_URL=https://mtg-calendly-webhook.mindthegaps-biz-account.workers.dev node scripts/setup-calendly-webhook.js
+```
+
+Creates a webhook subscription for `invitee.created` events. Checks for existing subscriptions first.
+
+---
+
+## Remaining Work
+
+### Before going live
+1. **Switch Stripe to live mode** — Replace test payment link with production link, update `STRIPE_WEBHOOK_SECRET`
+2. **Configure Resend** — Set `RESEND_API_KEY`, `MARC_EMAIL`, `FROM_EMAIL` on scan webhook
+3. **JotForm scan webhook URL** — Point JotForm scan worksheet webhook to `https://mtg-scan-webhook.mindthegaps-biz-account.workers.dev`
+4. **End-to-end testing** — Test the full flow from quiz through plan delivery
+
+### Nice-to-haves
+- Tighten CORS from `*` to specific domains
+- Add Calendly webhook signature verification (needs signing key from Calendly API)
+- Marc's operational runbook (day-to-day procedures)
+- Custom domain for Cloudflare Pages (instead of `mtg-pages-3yo.pages.dev`)
 
 ---
 
 ## Key Reference Files
 
-- `CLAUDE.md` — Architecture, repo structure, build order, critical rules
-- `PROJECT_CONTEXT.md` — Complete scoring matrix, HubSpot properties, sub-diagnosis mapping, cost-of-leak templates, scan worksheet field dictionary, stop rules, QA test cases
+- `CLAUDE.md` — Architecture, repo structure, build order, critical rules for AI assistants
+- `PROJECT_CONTEXT.md` — Complete scoring matrix, HubSpot properties, sub-diagnosis mapping, cost-of-leak templates, scan field dictionary, stop rules, QA test cases
