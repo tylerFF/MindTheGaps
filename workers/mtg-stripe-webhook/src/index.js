@@ -78,8 +78,8 @@ function buildHubSpotProperties(paymentData) {
     mtg_payment_status: 'Paid',
     mtg_payment_amount: paymentData.amountPaid,
     mtg_payment_currency: paymentData.currency.toUpperCase(),
-    mtg_payment_id: paymentData.paymentId,
-    mtg_payment_completed_at: new Date().toISOString(),
+    mtg_stripe_payment_id: paymentData.paymentId,
+    mtg_payment_date: new Date().toISOString(),
   };
 }
 

@@ -73,10 +73,10 @@ function buildHubSpotProperties(bookingData) {
   };
 
   if (bookingData.scheduledAt) {
-    props.mtg_scan_scheduled_time = bookingData.scheduledAt;
+    props.mtg_scan_scheduled_for = bookingData.scheduledAt;
   }
   if (bookingData.eventUri) {
-    props.mtg_calendly_event_uri = bookingData.eventUri;
+    props.mtg_calendly_event_id = bookingData.eventUri;
   }
   if (bookingData.name) {
     props.mtg_first_name = bookingData.name;

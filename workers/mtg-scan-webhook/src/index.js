@@ -6,15 +6,15 @@
  *   2. Validates email
  *   3. Runs stop rules — if stopped, notify Marc + write HubSpot + return
  *   4. Calculates confidence
- *   5. Generates plan via Claude API
+ *   5. Generates plan deterministically (no AI)
  *   6. Builds DOCX
  *   7. Uploads to R2
  *   8. Writes everything to HubSpot
  *   9. Notifies Marc
  *
  * Environment bindings (set in wrangler.toml / dashboard):
- *   HUBSPOT_API_KEY, CLAUDE_API_KEY, RESEND_API_KEY,
- *   R2_BUCKET, MARC_EMAIL, FROM_EMAIL, CLAUDE_MODEL
+ *   HUBSPOT_API_KEY, RESEND_API_KEY,
+ *   R2_BUCKET, MARC_EMAIL, FROM_EMAIL
  */
 
 const { checkStopRules } = require('./stopRules');
@@ -32,29 +32,76 @@ const { PILLARS, BASELINE_FIELDS } = require('../../shared/constants');
 // ---------------------------------------------------------------------------
 
 const JOTFORM_SCAN_FIELD_MAP = {
+  // Form ID: 260435948553162 — field names are q{QID}_{name}
   contact: {
-    s_email: 'email',
-    s_first_name: 'firstName',
-    s_business_name: 'businessName',
-    s_industry: 'industry',
-    s_phone: 'phone',
+    q2_contactEmail: 'email',
+    q3_scanFirstName: 'firstName',
+    q4_scanBusinessName: 'businessName',
+    q5_scanIndustry: 'industry',
+    q6_scanPhone: 'phone',
   },
   scan: {
-    s_primary_gap: 'primaryGap',
-    s_quiz_primary_gap: 'quizPrimaryGap',
-    s_gap_change_reason: 'gapChangeReason',
-    s_sub_path: 'subPath',
-    s_one_lever: 'oneLever',
+    q9_primaryGap: 'primaryGap',
+    q7_quizPrimaryGap: 'quizPrimaryGap',
+    q10_gapChangeReason: 'gapChangeReason',
   },
-  // Baseline fields mapped per pillar — s_<field_key>
-  baseline: Object.fromEntries(
-    Object.values(BASELINE_FIELDS)
-      .flat()
-      .map((key) => [`s_${key}`, key]),
-  ),
-  // Actions: s_action_1_desc, s_action_1_owner, s_action_1_due (×6)
-  // Metrics: s_metric_1, s_metric_2, s_metric_3, s_metric_4
-  // Constraints: s_constraint_1, s_constraint_2, s_constraint_3
+  // Sub-path: one per pillar, extracted based on primaryGap
+  subPathByPillar: {
+    Conversion: 'q11_subPathConversion',
+    Acquisition: 'q12_subPathAcquisition',
+    Retention: 'q13_subPathRetention',
+  },
+  // One Lever: one per pillar, extracted based on primaryGap
+  oneLeverByPillar: {
+    Conversion: 'q36_oneLeverConversion',
+    Acquisition: 'q37_oneLeverAcquisition',
+    Retention: 'q38_oneLeverRetention',
+  },
+  oneLeverSentence: 'q39_oneLeverSentence',
+  // Baseline fields per pillar
+  baseline: {
+    q15_convInboundLeads: 'conv_inbound_leads',
+    q16_convFirstResponseTime: 'conv_first_response_time',
+    q17_convLeadToBooked: 'conv_lead_to_booked',
+    q18_convBookedToShow: 'conv_booked_to_show',
+    q19_convTimeToFirstAppt: 'conv_time_to_first_appointment',
+    q20_convQuoteSentTimeline: 'conv_quote_sent_timeline',
+    q21_convQuoteToClose: 'conv_quote_to_close',
+    q22_acqInboundLeads: 'acq_inbound_leads',
+    q23_acqTopSourceDep: 'acq_top_source_dependence',
+    q24_acqPctFromTopSource: 'acq_pct_from_top_source',
+    q25_acqCallsAnsweredLive: 'acq_calls_answered_live',
+    q26_acqWebsiteCaptureFriction: 'acq_website_capture_friction',
+    q27_acqReviewsPerMonth: 'acq_reviews_per_month',
+    q28_acqReferralIntrosPerMonth: 'acq_referral_intros_per_month',
+    q29_retPctRevenueRepeat: 'ret_pct_revenue_repeat',
+    q30_retPctRevenueReferrals: 'ret_pct_revenue_referrals',
+    q31_retRebookScheduling: 'ret_rebook_scheduling',
+    q32_retReviewsPerMonth: 'ret_reviews_per_month',
+    q33_retFollowUpTime: 'ret_follow_up_time',
+    q34_retCheckInRhythm: 'ret_check_in_rhythm',
+  },
+  // Actions: q{QID}_{name} for each of 6 slots
+  actions: {
+    1: { desc: 'q41_action1Desc', owner: 'q42_action1Owner', due: 'q43_action1Due' },
+    2: { desc: 'q44_action2Desc', owner: 'q45_action2Owner', due: 'q46_action2Due' },
+    3: { desc: 'q47_action3Desc', owner: 'q48_action3Owner', due: 'q49_action3Due' },
+    4: { desc: 'q50_action4Desc', owner: 'q51_action4Owner', due: 'q52_action4Due' },
+    5: { desc: 'q53_action5Desc', owner: 'q54_action5Owner', due: 'q55_action5Due' },
+    6: { desc: 'q56_action6Desc', owner: 'q57_action6Owner', due: 'q58_action6Due' },
+  },
+  // Metrics: one checkbox field per pillar
+  metricsByPillar: {
+    Conversion: 'q60_metricsConversion',
+    Acquisition: 'q61_metricsAcquisition',
+    Retention: 'q62_metricsRetention',
+  },
+  // Constraints
+  constraints: {
+    1: 'q64_constraint1',
+    2: 'q65_constraint2',
+    3: 'q66_constraint3',
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -146,8 +193,15 @@ function extractScanData(payload) {
   scan.primaryGap = scan.primaryGap || '';
   scan.quizPrimaryGap = scan.quizPrimaryGap || scan.primaryGap;
   scan.gapChangeReason = scan.gapChangeReason || '';
-  scan.subPath = scan.subPath || '';
-  scan.oneLever = scan.oneLever || '';
+
+  // Sub-path: pick the field matching the confirmed primary gap
+  const subPathField = JOTFORM_SCAN_FIELD_MAP.subPathByPillar[scan.primaryGap];
+  scan.subPath = subPathField ? String(payload[subPathField] || '').trim() : '';
+
+  // One lever: pick the field matching the confirmed primary gap
+  const oneLeverField = JOTFORM_SCAN_FIELD_MAP.oneLeverByPillar[scan.primaryGap];
+  scan.oneLever = oneLeverField ? String(payload[oneLeverField] || '').trim() : '';
+  scan.oneLeverSentence = String(payload[JOTFORM_SCAN_FIELD_MAP.oneLeverSentence] || '').trim();
 
   // Baseline fields
   scan.baselineFields = {};
@@ -161,19 +215,33 @@ function extractScanData(payload) {
   // Actions (6 slots)
   scan.actions = [];
   for (let i = 1; i <= 6; i++) {
+    const actionMap = JOTFORM_SCAN_FIELD_MAP.actions[i];
     scan.actions.push({
-      description: String(payload[`s_action_${i}_desc`] || '').trim(),
-      owner: String(payload[`s_action_${i}_owner`] || '').trim(),
-      dueDate: String(payload[`s_action_${i}_due`] || '').trim(),
+      description: String(payload[actionMap.desc] || '').trim(),
+      owner: String(payload[actionMap.owner] || '').trim(),
+      dueDate: String(payload[actionMap.due] || '').trim(),
     });
   }
 
-  // Metrics (up to 4)
+  // Metrics: pick the checkbox field matching the confirmed primary gap
   scan.metrics = [];
-  for (let i = 1; i <= 4; i++) {
-    const value = payload[`s_metric_${i}`];
+  const metricsField = JOTFORM_SCAN_FIELD_MAP.metricsByPillar[scan.primaryGap];
+  if (metricsField) {
+    const metricsValue = payload[metricsField];
+    if (metricsValue) {
+      // JotForm checkboxes send as newline-separated or comma-separated string
+      const parts = String(metricsValue).split(/[\n,]+/).map((s) => s.trim()).filter(Boolean);
+      scan.metrics = parts;
+    }
+  }
+
+  // Constraints
+  scan.constraints = [];
+  for (let i = 1; i <= 3; i++) {
+    const field = JOTFORM_SCAN_FIELD_MAP.constraints[i];
+    const value = payload[field];
     if (value && String(value).trim()) {
-      scan.metrics.push(String(value).trim());
+      scan.constraints.push(String(value).trim());
     }
   }
 
@@ -190,26 +258,33 @@ function buildHubSpotProperties(scanData, confidenceResult, planUrl, stopResult)
   // Scan metadata
   props.mtg_scan_completed = 'true';
   props.mtg_scan_completed_at = new Date().toISOString();
-  props.mtg_primary_gap_confirmed = scanData.primaryGap;
-  props.mtg_sub_path = scanData.subPath;
-  props.mtg_one_lever = scanData.oneLever;
+  props.mtg_scan_primary_gap_confirmed = scanData.primaryGap;
+  props.mtg_scan_sub_path = scanData.subPath;
+  props.mtg_scan_one_lever = scanData.oneLever;
+  if (scanData.oneLeverSentence) {
+    props.mtg_scan_one_lever_sentence = scanData.oneLeverSentence;
+  }
 
   if (stopResult && stopResult.stopped) {
     props.mtg_scan_stop_reason = stopResult.reasons.join(' | ');
     props.mtg_plan_review_status = 'Manual Required';
+    props.mtg_plan_generation_mode = 'Stopped';
     return props;
   }
 
   // Confidence
   if (confidenceResult) {
-    props.mtg_confidence_level = confidenceResult.level;
+    props.mtg_scan_confidence = confidenceResult.level;
     props.mtg_confidence_not_sure_count = String(confidenceResult.notSureCount);
   }
 
   // Plan
   if (planUrl) {
-    props.mtg_plan_url = planUrl;
-    props.mtg_plan_review_status = 'Pending Review';
+    props.mtg_plan_draft_link = planUrl;
+    props.mtg_plan_review_status = 'Pending';
+    props.mtg_plan_drafted_at = new Date().toISOString();
+    props.mtg_plan_status = 'Draft';
+    props.mtg_plan_generation_mode = 'Auto';
   }
 
   return props;
@@ -295,21 +370,15 @@ async function handleScanWebhook(request, env, ctx) {
     // 5. Calculate confidence
     const confidenceResult = calculateConfidence(scanData.baselineFields, scanData.primaryGap);
 
-    // 6. Generate plan (needs CLAUDE_API_KEY)
-    let planContent = null;
-    if (env.CLAUDE_API_KEY) {
-      planContent = await generatePlan(scanData, contactInfo, confidenceResult, env);
-    }
+    // 6. Generate plan (deterministic — no AI)
+    const planContent = generatePlan(scanData, contactInfo, confidenceResult);
 
-    // 7. Build DOCX (skip if no planContent)
-    let docxBuffer = null;
-    if (planContent) {
-      docxBuffer = await buildDocx(planContent, scanData, contactInfo, confidenceResult);
-    }
+    // 7. Build DOCX
+    const docxBuffer = await buildDocx(planContent, scanData, contactInfo, confidenceResult);
 
-    // 8. Upload to R2 (skip if no buffer or no bucket)
+    // 8. Upload to R2 (skip if no bucket configured)
     let planUrl = null;
-    if (docxBuffer && env.R2_BUCKET) {
+    if (env.R2_BUCKET) {
       const key = await uploadPlan(env, email, docxBuffer);
       planUrl = `${env.R2_PUBLIC_URL || '/r2'}/${key}`;
     }

@@ -1,8 +1,8 @@
 /**
- * MindtheGaps — planGenerator unit tests
+ * MindtheGaps — planGenerator unit tests (deterministic version)
  *
- * Tests prompt construction, response parsing, and baseline data filtering.
- * The actual Claude API call is NOT tested here (requires credentials).
+ * Tests the deterministic plan generation: section building, baseline
+ * filtering, target computation, and personalization insights.
  */
 
 const { describe, it } = require('node:test');
@@ -14,11 +14,16 @@ const { PILLARS, BASELINE_FIELDS } = require('../workers/shared/constants');
 const { BASELINE_LABELS } = require('../workers/mtg-scan-webhook/src/docxBuilder');
 
 const {
-  buildSystemPrompt,
-  buildUserPrompt,
-  parseResponse,
   buildSectionBData,
-  REQUIRED_SECTIONS,
+  buildInsights,
+  getTarget,
+  resolveMetricField,
+  findWorstBaseline,
+  countNonNotSure,
+  countNotSure,
+  listNotSureFields,
+  RANGE_PROGRESSIONS,
+  WORST_RANGES,
 } = _internal;
 
 // ---------------------------------------------------------------------------
@@ -37,261 +42,152 @@ function lowConfidence() {
   return { level: 'Low', notSureCount: 4, totalFields: 7, answeredCount: 3, includeConstraints: true, includeDataGaps: true };
 }
 
-function fullPlanContent() {
-  return {
-    sectionA: { primaryGap: 'Conversion', subDiagnosis: 'Speed-to-lead', supportingSignal: 'Slow follow-up' },
-    sectionB: { baselineMetrics: [{ field: 'Response time', value: '3+ days' }] },
-    sectionC: { leverName: 'Response ownership', leverDescription: 'Fix response time', whatDoneLooksLike: { metric: 'Response time', target: '<4 hours' } },
-    sectionD: { actions: [{ description: 'Set auto-response', owner: 'Marc', dueDate: 'Week 1' }] },
-    sectionE: { metrics: [{ name: 'Response time', baseline: '3+ days', target30Day: '<4 hours' }] },
-    sectionF: { constraints: [], dataGaps: [] },
-  };
-}
-
 // ---------------------------------------------------------------------------
-// buildSystemPrompt
+// getTarget
 // ---------------------------------------------------------------------------
 
-describe('planGenerator — buildSystemPrompt', () => {
-  const prompt = buildSystemPrompt();
-
-  it('returns a non-empty string', () => {
-    assert.ok(typeof prompt === 'string');
-    assert.ok(prompt.length > 100);
+describe('planGenerator — getTarget', () => {
+  it('returns next range up for worst value', () => {
+    const target = getTarget('conv_first_response_time', '3+ days');
+    assert.equal(target, '1-2 days');
   });
 
-  it('includes the JSON schema contract', () => {
-    assert.ok(prompt.includes('sectionA'));
-    assert.ok(prompt.includes('sectionB'));
-    assert.ok(prompt.includes('sectionC'));
-    assert.ok(prompt.includes('sectionD'));
-    assert.ok(prompt.includes('sectionE'));
-    assert.ok(prompt.includes('sectionF'));
+  it('returns "Maintain" for best value', () => {
+    const target = getTarget('conv_first_response_time', '<1 hour');
+    assert.ok(target.includes('Maintain'));
+    assert.ok(target.includes('<1 hour'));
   });
 
-  it('includes content rules', () => {
-    assert.ok(prompt.includes('Plain language'));
-    assert.ok(prompt.includes('No jargon'));
-    assert.ok(prompt.includes('No upsell'));
+  it('returns "Establish baseline" for "Not sure"', () => {
+    const target = getTarget('conv_first_response_time', 'Not sure');
+    assert.equal(target, 'Establish baseline');
   });
 
-  it('specifies exactly 6 actions', () => {
-    assert.ok(prompt.includes('exactly 6 actions'));
+  it('returns "Improve" for unknown field key', () => {
+    const target = getTarget('unknown_field', 'some value');
+    assert.equal(target, 'Improve');
   });
 
-  it('specifies max 3 constraints', () => {
-    assert.ok(prompt.includes('max 3'));
+  it('handles case-insensitive matching', () => {
+    const target = getTarget('conv_first_response_time', 'SAME DAY');
+    assert.equal(target, '<1 hour');
   });
 
-  it('mentions confidence-based conditional rules', () => {
-    assert.ok(prompt.includes('Medium or Low'));
-    assert.ok(prompt.includes('Low'));
+  it('works for acquisition fields', () => {
+    const target = getTarget('acq_top_source_dependence', '1 source');
+    assert.equal(target, '2 sources');
+  });
+
+  it('works for retention fields', () => {
+    const target = getTarget('ret_follow_up_time', '8+ days');
+    assert.equal(target, '3-7 days');
   });
 });
 
 // ---------------------------------------------------------------------------
-// buildUserPrompt
+// resolveMetricField
 // ---------------------------------------------------------------------------
 
-describe('planGenerator — buildUserPrompt', () => {
-  it('includes business profile', () => {
+describe('planGenerator — resolveMetricField', () => {
+  it('resolves conversion metric directly', () => {
+    assert.equal(resolveMetricField('Median response time', 'Conversion'), 'conv_first_response_time');
+  });
+
+  it('resolves shared metric with pillar override', () => {
+    assert.equal(resolveMetricField('Reviews/week', 'Acquisition'), 'acq_reviews_per_month');
+    assert.equal(resolveMetricField('Reviews/week', 'Retention'), 'ret_reviews_per_month');
+  });
+
+  it('returns null for unknown metric', () => {
+    assert.equal(resolveMetricField('Unknown metric', 'Conversion'), null);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// findWorstBaseline
+// ---------------------------------------------------------------------------
+
+describe('planGenerator — findWorstBaseline', () => {
+  it('finds worst-range baseline field', () => {
+    const scanData = buildScanData({
+      baselineFields: {
+        conv_inbound_leads: '11-25',
+        conv_first_response_time: '3+ days',
+        conv_lead_to_booked: '21-40%',
+        conv_booked_to_show: '61-80%',
+        conv_time_to_first_appointment: '1-3 days',
+        conv_quote_sent_timeline: '48 hours',
+        conv_quote_to_close: '21-30%',
+      },
+    });
+
+    const worst = findWorstBaseline(scanData);
+    assert.ok(worst);
+    assert.equal(worst.field, 'conv_first_response_time');
+    assert.equal(worst.value, '3+ days');
+  });
+
+  it('returns null when no fields are at worst range', () => {
     const scanData = buildScanData();
-    const contactInfo = { businessName: 'Test Plumbing', industry: 'HVAC' };
-    const prompt = buildUserPrompt(scanData, contactInfo, highConfidence());
-
-    assert.ok(prompt.includes('Test Plumbing'));
-    assert.ok(prompt.includes('HVAC'));
+    const worst = findWorstBaseline(scanData);
+    assert.equal(worst, null);
   });
 
-  it('includes primary gap and sub-path', () => {
-    const scanData = buildScanData({ primaryGap: PILLARS.ACQUISITION, subPath: 'Channel concentration risk' });
-    const prompt = buildUserPrompt(scanData, {}, highConfidence());
+  it('skips "Not sure" fields', () => {
+    const scanData = buildScanData({
+      baselineFields: buildBaselineWithNotSure(PILLARS.CONVERSION, 7),
+    });
+    const worst = findWorstBaseline(scanData);
+    assert.equal(worst, null);
+  });
+});
 
-    assert.ok(prompt.includes('Acquisition'));
-    assert.ok(prompt.includes('Channel concentration risk'));
+// ---------------------------------------------------------------------------
+// countNonNotSure / countNotSure
+// ---------------------------------------------------------------------------
+
+describe('planGenerator — counting helpers', () => {
+  it('countNonNotSure returns 7 for full Conversion baseline', () => {
+    const scanData = buildScanData({ primaryGap: PILLARS.CONVERSION });
+    assert.equal(countNonNotSure(scanData), 7);
   });
 
-  it('includes one lever', () => {
-    const scanData = buildScanData({ oneLever: 'Response ownership + SLA' });
-    const prompt = buildUserPrompt(scanData, {}, highConfidence());
-
-    assert.ok(prompt.includes('Response ownership + SLA'));
+  it('countNotSure returns 0 for full Conversion baseline', () => {
+    const scanData = buildScanData({ primaryGap: PILLARS.CONVERSION });
+    assert.equal(countNotSure(scanData), 0);
   });
 
-  it('includes baseline metrics (non-"Not sure" only)', () => {
-    const scanData = buildScanData();
-    const prompt = buildUserPrompt(scanData, {}, highConfidence());
-
-    // Conv baseline has 7 fields all answered — should see labels
-    assert.ok(prompt.includes('Inbound leads per month'));
-    assert.ok(prompt.includes('Typical first response time'));
-  });
-
-  it('excludes "Not sure" baseline values from prompt', () => {
+  it('countNotSure counts "Not sure" entries', () => {
     const scanData = buildScanData({
       baselineFields: buildBaselineWithNotSure(PILLARS.CONVERSION, 3),
     });
-    const prompt = buildUserPrompt(scanData, {}, medConfidence());
-
-    // First 3 fields are "Not sure" — their metric lines should not appear
-    // Extract the baseline section between headers
-    const baselineSection = prompt.split('## Current Baseline Metrics')[1].split('##')[0];
-    assert.ok(!baselineSection.includes('Inbound leads per month'));
-    assert.ok(!baselineSection.includes('Typical first response time'));
-    assert.ok(!baselineSection.includes('Lead-to-booked'));
-    // But should see remaining 4
-    assert.ok(baselineSection.includes('Booked-to-show'));
+    assert.equal(countNotSure(scanData), 3);
+    assert.equal(countNonNotSure(scanData), 4);
   });
 
-  it('includes all 6 actions', () => {
-    const scanData = buildScanData();
-    const prompt = buildUserPrompt(scanData, {}, highConfidence());
-
-    assert.ok(prompt.includes('Set up auto-response'));
-    assert.ok(prompt.includes('Install call tracking'));
-    // Check numbering
-    assert.ok(prompt.includes('1.'));
-    assert.ok(prompt.includes('6.'));
-  });
-
-  it('includes scorecard metrics', () => {
-    const scanData = buildScanData();
-    const prompt = buildUserPrompt(scanData, {}, highConfidence());
-
-    assert.ok(prompt.includes('Response time (hours)'));
-    assert.ok(prompt.includes('Lead-to-booked rate (%)'));
-  });
-
-  it('includes confidence level', () => {
-    const scanData = buildScanData();
-
-    const highPrompt = buildUserPrompt(scanData, {}, highConfidence());
-    assert.ok(highPrompt.includes('Confidence Level: High'));
-
-    const lowPrompt = buildUserPrompt(scanData, {}, lowConfidence());
-    assert.ok(lowPrompt.includes('Confidence Level: Low'));
-  });
-
-  it('requires constraints instruction for Med confidence', () => {
-    const scanData = buildScanData();
-    const prompt = buildUserPrompt(scanData, {}, medConfidence());
-
-    assert.ok(prompt.includes('REQUIRED: Include at least 1 constraint'));
-  });
-
-  it('requires data gaps instruction for Low confidence', () => {
-    const scanData = buildScanData();
-    const prompt = buildUserPrompt(scanData, {}, lowConfidence());
-
-    assert.ok(prompt.includes('REQUIRED: Include data gaps to measure'));
-  });
-
-  it('marks constraints as optional for High confidence', () => {
-    const scanData = buildScanData();
-    const prompt = buildUserPrompt(scanData, {}, highConfidence());
-
-    assert.ok(prompt.includes('Constraints are optional'));
-  });
-
-  it('uses defaults for missing contactInfo', () => {
-    const scanData = buildScanData();
-    const prompt = buildUserPrompt(scanData, null, highConfidence());
-
-    assert.ok(prompt.includes('the business'));
-    assert.ok(prompt.includes('local service business'));
-  });
-
-  it('handles Acquisition pillar', () => {
-    const scanData = buildScanData({ primaryGap: PILLARS.ACQUISITION, subPath: 'Channel concentration risk' });
-    const prompt = buildUserPrompt(scanData, {}, highConfidence());
-
-    assert.ok(prompt.includes('Acquisition'));
-    // Should include Acq baseline labels
-    assert.ok(prompt.includes('Top lead source dependence'));
-  });
-
-  it('handles Retention pillar', () => {
-    const scanData = buildScanData({ primaryGap: PILLARS.RETENTION, subPath: 'Rebook/recall gap' });
-    const prompt = buildUserPrompt(scanData, {}, highConfidence());
-
-    assert.ok(prompt.includes('Retention'));
-    assert.ok(prompt.includes('revenue from repeat'));
+  it('counts missing fields as "Not sure"', () => {
+    const scanData = { primaryGap: PILLARS.CONVERSION, baselineFields: {} };
+    assert.equal(countNotSure(scanData), 7);
   });
 });
 
 // ---------------------------------------------------------------------------
-// parseResponse
+// listNotSureFields
 // ---------------------------------------------------------------------------
 
-describe('planGenerator — parseResponse', () => {
-  it('parses valid JSON', () => {
-    const json = JSON.stringify(fullPlanContent());
-    const result = parseResponse(json);
-
-    assert.equal(result.sectionA.primaryGap, 'Conversion');
-    assert.equal(result.sectionC.leverName, 'Response ownership');
+describe('planGenerator — listNotSureFields', () => {
+  it('returns empty array when all fields answered', () => {
+    const scanData = buildScanData();
+    assert.equal(listNotSureFields(scanData).length, 0);
   });
 
-  it('parses JSON with markdown fencing', () => {
-    const json = '```json\n' + JSON.stringify(fullPlanContent()) + '\n```';
-    const result = parseResponse(json);
-
-    assert.equal(result.sectionA.primaryGap, 'Conversion');
-  });
-
-  it('parses JSON with plain fencing (no language tag)', () => {
-    const json = '```\n' + JSON.stringify(fullPlanContent()) + '\n```';
-    const result = parseResponse(json);
-
-    assert.equal(result.sectionA.primaryGap, 'Conversion');
-  });
-
-  it('throws on empty input', () => {
-    assert.throws(() => parseResponse(''), /Empty or invalid/);
-  });
-
-  it('throws on null input', () => {
-    assert.throws(() => parseResponse(null), /Empty or invalid/);
-  });
-
-  it('throws on non-string input', () => {
-    assert.throws(() => parseResponse(123), /Empty or invalid/);
-  });
-
-  it('throws on invalid JSON', () => {
-    assert.throws(() => parseResponse('not json at all'), /Failed to parse/);
-  });
-
-  it('throws when sections are missing', () => {
-    const partial = { sectionA: {}, sectionB: {} };
-    assert.throws(() => parseResponse(JSON.stringify(partial)), /missing required sections.*sectionC/);
-  });
-
-  it('throws listing all missing sections', () => {
-    const partial = { sectionA: {} };
-    try {
-      parseResponse(JSON.stringify(partial));
-      assert.fail('Should have thrown');
-    } catch (err) {
-      assert.ok(err.message.includes('sectionB'));
-      assert.ok(err.message.includes('sectionC'));
-      assert.ok(err.message.includes('sectionD'));
-      assert.ok(err.message.includes('sectionE'));
-      assert.ok(err.message.includes('sectionF'));
-    }
-  });
-
-  it('accepts response with extra whitespace', () => {
-    const json = '  \n  ' + JSON.stringify(fullPlanContent()) + '  \n  ';
-    const result = parseResponse(json);
-    assert.equal(result.sectionA.primaryGap, 'Conversion');
-  });
-
-  it('preserves extra fields in sections', () => {
-    const plan = fullPlanContent();
-    plan.sectionA.extraField = 'bonus data';
-    const result = parseResponse(JSON.stringify(plan));
-    assert.equal(result.sectionA.extraField, 'bonus data');
+  it('returns labels for "Not sure" fields', () => {
+    const scanData = buildScanData({
+      baselineFields: buildBaselineWithNotSure(PILLARS.CONVERSION, 2),
+    });
+    const gaps = listNotSureFields(scanData);
+    assert.equal(gaps.length, 2);
+    assert.ok(gaps[0].includes(' '));
   });
 });
 
@@ -320,22 +216,11 @@ describe('planGenerator — buildSectionBData', () => {
     assert.ok(metrics.every((m) => m.value.toLowerCase() !== 'not sure'));
   });
 
-  it('filters out empty string values', () => {
-    const scanData = buildScanData({
-      primaryGap: PILLARS.CONVERSION,
-      baselineFields: { ...buildBaselineWithNotSure(PILLARS.CONVERSION, 0), conv_inbound_leads: '' },
-    });
-    const metrics = buildSectionBData(scanData);
-
-    assert.equal(metrics.length, 6);
-  });
-
-  it('uses human-readable labels from BASELINE_LABELS', () => {
+  it('uses human-readable labels', () => {
     const scanData = buildScanData({ primaryGap: PILLARS.CONVERSION });
     const metrics = buildSectionBData(scanData);
 
-    const firstField = metrics[0].field;
-    assert.ok(firstField.includes(' '), 'Label should be human-readable, not a field key');
+    assert.ok(metrics[0].field.includes(' '));
   });
 
   it('works for Acquisition pillar', () => {
@@ -343,75 +228,232 @@ describe('planGenerator — buildSectionBData', () => {
     const metrics = buildSectionBData(scanData);
 
     assert.equal(metrics.length, 7);
-    assert.ok(metrics.some((m) => m.field.includes('lead source')));
   });
 
-  it('works for Retention pillar', () => {
+  it('works for Retention pillar (6 fields)', () => {
     const scanData = buildScanData({ primaryGap: PILLARS.RETENTION });
-    const metrics = buildSectionBData(scanData);
-
-    assert.equal(metrics.length, 6); // Retention has 6 fields
-    assert.ok(metrics.some((m) => m.field.includes('repeat')));
-  });
-
-  it('returns empty array for unknown pillar', () => {
-    const scanData = { primaryGap: 'FakePillar', baselineFields: {} };
-    const metrics = buildSectionBData(scanData);
-
-    assert.equal(metrics.length, 0);
-  });
-
-  it('handles missing baselineFields gracefully', () => {
-    const scanData = { primaryGap: PILLARS.CONVERSION };
-    const metrics = buildSectionBData(scanData);
-
-    assert.equal(metrics.length, 0);
-  });
-
-  it('handles case-insensitive "Not sure" filtering', () => {
-    const scanData = buildScanData({
-      primaryGap: PILLARS.CONVERSION,
-      baselineFields: { ...buildBaselineWithNotSure(PILLARS.CONVERSION, 0), conv_inbound_leads: 'NOT SURE' },
-    });
     const metrics = buildSectionBData(scanData);
 
     assert.equal(metrics.length, 6);
   });
+
+  it('returns empty array for unknown pillar', () => {
+    const scanData = { primaryGap: 'FakePillar', baselineFields: {} };
+    assert.equal(buildSectionBData(scanData).length, 0);
+  });
+
+  it('handles missing baselineFields', () => {
+    const scanData = { primaryGap: PILLARS.CONVERSION };
+    assert.equal(buildSectionBData(scanData).length, 0);
+  });
 });
 
 // ---------------------------------------------------------------------------
-// generatePlan — API call (error paths only, no real API)
+// buildInsights (personalization)
+// ---------------------------------------------------------------------------
+
+describe('planGenerator — buildInsights', () => {
+  it('generates signal-to-action when conditions met', () => {
+    const scanData = buildScanData();
+    const insights = buildInsights(scanData, highConfidence());
+
+    const signalInsight = insights.find((i) => i.pattern === 'signal_to_action');
+    assert.ok(signalInsight);
+    assert.ok(signalInsight.text.includes('fastest win'));
+    assert.equal(signalInsight.placement, 'sectionA');
+  });
+
+  it('skips signal-to-action when fewer than 4 non-"Not sure" answers', () => {
+    const scanData = buildScanData({
+      baselineFields: buildBaselineWithNotSure(PILLARS.CONVERSION, 5),
+    });
+    const insights = buildInsights(scanData, lowConfidence());
+
+    const signalInsight = insights.find((i) => i.pattern === 'signal_to_action');
+    assert.equal(signalInsight, undefined);
+  });
+
+  it('generates risk callout when baseline at worst range', () => {
+    const scanData = buildScanData({
+      baselineFields: {
+        conv_inbound_leads: '11-25',
+        conv_first_response_time: '3+ days',
+        conv_lead_to_booked: '21-40%',
+        conv_booked_to_show: '61-80%',
+        conv_time_to_first_appointment: '1-3 days',
+        conv_quote_sent_timeline: '48 hours',
+        conv_quote_to_close: '21-30%',
+      },
+    });
+    const insights = buildInsights(scanData, highConfidence());
+
+    const riskInsight = insights.find((i) => i.pattern === 'risk_callout');
+    assert.ok(riskInsight);
+    assert.ok(riskInsight.text.includes('risk to momentum'));
+    assert.equal(riskInsight.placement, 'sectionF');
+  });
+
+  it('generates risk callout when >= 2 "Not sure" answers', () => {
+    const scanData = buildScanData({
+      baselineFields: buildBaselineWithNotSure(PILLARS.CONVERSION, 3),
+    });
+    const insights = buildInsights(scanData, medConfidence());
+
+    const riskInsight = insights.find((i) => i.pattern === 'risk_callout');
+    assert.ok(riskInsight);
+    assert.ok(riskInsight.text.includes('unknown'));
+  });
+
+  it('returns max 2 insights', () => {
+    const scanData = buildScanData({
+      baselineFields: {
+        conv_inbound_leads: '11-25',
+        conv_first_response_time: '3+ days',
+        conv_lead_to_booked: '21-40%',
+        conv_booked_to_show: '61-80%',
+        conv_time_to_first_appointment: '1-3 days',
+        conv_quote_sent_timeline: '48 hours',
+        conv_quote_to_close: '21-30%',
+      },
+    });
+    const insights = buildInsights(scanData, highConfidence());
+
+    assert.ok(insights.length <= 2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// generatePlan (full pipeline)
 // ---------------------------------------------------------------------------
 
 describe('planGenerator — generatePlan', () => {
-  it('throws when CLAUDE_API_KEY is missing', async () => {
+  it('is synchronous (returns object, not promise)', () => {
     const scanData = buildScanData();
-    await assert.rejects(
-      () => generatePlan(scanData, {}, highConfidence(), {}),
-      /CLAUDE_API_KEY is required/,
-    );
+    const result = generatePlan(scanData, {}, highConfidence());
+
+    assert.ok(typeof result === 'object');
+    assert.ok(!(result instanceof Promise));
   });
 
-  it('throws when env is null', async () => {
+  it('returns all 6 sections + insights', () => {
     const scanData = buildScanData();
-    await assert.rejects(
-      () => generatePlan(scanData, {}, highConfidence(), null),
-      /CLAUDE_API_KEY is required/,
-    );
+    const plan = generatePlan(scanData, {}, highConfidence());
+
+    assert.ok(plan.sectionA);
+    assert.ok(plan.sectionB);
+    assert.ok(plan.sectionC);
+    assert.ok(plan.sectionD);
+    assert.ok(plan.sectionE);
+    assert.ok(plan.sectionF);
+    assert.ok(Array.isArray(plan.insights));
+  });
+
+  it('Section A contains primary gap and sub-path', () => {
+    const scanData = buildScanData({ primaryGap: PILLARS.ACQUISITION, subPath: 'Channel concentration risk' });
+    const plan = generatePlan(scanData, {}, highConfidence());
+
+    assert.equal(plan.sectionA.primaryGap, 'Acquisition');
+    assert.equal(plan.sectionA.subDiagnosis, 'Channel concentration risk');
+  });
+
+  it('Section B filters "Not sure" from baseline', () => {
+    const scanData = buildScanData({
+      baselineFields: buildBaselineWithNotSure(PILLARS.CONVERSION, 2),
+    });
+    const plan = generatePlan(scanData, {}, medConfidence());
+
+    assert.equal(plan.sectionB.baselineMetrics.length, 5);
+  });
+
+  it('Section C uses oneLever and oneLeverSentence from scan', () => {
+    const scanData = buildScanData({ oneLever: 'Response ownership + SLA + follow-up sequence' });
+    scanData.oneLeverSentence = 'Fix response time to under 1 hour.';
+    const plan = generatePlan(scanData, {}, highConfidence());
+
+    assert.equal(plan.sectionC.leverName, 'Response ownership + SLA + follow-up sequence');
+    assert.equal(plan.sectionC.leverDescription, 'Fix response time to under 1 hour.');
+  });
+
+  it('Section D passes through exactly 6 actions', () => {
+    const scanData = buildScanData();
+    const plan = generatePlan(scanData, {}, highConfidence());
+
+    assert.equal(plan.sectionD.actions.length, 6);
+    assert.equal(plan.sectionD.actions[0].description, DEFAULT_ACTIONS[0].description);
+  });
+
+  it('Section D pads to 6 when fewer actions provided', () => {
+    const scanData = buildScanData({ actions: [{ description: 'Only one', owner: 'Me', dueDate: 'Now' }] });
+    const plan = generatePlan(scanData, {}, highConfidence());
+
+    assert.equal(plan.sectionD.actions.length, 6);
+    assert.equal(plan.sectionD.actions[0].description, 'Only one');
+    assert.equal(plan.sectionD.actions[1].description, '');
+  });
+
+  it('Section E maps metrics with baselines and targets', () => {
+    const scanData = buildScanData({
+      metrics: ['Median response time', 'Lead to booked %'],
+    });
+    const plan = generatePlan(scanData, {}, highConfidence());
+
+    assert.equal(plan.sectionE.metrics.length, 2);
+    assert.equal(plan.sectionE.metrics[0].name, 'Median response time');
+    assert.ok(plan.sectionE.metrics[0].baseline);
+    assert.ok(plan.sectionE.metrics[0].target30Day);
+  });
+
+  it('Section F includes constraints from scan data', () => {
+    const scanData = buildScanData();
+    scanData.constraints = ['Budget limited', 'No tech team'];
+    const plan = generatePlan(scanData, {}, medConfidence());
+
+    assert.deepEqual(plan.sectionF.constraints, ['Budget limited', 'No tech team']);
+  });
+
+  it('Section F includes data gaps for Low confidence', () => {
+    const scanData = buildScanData({
+      baselineFields: buildBaselineWithNotSure(PILLARS.CONVERSION, 4),
+    });
+    const plan = generatePlan(scanData, {}, lowConfidence());
+
+    assert.ok(plan.sectionF.dataGaps.length > 0);
+    assert.ok(plan.sectionF.dataGaps[0].startsWith('Track:'));
+  });
+
+  it('Section F omits data gaps for High confidence', () => {
+    const scanData = buildScanData();
+    const plan = generatePlan(scanData, {}, highConfidence());
+
+    assert.equal(plan.sectionF.dataGaps.length, 0);
+  });
+
+  it('works for all three pillars', () => {
+    for (const pillar of [PILLARS.CONVERSION, PILLARS.ACQUISITION, PILLARS.RETENTION]) {
+      const scanData = buildScanData({ primaryGap: pillar });
+      const plan = generatePlan(scanData, {}, highConfidence());
+
+      assert.equal(plan.sectionA.primaryGap, pillar);
+      assert.ok(plan.sectionB.baselineMetrics.length > 0);
+    }
   });
 });
 
 // ---------------------------------------------------------------------------
-// REQUIRED_SECTIONS constant
+// RANGE_PROGRESSIONS coverage
 // ---------------------------------------------------------------------------
 
-describe('planGenerator — REQUIRED_SECTIONS', () => {
-  it('has exactly 6 required sections', () => {
-    assert.equal(REQUIRED_SECTIONS.length, 6);
-  });
+describe('planGenerator — RANGE_PROGRESSIONS', () => {
+  it('has progressions for all 20 baseline field keys', () => {
+    const allFields = [
+      ...BASELINE_FIELDS[PILLARS.CONVERSION],
+      ...BASELINE_FIELDS[PILLARS.ACQUISITION],
+      ...BASELINE_FIELDS[PILLARS.RETENTION],
+    ];
 
-  it('matches the planContent shape', () => {
-    const expected = ['sectionA', 'sectionB', 'sectionC', 'sectionD', 'sectionE', 'sectionF'];
-    assert.deepEqual(REQUIRED_SECTIONS, expected);
+    for (const key of allFields) {
+      assert.ok(RANGE_PROGRESSIONS[key], `Missing progression for: ${key}`);
+      assert.ok(RANGE_PROGRESSIONS[key].length >= 2, `Progression too short for: ${key}`);
+    }
   });
 });

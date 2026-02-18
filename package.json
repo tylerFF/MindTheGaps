@@ -16,7 +16,9 @@
     "test:scanwebhook": "node --test tests/scanWebhook.test.js",
     "test:stripewebhook": "node --test tests/stripeWebhook.test.js",
     "test:calendlywebhook": "node --test tests/calendlyWebhook.test.js",
-    "test:notifications": "node --test tests/notifications.test.js"
+    "test:notifications": "node --test tests/notifications.test.js",
+    "setup:hubspot": "node scripts/setup-hubspot-properties.js",
+    "setup:calendly": "node scripts/setup-calendly-webhook.js"
   },
   "engines": {
     "node": ">=18.0.0"

@@ -1,10 +1,11 @@
 name = "mtg-quiz-webhook"
-main = "src/index.js"
-compatibility_date = "2024-01-01"
+main = "src/worker.js"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
 
 # Environment variables (set via wrangler secret or Cloudflare dashboard)
 # HUBSPOT_API_KEY — HubSpot private app token
 
 [vars]
-# Non-secret vars can go here
-# ENVIRONMENT = "production"
+# Set RESULTS_PAGE_URL to the live results page URL in production
+# RESULTS_PAGE_URL = "https://yourdomain.com/results/"

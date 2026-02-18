@@ -51,10 +51,10 @@ function medConfidence() {
 describe('scanWebhook — extractContactInfo', () => {
   it('extracts contact fields from payload', () => {
     const payload = {
-      s_email: 'test@example.com',
-      s_first_name: 'Marc',
-      s_business_name: 'Acme Plumbing',
-      s_industry: 'HVAC',
+      q2_contactEmail: 'test@example.com',
+      q3_scanFirstName: 'Marc',
+      q4_scanBusinessName: 'Acme Plumbing',
+      q5_scanIndustry: 'HVAC',
     };
     const info = extractContactInfo(payload);
 
@@ -65,7 +65,7 @@ describe('scanWebhook — extractContactInfo', () => {
   });
 
   it('skips empty fields', () => {
-    const payload = { s_email: 'test@example.com', s_first_name: '' };
+    const payload = { q2_contactEmail: 'test@example.com', q3_scanFirstName: '' };
     const info = extractContactInfo(payload);
 
     assert.equal(info.email, 'test@example.com');
@@ -85,10 +85,10 @@ describe('scanWebhook — extractContactInfo', () => {
 describe('scanWebhook — extractScanData', () => {
   it('extracts core scan fields', () => {
     const payload = {
-      s_primary_gap: 'Conversion',
-      s_quiz_primary_gap: 'Conversion',
-      s_sub_path: 'Speed-to-lead',
-      s_one_lever: 'Response ownership',
+      q9_primaryGap: 'Conversion',
+      q7_quizPrimaryGap: 'Conversion',
+      q11_subPathConversion: 'Speed-to-lead',
+      q36_oneLeverConversion: 'Response ownership',
     };
     const scan = extractScanData(payload);
 
@@ -100,9 +100,9 @@ describe('scanWebhook — extractScanData', () => {
 
   it('extracts baseline fields via field map', () => {
     const payload = {
-      s_primary_gap: 'Conversion',
-      s_conv_inbound_leads: '11-25',
-      s_conv_first_response_time: 'same day',
+      q9_primaryGap: 'Conversion',
+      q15_convInboundLeads: '11-25',
+      q16_convFirstResponseTime: 'same day',
     };
     const scan = extractScanData(payload);
 
@@ -112,13 +112,13 @@ describe('scanWebhook — extractScanData', () => {
 
   it('extracts 6 action slots', () => {
     const payload = {
-      s_primary_gap: 'Conversion',
-      s_action_1_desc: 'Set up auto-response',
-      s_action_1_owner: 'Marc',
-      s_action_1_due: 'Week 1',
-      s_action_2_desc: 'Follow-up sequence',
-      s_action_2_owner: 'VA',
-      s_action_2_due: 'Week 1',
+      q9_primaryGap: 'Conversion',
+      q41_action1Desc: 'Set up auto-response',
+      q42_action1Owner: 'Marc',
+      q43_action1Due: 'Week 1',
+      q44_action2Desc: 'Follow-up sequence',
+      q45_action2Owner: 'VA',
+      q46_action2Due: 'Week 1',
     };
     const scan = extractScanData(payload);
 
@@ -130,17 +130,16 @@ describe('scanWebhook — extractScanData', () => {
     assert.equal(scan.actions[2].description, '');
   });
 
-  it('extracts metrics', () => {
+  it('extracts metrics from checkbox field', () => {
     const payload = {
-      s_primary_gap: 'Conversion',
-      s_metric_1: 'Response time (hours)',
-      s_metric_2: 'Lead-to-booked rate (%)',
+      q9_primaryGap: 'Conversion',
+      q60_metricsConversion: 'Median response time\nLead to booked %',
     };
     const scan = extractScanData(payload);
 
     assert.equal(scan.metrics.length, 2);
-    assert.equal(scan.metrics[0], 'Response time (hours)');
-    assert.equal(scan.metrics[1], 'Lead-to-booked rate (%)');
+    assert.equal(scan.metrics[0], 'Median response time');
+    assert.equal(scan.metrics[1], 'Lead to booked %');
   });
 
   it('defaults missing fields to empty strings', () => {
@@ -154,9 +153,9 @@ describe('scanWebhook — extractScanData', () => {
 
   it('handles Acquisition baseline fields', () => {
     const payload = {
-      s_primary_gap: 'Acquisition',
-      s_acq_inbound_leads: '11-25',
-      s_acq_top_source_dependence: '2 sources',
+      q9_primaryGap: 'Acquisition',
+      q22_acqInboundLeads: '11-25',
+      q23_acqTopSourceDep: '2 sources',
     };
     const scan = extractScanData(payload);
 
@@ -166,14 +165,50 @@ describe('scanWebhook — extractScanData', () => {
 
   it('handles Retention baseline fields', () => {
     const payload = {
-      s_primary_gap: 'Retention',
-      s_ret_pct_revenue_repeat: '21-40%',
-      s_ret_reviews_per_month: '1-2',
+      q9_primaryGap: 'Retention',
+      q29_retPctRevenueRepeat: '21-40%',
+      q32_retReviewsPerMonth: '1-2',
     };
     const scan = extractScanData(payload);
 
     assert.equal(scan.baselineFields.ret_pct_revenue_repeat, '21-40%');
     assert.equal(scan.baselineFields.ret_reviews_per_month, '1-2');
+  });
+
+  it('picks sub-path based on confirmed primary gap', () => {
+    const payload = {
+      q9_primaryGap: 'Acquisition',
+      q11_subPathConversion: 'Speed-to-lead',
+      q12_subPathAcquisition: 'Channel concentration risk',
+      q13_subPathRetention: 'Rebook/recall gap',
+    };
+    const scan = extractScanData(payload);
+
+    assert.equal(scan.subPath, 'Channel concentration risk');
+  });
+
+  it('picks one lever based on confirmed primary gap', () => {
+    const payload = {
+      q9_primaryGap: 'Retention',
+      q36_oneLeverConversion: 'Response ownership',
+      q38_oneLeverRetention: 'Rebook/recall system (prompt + script + schedule)',
+    };
+    const scan = extractScanData(payload);
+
+    assert.equal(scan.oneLever, 'Rebook/recall system (prompt + script + schedule)');
+  });
+
+  it('extracts constraints', () => {
+    const payload = {
+      q9_primaryGap: 'Conversion',
+      q64_constraint1: 'Budget limited',
+      q65_constraint2: 'Small team',
+    };
+    const scan = extractScanData(payload);
+
+    assert.equal(scan.constraints.length, 2);
+    assert.equal(scan.constraints[0], 'Budget limited');
+    assert.equal(scan.constraints[1], 'Small team');
   });
 });
 
@@ -187,11 +222,14 @@ describe('scanWebhook — buildHubSpotProperties', () => {
     const props = buildHubSpotProperties(scanData, highConfidence(), 'https://r2.example.com/plan.docx', null);
 
     assert.equal(props.mtg_scan_completed, 'true');
-    assert.equal(props.mtg_primary_gap_confirmed, 'Conversion');
-    assert.equal(props.mtg_sub_path, 'Speed-to-lead');
-    assert.equal(props.mtg_confidence_level, 'High');
-    assert.equal(props.mtg_plan_url, 'https://r2.example.com/plan.docx');
-    assert.equal(props.mtg_plan_review_status, 'Pending Review');
+    assert.equal(props.mtg_scan_primary_gap_confirmed, 'Conversion');
+    assert.equal(props.mtg_scan_sub_path, 'Speed-to-lead');
+    assert.equal(props.mtg_scan_confidence, 'High');
+    assert.equal(props.mtg_plan_draft_link, 'https://r2.example.com/plan.docx');
+    assert.equal(props.mtg_plan_review_status, 'Pending');
+    assert.ok(props.mtg_plan_drafted_at);
+    assert.equal(props.mtg_plan_status, 'Draft');
+    assert.equal(props.mtg_plan_generation_mode, 'Auto');
   });
 
   it('builds stopped properties', () => {
@@ -201,7 +239,8 @@ describe('scanWebhook — buildHubSpotProperties', () => {
 
     assert.equal(props.mtg_scan_stop_reason, 'Sub-path requires manual plan');
     assert.equal(props.mtg_plan_review_status, 'Manual Required');
-    assert.equal(props.mtg_plan_url, undefined);
+    assert.equal(props.mtg_plan_draft_link, undefined);
+    assert.equal(props.mtg_plan_generation_mode, 'Stopped');
   });
 
   it('includes confidence not sure count', () => {
@@ -242,7 +281,7 @@ describe('scanWebhook — handler HTTP behavior', () => {
   });
 
   it('returns 400 for missing email', async () => {
-    const request = makeRequest({ s_primary_gap: 'Conversion' });
+    const request = makeRequest({ q9_primaryGap: 'Conversion' });
     const response = await handleScanWebhook(request, {}, null);
 
     assert.equal(response.status, 400);
@@ -252,9 +291,9 @@ describe('scanWebhook — handler HTTP behavior', () => {
 
   it('returns success with stopped=true when stop rules fire', async () => {
     const request = makeRequest({
-      s_email: 'test@example.com',
-      s_primary_gap: 'Conversion',
-      s_sub_path: 'Other (manual)',
+      q2_contactEmail: 'test@example.com',
+      q9_primaryGap: 'Conversion',
+      q11_subPathConversion: 'Other (manual)',
     });
     const response = await handleScanWebhook(request, {}, null);
 
@@ -268,30 +307,28 @@ describe('scanWebhook — handler HTTP behavior', () => {
   it('returns success with stopped=false for valid scan (no API keys)', async () => {
     // Build a valid payload that passes stop rules
     const payload = {
-      s_email: 'test@example.com',
-      s_primary_gap: 'Conversion',
-      s_quiz_primary_gap: 'Conversion',
-      s_sub_path: 'Speed-to-lead',
-      s_one_lever: 'Response ownership + SLA + follow-up sequence',
+      q2_contactEmail: 'test@example.com',
+      q9_primaryGap: 'Conversion',
+      q7_quizPrimaryGap: 'Conversion',
+      q11_subPathConversion: 'Speed-to-lead',
+      q36_oneLeverConversion: 'Response ownership + SLA + follow-up sequence',
       // 7 baseline fields (all answered)
-      s_conv_inbound_leads: '11-25',
-      s_conv_first_response_time: 'same day',
-      s_conv_lead_to_booked: '21-40%',
-      s_conv_booked_to_show: '61-80%',
-      s_conv_time_to_first_appointment: '1-3 days',
-      s_conv_quote_sent_timeline: '48 hours',
-      s_conv_quote_to_close: '21-30%',
+      q15_convInboundLeads: '11-25',
+      q16_convFirstResponseTime: 'same day',
+      q17_convLeadToBooked: '21-40%',
+      q18_convBookedToShow: '61-80%',
+      q19_convTimeToFirstAppt: '1-3 days',
+      q20_convQuoteSentTimeline: '48 hours',
+      q21_convQuoteToClose: '21-30%',
       // 6 actions
-      s_action_1_desc: 'Set up auto-response within 15 min', s_action_1_owner: 'Marc', s_action_1_due: 'Week 1',
-      s_action_2_desc: 'Create follow-up email sequence', s_action_2_owner: 'Marc', s_action_2_due: 'Week 1',
-      s_action_3_desc: 'Add booking link to all touchpoints', s_action_3_owner: 'VA', s_action_3_due: 'Week 2',
-      s_action_4_desc: 'Set calendar reminder for quote follow-up', s_action_4_owner: 'Marc', s_action_4_due: 'Week 2',
-      s_action_5_desc: 'Build after-quote text template', s_action_5_owner: 'VA', s_action_5_due: 'Week 3',
-      s_action_6_desc: 'Install call tracking on website', s_action_6_owner: 'Marc', s_action_6_due: 'Week 4',
-      // 3 metrics
-      s_metric_1: 'Response time (hours)',
-      s_metric_2: 'Lead-to-booked rate (%)',
-      s_metric_3: 'Quote-to-close rate (%)',
+      q41_action1Desc: 'Set up auto-response within 15 min', q42_action1Owner: 'Marc', q43_action1Due: 'Week 1',
+      q44_action2Desc: 'Create follow-up email sequence', q45_action2Owner: 'Marc', q46_action2Due: 'Week 1',
+      q47_action3Desc: 'Add booking link to all touchpoints', q48_action3Owner: 'VA', q49_action3Due: 'Week 2',
+      q50_action4Desc: 'Set calendar reminder for quote follow-up', q51_action4Owner: 'Marc', q52_action4Due: 'Week 2',
+      q53_action5Desc: 'Build after-quote text template', q54_action5Owner: 'VA', q55_action5Due: 'Week 3',
+      q56_action6Desc: 'Install call tracking on website', q57_action6Owner: 'Marc', q58_action6Due: 'Week 4',
+      // 3 metrics (checkbox field, newline-separated)
+      q60_metricsConversion: 'Median response time\nLead to booked %\nShow rate %',
     };
     const request = makeRequest(payload);
     const response = await handleScanWebhook(request, {}, null);
@@ -306,7 +343,7 @@ describe('scanWebhook — handler HTTP behavior', () => {
   });
 
   it('includes CORS headers in response', async () => {
-    const request = makeRequest({ s_email: 'test@example.com' });
+    const request = makeRequest({ q2_contactEmail: 'test@example.com' });
     const response = await handleScanWebhook(request, {}, null);
 
     assert.ok(response.headers.get('Access-Control-Allow-Origin'));

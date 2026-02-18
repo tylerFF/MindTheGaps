@@ -1065,6 +1065,46 @@
       });
 
       // ---------------------------------------------------------------
+      // Form submission — fetch to API, then redirect to results
+      // ---------------------------------------------------------------
+      var QUIZ_API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? '/submit'
+        : 'https://mtg-quiz-webhook.mindthegaps-biz-account.workers.dev';
+
+      document.getElementById('quizForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        var submitBtn = this.querySelector('[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Processing...';
+
+        var data = {};
+        new FormData(this).forEach(function (value, key) { data[key] = value; });
+
+        fetch(QUIZ_API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (result) {
+          if (result.success && result.resultsUrl) {
+            window.location.href = result.resultsUrl;
+          } else {
+            alert('Error: ' + (result.error || 'Something went wrong. Please try again.'));
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'See My Results';
+          }
+        })
+        .catch(function (err) {
+          alert('Network error — please check your connection and try again.');
+          console.error(err);
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'See My Results';
+        });
+      });
+
+      // ---------------------------------------------------------------
       // Init
       // ---------------------------------------------------------------
       updateProgress();
