@@ -117,7 +117,7 @@ describe('stripeWebhook — buildHubSpotProperties', () => {
       currency: 'cad',
       paymentId: 'pi_test_123',
     });
-    assert.equal(props.mtg_payment_id, 'pi_test_123');
+    assert.equal(props.mtg_stripe_payment_id, 'pi_test_123');
   });
 
   it('includes timestamp', () => {
@@ -126,8 +126,8 @@ describe('stripeWebhook — buildHubSpotProperties', () => {
       currency: 'cad',
       paymentId: 'pi_test',
     });
-    assert.ok(props.mtg_payment_completed_at);
-    assert.ok(props.mtg_payment_completed_at.includes('T'));
+    assert.ok(props.mtg_payment_date);
+    assert.ok(props.mtg_payment_date.includes('T'));
   });
 });
 

@@ -31,32 +31,33 @@ const { QUESTION_IDS, HUBSPOT_PREFIX } = require('../../shared/constants');
 
 const JOTFORM_FIELD_MAP = {
   // Contact info fields (JotForm field name → property key)
+  // Form ID: 260466844433158 (card layout)
   contact: {
-    q_email: 'email',
-    q_first_name: 'firstName',
-    q_business_name: 'businessName',
-    q_industry: 'industry',
-    q_location: 'location',
-    q_team_size: 'teamSize',
-    q_website: 'websiteUrl',
-    q_phone: 'phone',
+    q14_quiz_firstName: 'firstName',
+    q15_quiz_email: 'email',
+    q16_quiz_businessName: 'businessName',
+    q17_quiz_industry: 'industry',
+    q18_quiz_location: 'location',
+    q19_quiz_teamSize: 'teamSize',
+    q20_quiz_website: 'websiteUrl',
+    q21_quiz_phone: 'phone',
   },
 
   // Quiz answer fields (JotForm field name → question ID)
   answers: {
-    q_v1: 'V1',
-    q_v2: 'V2',
-    q_v3: 'V3',
-    q_v4: 'V4',
-    q_v5: 'V5',
-    q_a1: 'A1',
-    q_c1: 'C1',
-    q_c2: 'C2',
-    q_c3: 'C3',
-    q_c4: 'C4',
-    q_r1: 'R1',
-    q_r2: 'R2',
-    q_r3: 'R3',
+    q3_quiz_V1: 'V1',
+    q5_quiz_V2: 'V2',
+    q7_quiz_V3: 'V3',
+    q9_quiz_V4: 'V4',
+    q11_quiz_V5: 'V5',
+    q23_quiz_A1: 'A1',
+    q25_quiz_C1: 'C1',
+    q27_quiz_C2: 'C2',
+    q29_quiz_C3: 'C3',
+    q31_quiz_C4: 'C4',
+    q33_quiz_R1: 'R1',
+    q35_quiz_R2: 'R2',
+    q37_quiz_R3: 'R3',
   },
 };
 
@@ -148,14 +149,39 @@ async function parsePayload(request) {
 }
 
 /**
+ * Simple field name map (custom quiz page sends these — no JotForm prefix).
+ */
+const SIMPLE_CONTACT_MAP = {
+  firstName: 'firstName',
+  email: 'email',
+  businessName: 'businessName',
+  industry: 'industry',
+  location: 'location',
+  teamSize: 'teamSize',
+  website: 'websiteUrl',
+  phone: 'phone',
+};
+
+/**
  * Extract contact info from the parsed payload using the field map.
+ * Tries JotForm-prefixed names first, then falls back to simple names.
  */
 function extractContactInfo(payload) {
   const info = {};
+  // Try JotForm field names first
   for (const [jotformField, key] of Object.entries(JOTFORM_FIELD_MAP.contact)) {
     const value = payload[jotformField];
     if (value !== undefined && value !== null && value !== '') {
       info[key] = sanitizeString(String(value));
+    }
+  }
+  // Fallback: try simple field names (from custom quiz page)
+  for (const [simpleField, key] of Object.entries(SIMPLE_CONTACT_MAP)) {
+    if (!info[key]) {
+      const value = payload[simpleField];
+      if (value !== undefined && value !== null && value !== '') {
+        info[key] = sanitizeString(String(value));
+      }
     }
   }
   return info;
@@ -163,13 +189,24 @@ function extractContactInfo(payload) {
 
 /**
  * Extract quiz answers from the parsed payload using the field map.
+ * Tries JotForm-prefixed names first, then falls back to simple question IDs.
  */
 function extractQuizAnswers(payload) {
   const answers = {};
+  // Try JotForm field names first
   for (const [jotformField, questionId] of Object.entries(JOTFORM_FIELD_MAP.answers)) {
     const value = payload[jotformField];
     if (value !== undefined && value !== null && value !== '') {
       answers[questionId] = String(value).trim();
+    }
+  }
+  // Fallback: try simple question IDs (V1, A1, C1, etc.)
+  if (Object.keys(answers).length === 0) {
+    for (const qId of QUESTION_IDS) {
+      const value = payload[qId];
+      if (value !== undefined && value !== null && value !== '') {
+        answers[qId] = String(value).trim();
+      }
     }
   }
   return answers;

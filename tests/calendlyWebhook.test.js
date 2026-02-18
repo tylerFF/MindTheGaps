@@ -115,15 +115,15 @@ describe('calendlyWebhook — buildHubSpotProperties', () => {
       scheduledAt: '2026-02-15T14:00:00Z',
       eventUri: '',
     });
-    assert.equal(props.mtg_scan_scheduled_time, '2026-02-15T14:00:00Z');
+    assert.equal(props.mtg_scan_scheduled_for, '2026-02-15T14:00:00Z');
   });
 
-  it('includes event URI', () => {
+  it('includes event ID', () => {
     const props = buildHubSpotProperties({
       scheduledAt: '',
       eventUri: 'https://api.calendly.com/events/abc',
     });
-    assert.equal(props.mtg_calendly_event_uri, 'https://api.calendly.com/events/abc');
+    assert.equal(props.mtg_calendly_event_id, 'https://api.calendly.com/events/abc');
   });
 
   it('includes name as first_name', () => {
@@ -134,8 +134,8 @@ describe('calendlyWebhook — buildHubSpotProperties', () => {
   it('omits empty optional fields', () => {
     const props = buildHubSpotProperties({ name: '', scheduledAt: '', eventUri: '' });
     assert.equal(props.mtg_first_name, undefined);
-    assert.equal(props.mtg_scan_scheduled_time, undefined);
-    assert.equal(props.mtg_calendly_event_uri, undefined);
+    assert.equal(props.mtg_scan_scheduled_for, undefined);
+    assert.equal(props.mtg_calendly_event_id, undefined);
   });
 
   it('includes booked_at timestamp', () => {

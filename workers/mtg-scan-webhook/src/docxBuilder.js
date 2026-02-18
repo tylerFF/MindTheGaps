@@ -1,7 +1,7 @@
 /**
  * MindtheGaps — One-Page Plan DOCX Builder
  *
- * Pure function that takes structured plan content (from Claude API),
+ * Pure function that takes structured plan content (deterministic),
  * scan data, contact info, and confidence result, then generates a
  * professional One-Page Plan as a DOCX buffer.
  *
@@ -138,6 +138,28 @@ function row(cells) {
 }
 
 // ---------------------------------------------------------------------------
+// Helper: create an insight callout paragraph (light blue background)
+// ---------------------------------------------------------------------------
+
+function insightCallout(insightText) {
+  return new Paragraph({
+    spacing: { before: 120, after: 120 },
+    shading: { type: ShadingType.SOLID, color: COLORS.LIGHT_BLUE },
+    children: [
+      text(insightText, { italics: true }),
+    ],
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Helper: get insights by placement
+// ---------------------------------------------------------------------------
+
+function getInsightsByPlacement(planContent, placement) {
+  return (planContent.insights || []).filter((i) => i.placement === placement);
+}
+
+// ---------------------------------------------------------------------------
 // Section A: What We Found
 // ---------------------------------------------------------------------------
 
@@ -182,6 +204,11 @@ function buildSectionA(planContent) {
         ],
       }),
     );
+  }
+
+  // Personalization: signal-to-action insight
+  for (const insight of getInsightsByPlacement(planContent, 'sectionA')) {
+    children.push(insightCallout(insight.text));
   }
 
   return children;
@@ -339,6 +366,11 @@ function buildSectionE(planContent) {
     }),
   );
 
+  // Personalization: stability target insight
+  for (const insight of getInsightsByPlacement(planContent, 'sectionE')) {
+    children.push(insightCallout(insight.text));
+  }
+
   return children;
 }
 
@@ -375,6 +407,11 @@ function buildSectionF(planContent, confidenceResult) {
         children: [text('No constraints noted.', { italics: true })],
       }),
     );
+  }
+
+  // Personalization: risk callout insight
+  for (const insight of getInsightsByPlacement(planContent, 'sectionF')) {
+    children.push(insightCallout(insight.text));
   }
 
   // Data gaps box (Low confidence only)

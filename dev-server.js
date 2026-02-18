@@ -56,12 +56,22 @@ function handleRequest(req, res) {
     req.on('data', (chunk) => { body += chunk; });
     req.on('end', () => {
       try {
-        // Parse form-encoded body — separate quiz answers from profile fields
-        const params = new URLSearchParams(body);
+        // Parse body — accept JSON or form-encoded
+        const contentType = req.headers['content-type'] || '';
+        let fields = {};
+        if (contentType.includes('json')) {
+          fields = JSON.parse(body);
+        } else {
+          const params = new URLSearchParams(body);
+          for (const [key, value] of params.entries()) {
+            fields[key] = value;
+          }
+        }
+
         const answers = {};
         const profile = {};
         const PROFILE_FIELDS = ['firstName', 'email', 'businessName', 'industry', 'location', 'teamSize', 'website', 'phone'];
-        for (const [key, value] of params.entries()) {
+        for (const [key, value] of Object.entries(fields)) {
           if (!value) continue;
           if (PROFILE_FIELDS.includes(key)) {
             profile[key] = value;
@@ -98,10 +108,24 @@ function handleRequest(req, res) {
           },
         };
 
-        // Encode and redirect to results page
+        // Return JSON response (same format as production worker)
         const encoded = Buffer.from(JSON.stringify(resultsData)).toString('base64');
-        res.writeHead(302, { Location: `/results/#${encoded}` });
-        res.end();
+        const responseBody = {
+          success: true,
+          email: profile.email || '',
+          resultsUrl: `/results/#${encoded}`,
+          ...resultsData,
+          _meta: {
+            hubspotStatus: 'skipped',
+            processedAt: new Date().toISOString(),
+          },
+        };
+
+        res.writeHead(200, {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        });
+        res.end(JSON.stringify(responseBody));
 
         // Log to console for debugging
         console.log(`\n--- Quiz Submitted ---`);
@@ -116,8 +140,8 @@ function handleRequest(req, res) {
         console.log(`Pillar totals: Acq=${scoringResult.pillarTotals.Acquisition}, Conv=${scoringResult.pillarTotals.Conversion}, Ret=${scoringResult.pillarTotals.Retention}`);
       } catch (err) {
         console.error('Processing error:', err);
-        res.writeHead(500, { 'Content-Type': 'text/plain' });
-        res.end('Error processing quiz: ' + err.message);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Error processing quiz: ' + err.message }));
       }
     });
     return;

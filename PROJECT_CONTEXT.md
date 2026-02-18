@@ -236,6 +236,7 @@ mtg_quiz_r3     dropdown (4 options)
 ```
 mtg_payment_status          dropdown: Pending / Paid / Refunded
 mtg_payment_amount          number
+mtg_payment_currency        single-line text (e.g. CAD)
 mtg_payment_date            datetime
 mtg_stripe_payment_id       single-line text
 ```
@@ -257,6 +258,7 @@ mtg_scan_sub_path           dropdown (see Section 3 for full list)
 mtg_scan_one_lever          single-line text
 mtg_scan_one_lever_sentence multi-line text
 mtg_scan_confidence         dropdown: High / Med / Low
+mtg_confidence_not_sure_count   number
 mtg_scan_stop_reason        single-line text (blank if no stop)
 ```
 
@@ -268,6 +270,7 @@ mtg_plan_review_status      dropdown: Pending / Approved / Rejected / Manual Req
 mtg_plan_reviewer_notes     multi-line text
 mtg_plan_sent_at            datetime
 mtg_plan_status             dropdown: Draft / Reviewed / Sent
+mtg_plan_generation_mode    dropdown: Auto / Stopped
 ```
 
 ---

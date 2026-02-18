@@ -1,10 +1,10 @@
 name = "mtg-scan-webhook"
-main = "src/index.js"
-compatibility_date = "2024-01-01"
+main = "src/worker.js"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
 
 # Environment variables (set via wrangler secret or Cloudflare dashboard)
 # HUBSPOT_API_KEY — HubSpot private app token
-# CLAUDE_API_KEY — Claude API key for plan generation
 # RESEND_API_KEY — Resend email API key
 # MARC_EMAIL — Marc's email for notifications
 # FROM_EMAIL — Sender email address
@@ -12,9 +12,7 @@ compatibility_date = "2024-01-01"
 [vars]
 # Non-secret vars can go here
 # ENVIRONMENT = "production"
-# CLAUDE_MODEL = "claude-sonnet-4-5-20250929"
 
-# R2 bucket binding — update bucket_name when created in Cloudflare dashboard
 [[r2_buckets]]
 binding = "R2_BUCKET"
 bucket_name = "mtg-plan-drafts"
