@@ -275,7 +275,19 @@ async function handleQuizWebhook(request, env, ctx) {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
   }
 
-  // Only POST allowed
+  // Handle GET request for results lookup by submission ID
+  if (request.method === 'GET') {
+    const url = new URL(request.url);
+    const sid = url.searchParams.get('sid');
+    if (sid && env.MTG_RESULTS_CACHE) {
+      const cached = await env.MTG_RESULTS_CACHE.get(`result:${sid}`);
+      if (cached) return corsResponse(JSON.parse(cached));
+      return errorResponse('Result not found', 404);
+    }
+    return errorResponse('Missing sid parameter', 400);
+  }
+
+  // Only POST allowed for webhook
   if (request.method !== 'POST') {
     return errorResponse('Method not allowed', 405);
   }
@@ -362,7 +374,13 @@ async function handleQuizWebhook(request, env, ctx) {
     const resultsPageBase = env.RESULTS_PAGE_URL || '/results/';
     const encodedData = btoa(JSON.stringify(resultsData));
     const resultsUrl = `${resultsPageBase}#${encodedData}`;
-
+	// Store results URL in KV keyed by submission ID (expires in 1 hour)
+const submissionId = payload.submissionID || payload.id || email + Date.now();
+if (env.MTG_RESULTS_CACHE) {
+  ctx.waitUntil(
+    env.MTG_RESULTS_CACHE.put(`result:${submissionId}`, JSON.stringify({ resultsUrl }), { expirationTtl: 3600 })
+  );
+}
     // 10. Return results JSON for the results page
     return corsResponse({
       success: true,

@@ -9,3 +9,7 @@ compatibility_flags = ["nodejs_compat"]
 [vars]
 # Set RESULTS_PAGE_URL to the live results page URL in production
 # RESULTS_PAGE_URL = "https://yourdomain.com/results/"
+
+[[kv_namespaces]]
+binding = "MTG_RESULTS_CACHE"
+id = "e55d117319de4c65a1d0edff2f5e3c5b"
