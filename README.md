@@ -2,22 +2,44 @@
 
 Consulting automation system for Marc (marc@mindthegaps.biz). Automates the full pipeline from quiz intake through plan delivery.
 
-**Customer flow:** Quiz → Results Page → Stripe Payment → Calendly Booking → Scan Worksheet → One-Page Plan (DOCX)
+**Customer flow:** Quiz → Results Page → Stripe Payment → Booking Page (Calendly) → Scan Worksheet → One-Page Plan (DOCX) → Email to Marc
 
 ---
 
-## Current Status (Feb 18, 2026)
+## WHEN ABOUT TO GO LIVE, CHANGE THE FOLLOWING VALUES:
+
+| # | What | Current (TEST) Value | Production Value | Where to Change |
+|---|------|---------------------|-----------------|-----------------|
+| 1 | **Stripe Payment Link** | `https://book.stripe.com/test_bJebJ28Jl30W3yL8Q81sQ01` (TEST mode) | Create a new **live** payment link in Stripe dashboard | `pages/results/index.html` — the `href` on the "Book the 45-Minute Growth Gap Scan" button |
+| 2 | **Stripe Webhook Secret** | Test signing secret | New signing secret from live Stripe webhook endpoint | Cloudflare Worker secret: `echo "whsec_live_xxx" \| npx wrangler secret put STRIPE_WEBHOOK_SECRET` in `workers/mtg-stripe-webhook/` |
+| 3 | **Stripe Success URL** | Currently redirects to Stripe default | Set to `https://mtg-pages-3yo.pages.dev/booking/` (or your custom domain) | Stripe Dashboard → Payment Links → Edit → After payment → Redirect URL |
+| 4 | **RESEND_API_KEY** | `re_KWb3PhrW_...` (test/burner key) | Production Resend API key (with verified domain) | Cloudflare Worker secret: `echo "re_live_xxx" \| npx wrangler secret put RESEND_API_KEY` in `workers/mtg-scan-webhook/` |
+| 5 | **FROM_EMAIL** | `onboarding@resend.dev` (Resend test sender) | `notifications@mindthegaps.biz` (or similar, must be verified in Resend) | Cloudflare Worker secret: `echo "notifications@mindthegaps.biz" \| npx wrangler secret put FROM_EMAIL` in `workers/mtg-scan-webhook/` |
+| 6 | **MARC_EMAIL** | `tyler@bryantworks.com` (Resend account owner — test keys can ONLY send to this address) | `marc@mindthegaps.biz` | Cloudflare Worker secret: `echo "marc@mindthegaps.biz" \| npx wrangler secret put MARC_EMAIL` in `workers/mtg-scan-webhook/` |
+| 7 | **Custom Domain** (optional) | `mtg-pages-3yo.pages.dev` | Custom domain (e.g. `app.mindthegaps.biz`) | Cloudflare Dashboard → Pages → Custom Domains. Then update Stripe success URL and any hardcoded references. |
+
+**How to change a Cloudflare Worker secret:**
+```bash
+cd workers/<worker-name>
+echo "new-value" | npx wrangler secret put SECRET_NAME
+```
+No redeployment needed — secrets take effect immediately.
+
+---
+
+## Current Status (Feb 19, 2026)
 
 | Component | Status | Details |
 |-----------|--------|---------|
 | Quiz + Scoring Engine | **Deployed** | 13-question quiz, scoring, results, eligibility |
 | Results Page | **Deployed** | Gap diagnosis, score, CTA with Stripe link |
+| Booking Page | **Deployed** | Calendly inline widget, shown after Stripe payment |
 | Stripe Payment Webhook | **Deployed** | Receives checkout.session.completed, updates HubSpot |
 | Calendly Booking Webhook | **Deployed** | Receives invitee.created, updates HubSpot |
 | Scan Worksheet Processing | **Deployed** | Stop rules, confidence, plan generation, DOCX builder |
 | HubSpot Integration | **Deployed** | 54 custom `mtg_` properties created and populated |
-| R2 Storage | **Deployed** | `mtg-plan-drafts` bucket for DOCX plans |
-| Email Notifications | **Partial** | Code complete, Resend API key not yet configured |
+| R2 Storage | **Deployed** | `mtg-plan-drafts` bucket, DOCX download endpoint live |
+| Email Notifications | **Deployed** | Resend configured (test mode), emails sent to Jesse for testing |
 
 **390 tests passing, 0 failing**
 
@@ -66,7 +88,19 @@ Name/address: Anything
 
 After payment, check HubSpot again — `mtg_payment_status` should be "Paid".
 
-**Step 4 — Test Calendly booking (optional):** Book a test appointment on Marc's Calendly. After booking, check HubSpot — `mtg_scan_booked` should be "true".
+**Step 4 — Test Calendly booking:** After Stripe payment, you should be redirected to the booking page at `https://mtg-pages-3yo.pages.dev/booking/`. Pick a time in the Calendly widget. After booking, check HubSpot — `mtg_scan_booked` should be "true".
+
+> **Note:** For the redirect to work, the Stripe payment link's success URL must be set to `https://mtg-pages-3yo.pages.dev/booking/` in the Stripe dashboard.
+
+**Step 5 — Test Scan Worksheet (triggers DOCX + email):** Open the JotForm scan worksheet:
+
+```
+https://form.jotform.com/260435948553162
+```
+
+Fill out all required fields (contact info, primary gap, sub-path, one lever, 6 actions, metrics). Submit the form. You should receive an email notification at the configured `MARC_EMAIL` address with a download link for the generated DOCX plan.
+
+Check HubSpot: `mtg_plan_draft_link` should contain the download URL, `mtg_scan_confidence` should be set.
 
 ### Option 3: Run the Automated Tests
 
@@ -120,20 +154,20 @@ Requires Node 18+ (uses built-in `node:test` runner). Only external dependency: 
                     │  Stripe Checkout │  Stripe (TEST mode)
                     │  $295 CAD        │  https://book.stripe.com/test_bJebJ28Jl30W3yL8Q81sQ01
                     └────────┬─────────┘
-                             │ checkout.session.completed webhook
+                             │ checkout.session.completed webhook + redirect
                              ▼
                     ┌──────────────────┐
                     │  Stripe Webhook  │  Cloudflare Worker
                     │  Updates HubSpot │  https://mtg-stripe-webhook.mindthegaps-biz-account.workers.dev
                     │  payment status  │
-                    └────────┬─────────┘
-                             │ Customer books scan appointment
-                             ▼
+                    └──────────────────┘
+
                     ┌──────────────────┐
-                    │  Calendly        │  Calendly
-                    │  Booking page    │
+                    │  Booking Page    │  Cloudflare Pages
+                    │  Calendly inline │  https://mtg-pages-3yo.pages.dev/booking/
+                    │  widget embedded │  (Stripe redirects here after payment)
                     └────────┬─────────┘
-                             │ invitee.created webhook
+                             │ Customer picks time → invitee.created webhook
                              ▼
                     ┌──────────────────┐
                     │  Calendly        │  Cloudflare Worker
@@ -159,30 +193,25 @@ Requires Node 18+ (uses built-in `node:test` runner). Only external dependency: 
 |---------|----------|
 | Quiz Page | `https://mtg-pages-3yo.pages.dev/quiz/` |
 | Results Page | `https://mtg-pages-3yo.pages.dev/results/` |
+| Booking Page | `https://mtg-pages-3yo.pages.dev/booking/` |
 | Quiz Webhook | `https://mtg-quiz-webhook.mindthegaps-biz-account.workers.dev` |
 | Stripe Webhook | `https://mtg-stripe-webhook.mindthegaps-biz-account.workers.dev` |
 | Calendly Webhook | `https://mtg-calendly-webhook.mindthegaps-biz-account.workers.dev` |
 | Scan Webhook | `https://mtg-scan-webhook.mindthegaps-biz-account.workers.dev` |
+| DOCX Downloads | `https://mtg-scan-webhook.mindthegaps-biz-account.workers.dev/plans/{email}/{timestamp}.docx` |
 | R2 Bucket | `mtg-plan-drafts` |
 | Cloudflare Account | `29b45c8200ab5ef930e08946b9fad67a` |
 | Stripe Checkout | `https://book.stripe.com/test_bJebJ28Jl30W3yL8Q81sQ01` (TEST mode) |
+| Calendly Booking | `https://calendly.com/marc-tribeon/45-minute-growth-gap-scan` |
 
-### Secrets configured on workers
+### Secrets configured on workers (all set)
 
 | Worker | Secrets Set |
 |--------|------------|
 | mtg-quiz-webhook | `HUBSPOT_API_KEY`, `RESULTS_PAGE_URL` |
 | mtg-stripe-webhook | `HUBSPOT_API_KEY`, `STRIPE_WEBHOOK_SECRET` |
 | mtg-calendly-webhook | `HUBSPOT_API_KEY` |
-| mtg-scan-webhook | `HUBSPOT_API_KEY` |
-
-### Not yet configured
-
-| Secret | Worker | What it does |
-|--------|--------|-------------|
-| `RESEND_API_KEY` | mtg-scan-webhook | Sends email notifications to Marc when plans are ready |
-| `MARC_EMAIL` | mtg-scan-webhook | Marc's email for notifications (marc@mindthegaps.biz) |
-| `FROM_EMAIL` | mtg-scan-webhook | Sender email address for Resend |
+| mtg-scan-webhook | `HUBSPOT_API_KEY`, `RESEND_API_KEY`, `MARC_EMAIL`, `FROM_EMAIL` |
 
 ---
 
@@ -217,7 +246,28 @@ All webhook handlers use `ctx.waitUntil()` for HubSpot writes. The customer-faci
 
 ---
 
-## What Changed Since Phase 4 (Feb 7 → Feb 18)
+## What Changed (Feb 19, 2026)
+
+These changes were made by Jesse (Williamsjesse22) working with Claude in the Feb 19 session:
+
+### 1. Booking Page Created
+Created `pages/booking/index.html` with an embedded Calendly inline widget. After Stripe payment, customers are redirected here to book their 45-Minute Growth Gap Scan. Uses Marc's Calendly URL: `https://calendly.com/marc-tribeon/45-minute-growth-gap-scan`.
+
+### 2. DOCX Download Endpoint
+Added a GET `/plans/*` route to the scan webhook worker so DOCX files stored in R2 are downloadable via a real URL (e.g. `https://mtg-scan-webhook.../plans/email@example.com/1234567890.docx`). Previously the plan URL was a broken relative path.
+
+### 3. Email Notifications Configured
+Set `RESEND_API_KEY`, `MARC_EMAIL`, and `FROM_EMAIL` secrets on the scan webhook worker. Marc (currently Jesse for testing) receives:
+- **"Plan draft ready"** email when a DOCX is generated (includes download link + confidence level)
+- **"Manual plan required"** email when stop rules fire (includes stop reasons)
+
+### 4. JotForm Dropdown Fixes
+- Removed "Please Select" placeholder from q7 (Primary Gap from Quiz) and q9 (Confirmed Primary Gap) on the scan worksheet
+- Confirmed Retention option IS present in both dropdowns (just requires scrolling)
+
+---
+
+## What Changed (Feb 7 → Feb 18)
 
 These changes were made by Jesse (Williamsjesse22) working with Claude in the Feb 18 session:
 
@@ -261,6 +311,7 @@ MindTheGaps/
 ├── pages/
 │   ├── quiz/index.html          # Multi-step quiz (15 steps, progress bar)
 │   ├── results/index.html       # Results page (reads base64 from URL hash)
+│   ├── booking/index.html       # Post-payment booking page (Calendly inline widget)
 │   ├── landing/index.html       # Marketing landing page (from Figma)
 │   └── scan/index.html          # Scan booking page (from Figma)
 │
@@ -344,16 +395,18 @@ MindTheGaps/
 7. Quiz page JavaScript redirects to the results URL
 8. Results page decodes the hash, renders diagnosis with pillar-specific colors
 
-### Stripe Payment Webhook
+### Stripe Payment → Booking Page
 
 1. Customer clicks "Book the 45-Minute Growth Gap Scan — CAD $295" on results page
 2. Stripe handles checkout, sends `checkout.session.completed` event to stripe webhook
 3. Worker verifies HMAC-SHA256 signature, extracts payment data
 4. Updates HubSpot: `mtg_payment_status=Paid`, amount, currency, payment ID, timestamp
+5. Customer is redirected to `https://mtg-pages-3yo.pages.dev/booking/` (Stripe success URL)
+6. Booking page shows embedded Calendly widget for Marc's 45-Minute Growth Gap Scan
 
 ### Calendly Booking Webhook
 
-1. Customer books scan appointment on Calendly
+1. Customer picks a time on the booking page's Calendly widget
 2. Calendly sends `invitee.created` event to calendly webhook
 3. Worker extracts booking data (email, scheduled time, event URI)
 4. Updates HubSpot: `mtg_scan_booked=true`, scheduled time, event ID
@@ -370,7 +423,7 @@ MindTheGaps/
 7. **DOCX builder**: Generates One-Page Plan with 6 sections (What We Found, Baseline, One Lever, Action Plan, Scorecard, Risks)
 8. **R2 upload**: Stores DOCX at `plans/{email}/{timestamp}.docx`
 9. **HubSpot update**: Plan URL, confidence level, status, timestamps
-10. **Email Marc**: "Plan draft ready for review" (via Resend, when configured)
+10. **Email Marc**: "Plan draft ready for review" (via Resend — configured and live)
 
 ---
 
@@ -457,11 +510,12 @@ Creates a webhook subscription for `invitee.created` events. Checks for existing
 
 ## Remaining Work
 
-### Before going live
+### Before going live (see go-live checklist at top of this file)
 1. **Switch Stripe to live mode** — Replace test payment link with production link, update `STRIPE_WEBHOOK_SECRET`
-2. **Configure Resend** — Set `RESEND_API_KEY`, `MARC_EMAIL`, `FROM_EMAIL` on scan webhook
-3. **JotForm scan webhook URL** — Point JotForm scan worksheet webhook to `https://mtg-scan-webhook.mindthegaps-biz-account.workers.dev`
-4. **End-to-end testing** — Test the full flow from quiz through plan delivery
+2. **Set Stripe success URL** — Redirect after payment to `https://mtg-pages-3yo.pages.dev/booking/` (in Stripe dashboard)
+3. **Swap Resend to production** — New API key with verified domain, update `FROM_EMAIL` to `@mindthegaps.biz`
+4. **Swap MARC_EMAIL** — Change from test email to `marc@mindthegaps.biz`
+5. **End-to-end testing** — Test the full flow from quiz through plan delivery + email
 
 ### Nice-to-haves
 - Tighten CORS from `*` to specific domains

@@ -105,6 +105,54 @@ const JOTFORM_SCAN_FIELD_MAP = {
 };
 
 // ---------------------------------------------------------------------------
+// QID → full field name map (for JotForm rawRequest with numeric keys)
+// Built once at module load from JOTFORM_SCAN_FIELD_MAP
+// ---------------------------------------------------------------------------
+
+const QID_TO_FIELD = {};
+function registerFields(obj) {
+  for (const key of Object.values(typeof obj === 'object' ? obj : {})) {
+    const match = typeof key === 'string' && key.match(/^q(\d+)_/);
+    if (match) QID_TO_FIELD[match[1]] = key;
+  }
+}
+function registerFieldKeys(obj) {
+  for (const key of Object.keys(typeof obj === 'object' ? obj : {})) {
+    const match = key.match(/^q(\d+)_/);
+    if (match) QID_TO_FIELD[match[1]] = key;
+  }
+}
+// Register all known field names
+registerFieldKeys(JOTFORM_SCAN_FIELD_MAP.contact);
+registerFieldKeys(JOTFORM_SCAN_FIELD_MAP.scan);
+registerFieldKeys(JOTFORM_SCAN_FIELD_MAP.baseline);
+registerFields(JOTFORM_SCAN_FIELD_MAP.subPathByPillar);
+registerFields(JOTFORM_SCAN_FIELD_MAP.oneLeverByPillar);
+{ const m = JOTFORM_SCAN_FIELD_MAP.oneLeverSentence.match(/^q(\d+)_/); if (m) QID_TO_FIELD[m[1]] = JOTFORM_SCAN_FIELD_MAP.oneLeverSentence; }
+for (const slot of Object.values(JOTFORM_SCAN_FIELD_MAP.actions)) {
+  for (const fieldName of Object.values(slot)) {
+    const match = fieldName.match(/^q(\d+)_/);
+    if (match) QID_TO_FIELD[match[1]] = fieldName;
+  }
+}
+registerFields(JOTFORM_SCAN_FIELD_MAP.metricsByPillar);
+registerFields(JOTFORM_SCAN_FIELD_MAP.constraints);
+
+/**
+ * Normalize payload keys: JotForm rawRequest uses numeric QIDs ("2", "9", etc.)
+ * but our field map uses "q2_contactEmail", "q9_primaryGap", etc.
+ * This adds the full field name for any numeric key found in the payload.
+ */
+function normalizePayloadKeys(payload) {
+  for (const [qid, fullKey] of Object.entries(QID_TO_FIELD)) {
+    if (payload[qid] !== undefined && payload[fullKey] === undefined) {
+      payload[fullKey] = payload[qid];
+    }
+  }
+  return payload;
+}
+
+// ---------------------------------------------------------------------------
 // CORS configuration
 // ---------------------------------------------------------------------------
 
@@ -131,6 +179,7 @@ function errorResponse(message, status = 400) {
 
 async function parsePayload(request) {
   const contentType = request.headers.get('Content-Type') || '';
+  let payload;
 
   if (contentType.includes('form')) {
     const formData = await request.formData();
@@ -141,22 +190,25 @@ async function parsePayload(request) {
     if (flat.rawRequest) {
       try {
         const raw = JSON.parse(flat.rawRequest);
-        return { ...flat, ...raw };
-      } catch { /* keep flat */ }
+        payload = { ...flat, ...raw };
+      } catch { payload = flat; }
+    } else {
+      payload = flat;
     }
-    return flat;
-  }
-
-  if (contentType.includes('json')) {
+  } else if (contentType.includes('json')) {
     const json = await request.json();
     if (json.rawRequest && typeof json.rawRequest === 'string') {
-      try { return JSON.parse(json.rawRequest); } catch { return json; }
+      try { payload = JSON.parse(json.rawRequest); } catch { payload = json; }
+    } else {
+      payload = json;
     }
-    return json;
+  } else {
+    const text = await request.text();
+    try { payload = JSON.parse(text); } catch { payload = {}; }
   }
 
-  const text = await request.text();
-  try { return JSON.parse(text); } catch { return {}; }
+  // Normalize JotForm numeric QID keys ("2", "9") → full field names ("q2_contactEmail", "q9_primaryGap")
+  return normalizePayloadKeys(payload);
 }
 
 // ---------------------------------------------------------------------------
@@ -216,10 +268,18 @@ function extractScanData(payload) {
   scan.actions = [];
   for (let i = 1; i <= 6; i++) {
     const actionMap = JOTFORM_SCAN_FIELD_MAP.actions[i];
+    // JotForm sends dates as objects: {"month":"02","day":"19","year":"2026","datetime":"..."}
+    const rawDue = payload[actionMap.due];
+    let dueDate = '';
+    if (rawDue && typeof rawDue === 'object' && rawDue.year) {
+      dueDate = rawDue.datetime || `${rawDue.year}-${rawDue.month}-${rawDue.day}`;
+    } else {
+      dueDate = String(rawDue || '').trim();
+    }
     scan.actions.push({
       description: String(payload[actionMap.desc] || '').trim(),
       owner: String(payload[actionMap.owner] || '').trim(),
-      dueDate: String(payload[actionMap.due] || '').trim(),
+      dueDate,
     });
   }
 
@@ -229,9 +289,13 @@ function extractScanData(payload) {
   if (metricsField) {
     const metricsValue = payload[metricsField];
     if (metricsValue) {
-      // JotForm checkboxes send as newline-separated or comma-separated string
-      const parts = String(metricsValue).split(/[\n,]+/).map((s) => s.trim()).filter(Boolean);
-      scan.metrics = parts;
+      // JotForm sends checkboxes as arrays or newline/comma-separated strings
+      if (Array.isArray(metricsValue)) {
+        scan.metrics = metricsValue.filter(Boolean);
+      } else {
+        const parts = String(metricsValue).split(/[\n,]+/).map((s) => s.trim()).filter(Boolean);
+        scan.metrics = parts;
+      }
     }
   }
 
@@ -502,5 +566,7 @@ module.exports._internal = {
   buildHubSpotProperties,
   handleScanWebhook,
   handlePlanDownload,
+  normalizePayloadKeys,
   JOTFORM_SCAN_FIELD_MAP,
+  QID_TO_FIELD,
 };
