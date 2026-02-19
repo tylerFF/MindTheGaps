@@ -227,7 +227,10 @@ function buildHubSpotProperties(contactInfo, answers, scoringResult, resultsCont
   if (contactInfo.businessName) props.mtg_business_name = contactInfo.businessName;
   if (contactInfo.industry) props.mtg_industry = contactInfo.industry;
   if (contactInfo.location) props.mtg_location = contactInfo.location;
-  if (contactInfo.teamSize) props.mtg_team_size = contactInfo.teamSize;
+  if (contactInfo.teamSize) {
+    // Map JotForm value to HubSpot expected value
+    props.mtg_team_size = contactInfo.teamSize === 'Less than 10' ? '<10' : contactInfo.teamSize;
+  }
   if (contactInfo.websiteUrl) props.mtg_website_url = contactInfo.websiteUrl;
   if (contactInfo.phone) props.mtg_phone = contactInfo.phone;
 
@@ -324,14 +327,18 @@ async function handleQuizWebhook(request, env, ctx) {
 
     // 8. Write to HubSpot (non-blocking — don't fail the user-facing response)
     let hubspotStatus = 'skipped';
+    console.log('HubSpot API key present:', !!env.HUBSPOT_API_KEY);
 
     if (env.HUBSPOT_API_KEY) {
       const hubspotWrite = async () => {
+        console.log('HubSpot write starting');
         try {
           const client = createHubSpotClient(env.HUBSPOT_API_KEY);
           const result = await client.upsertContact(email, hubspotProps);
           hubspotStatus = result.created ? 'created' : 'updated';
+          console.log('HubSpot write success:', hubspotStatus);
         } catch (err) {
+          console.log('HubSpot write error:', err.message);
           console.error('HubSpot write failed:', err.message);
           hubspotStatus = 'error';
         }
