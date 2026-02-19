@@ -294,13 +294,54 @@ function buildHubSpotProperties(scanData, confidenceResult, planUrl, stopResult)
 // Main handler
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// GET /plans/* — serve DOCX files from R2
+// ---------------------------------------------------------------------------
+
+async function handlePlanDownload(request, env) {
+  const url = new URL(request.url);
+  const key = url.pathname.replace(/^\//, ''); // strip leading slash → "plans/email/ts.docx"
+
+  if (!env.R2_BUCKET) {
+    return new Response('Storage not configured', { status: 503 });
+  }
+
+  const object = await env.R2_BUCKET.get(key);
+  if (!object) {
+    return new Response('File not found', { status: 404 });
+  }
+
+  return new Response(object.body, {
+    headers: {
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'Content-Disposition': `attachment; filename="${key.split('/').pop()}"`,
+      'Cache-Control': 'private, max-age=3600',
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Main handler
+// ---------------------------------------------------------------------------
+
 async function handleScanWebhook(request, env, ctx) {
   // CORS preflight
   if (request.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
   }
 
-  // Only POST
+  // GET /plans/* — serve DOCX downloads from R2
+  if (request.method === 'GET') {
+    try {
+      const url = new URL(request.url);
+      if (url.pathname.startsWith('/plans/')) {
+        return handlePlanDownload(request, env);
+      }
+    } catch { /* not a valid absolute URL — fall through */ }
+    return errorResponse('Method not allowed', 405);
+  }
+
+  // Only POST for webhook
   if (request.method !== 'POST') {
     return errorResponse('Method not allowed', 405);
   }
@@ -380,7 +421,13 @@ async function handleScanWebhook(request, env, ctx) {
     let planUrl = null;
     if (env.R2_BUCKET) {
       const key = await uploadPlan(env, email, docxBuffer);
-      planUrl = `${env.R2_PUBLIC_URL || '/r2'}/${key}`;
+      // Build a real download URL using the worker's own hostname
+      try {
+        const workerUrl = new URL(request.url);
+        planUrl = `${workerUrl.origin}/${key}`;
+      } catch {
+        planUrl = `/${key}`;
+      }
     }
 
     // 9. Write to HubSpot (non-blocking)
@@ -454,5 +501,6 @@ module.exports._internal = {
   extractScanData,
   buildHubSpotProperties,
   handleScanWebhook,
+  handlePlanDownload,
   JOTFORM_SCAN_FIELD_MAP,
 };
