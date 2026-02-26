@@ -89,6 +89,60 @@ const STABILITY_TRIGGERS = Object.freeze({
 });
 
 // ---------------------------------------------------------------------------
+// Phrasing bank: MOST_LIKELY_LEAK (keyed by dropdown sub-path values)
+//
+// Maps the actual JotForm dropdown values to the spec's "Most likely leak"
+// phrases. See README "Sub-Path Naming Mismatch" for dropdown→spec mapping.
+// ---------------------------------------------------------------------------
+
+const MOST_LIKELY_LEAK = Object.freeze({
+  // Acquisition sub-paths
+  'Demand capture / local visibility':        'Inbound demand is not steady enough to hit targets.',
+  'Lead capture friction':                    'Leads are being lost at the capture/response step.',
+  'Channel concentration risk':               'Lead flow is concentrated in one source, which raises risk.',
+  // Conversion sub-paths
+  'Speed-to-lead':                            'Speed-to-lead is too slow, which reduces bookings.',
+  'Booking friction':                         'Booking is too slow or too hard, which reduces conversion.',
+  'Show rate':                                'No-shows are reducing completed appointments.',
+  'Quote follow-up / decision drop-off':      'Follow-up after quoting is not consistent, reducing close rate.',
+  // Retention sub-paths
+  'Post-service follow-up gap':               'There is no consistent post-service follow-up to drive repeat work.',
+  'Review rhythm gap':                        'The ask is not happening at the best moment, so referrals/reviews stay low.',
+  'Referral ask gap':                         'The ask is not happening at the best moment, so referrals/reviews stay low.',
+  'Rebook/recall gap':                        'There is no reliable recall system to bring customers back.',
+});
+
+// ---------------------------------------------------------------------------
+// Phrasing bank: WHAT_CHANGES (keyed by sub-path, with gap-level fallbacks)
+//
+// Describes the positive outcome if the leak is fixed.
+// ---------------------------------------------------------------------------
+
+const WHAT_CHANGES = Object.freeze({
+  // Acquisition sub-paths → all map to same outcome
+  'Demand capture / local visibility':        'More leads become booked work.',
+  'Lead capture friction':                    'More leads become booked work.',
+  'Channel concentration risk':               'More leads become booked work.',
+  // Conversion sub-paths → specific to the sub-path
+  'Speed-to-lead':                            'More leads become booked work.',
+  'Booking friction':                         'More booked jobs actually show up.',
+  'Show rate':                                'More booked jobs actually show up.',
+  'Quote follow-up / decision drop-off':      'More quotes turn into signed work.',
+  // Retention sub-paths
+  'Post-service follow-up gap':               'More customers come back without new ad spend.',
+  'Review rhythm gap':                        'More happy customers leave reviews and refer others.',
+  'Referral ask gap':                         'More happy customers leave reviews and refer others.',
+  'Rebook/recall gap':                        'More customers come back without new ad spend.',
+});
+
+// Gap-level fallbacks for WHAT_CHANGES (when sub-path doesn't match)
+const WHAT_CHANGES_BY_GAP = Object.freeze({
+  Acquisition: 'More leads become booked work.',
+  Conversion:  'More leads become booked work.',
+  Retention:   'More customers come back without new ad spend.',
+});
+
+// ---------------------------------------------------------------------------
 // Metric name → baseline field key mapping
 //
 // Maps the metric names selected in Section 6 of the scan worksheet
@@ -136,7 +190,7 @@ const METRIC_PILLAR_OVERRIDES = Object.freeze({
 
 function getTarget(fieldKey, currentValue) {
   if (!currentValue || currentValue.toLowerCase() === 'not sure') {
-    return 'Establish baseline';
+    return 'Start tracking weekly.';
   }
 
   const progression = RANGE_PROGRESSIONS[fieldKey];
@@ -368,7 +422,42 @@ function generatePlan(scanData, contactInfo, confidenceResult) {
   const baselineMetrics = buildSectionBData(scanData);
 
   // Section A: What We Found
+  // 3.1: opener = oneLeverSentence verbatim; fallback if blank
+  const opener = scanData.oneLeverSentence
+    ? scanData.oneLeverSentence
+    : (scanData.subPath && scanData.oneLever
+        ? `Fix ${scanData.subPath} first by focusing on ${scanData.oneLever}.`
+        : '');
+
+  // 3.6: Phrasing bank lookups
+  const mostLikelyLeak = MOST_LIKELY_LEAK[scanData.subPath] || '';
+  const whatChanges = WHAT_CHANGES[scanData.subPath]
+    || WHAT_CHANGES_BY_GAP[scanData.primaryGap]
+    || '';
+
+  // Phase 5 (3.4): Pass contradiction note through to sectionA
+  const contradictionNote = (scanData.contradictionNote || '').trim();
+
+  // Field 2: supporting data point for the plan (tie-breaker confirmation)
+  const field2Answer = (scanData.field2Answer || '').trim();
+  const field2Label = (scanData.field2Label || '').trim();
+
+  // Phase 5 (3.5): Flag when sub-path is "Other (manual)"
+  const isOtherSubPath = scanData.subPath
+    && typeof scanData.subPath === 'string'
+    && scanData.subPath.trim().toLowerCase().startsWith('other');
+  const manualPlanFlag = isOtherSubPath
+    ? 'Manual plan: sub-path was not selected with confidence. Human review required.'
+    : '';
+
   const sectionA = {
+    opener,
+    mostLikelyLeak,
+    whatChanges,
+    contradictionNote,
+    field2Answer,
+    field2Label,
+    manualPlanFlag,
     primaryGap: scanData.primaryGap || 'Unknown',
     subDiagnosis: scanData.subPath || 'Not identified',
     supportingSignal: worst
@@ -394,7 +483,7 @@ function generatePlan(scanData, contactInfo, confidenceResult) {
 
   const sectionC = {
     leverName: scanData.oneLever || 'Not selected',
-    leverDescription: scanData.oneLeverSentence || '',
+    leverDescription: '', // 3.1: moved to sectionA.opener
     whatDoneLooksLike: {
       metric: firstMetric || 'Primary scorecard metric',
       target: firstMetricTarget,
@@ -479,5 +568,8 @@ module.exports = {
     STABILITY_TRIGGERS,
     METRIC_TO_BASELINE,
     METRIC_PILLAR_OVERRIDES,
+    MOST_LIKELY_LEAK,
+    WHAT_CHANGES,
+    WHAT_CHANGES_BY_GAP,
   },
 };

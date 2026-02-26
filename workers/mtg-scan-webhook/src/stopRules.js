@@ -7,7 +7,9 @@
  * Spec reference: PROJECT_CONTEXT.md Section 4 / CLAUDE.md Stop Rules
  *
  * Stop rules:
- *   1. Sub-path = "not sure" or starts with "Other" (manual plan required)
+ *   1a. Sub-path = "not sure"  → full stop (no plan generated)
+ *   1b. Sub-path starts with "Other" → degraded draft (plan IS generated, flagged)
+ *   1c. Field 2 follow-up = "not sure" → full stop (no plan generated)
  *   2. Primary gap changed from quiz without an explanation provided
  *   3. Missing required fields:
  *      - primary gap present
@@ -22,9 +24,10 @@
  *
  * StopRulesResult shape:
  *   {
- *     stopped:  boolean,
- *     reasons:  string[],     // human-readable stop reason(s)
- *     details:  object[],     // machine-readable details per fired rule
+ *     stopped:  boolean,       // true = full stop, plan NOT generated
+ *     degraded: boolean,       // true = "Other (manual)", plan IS generated but flagged
+ *     reasons:  string[],      // human-readable stop reason(s)
+ *     details:  object[],      // machine-readable details per fired rule
  *   }
  *
  * scanData expected shape:
@@ -37,6 +40,8 @@
  *     baselineFields:   object,   // { fieldKey: answerValue } for Tier-1 baseline
  *     actions:          array,    // 6 action slots (strings or { description })
  *     metrics:          array,    // selected metric names (strings)
+ *     field2Answer:     string,   // Field 2 follow-up answer (empty if no follow-up for this sub-path)
+ *     field2Label:      string,   // Field 2 question label (empty if no follow-up)
  *   }
  */
 
@@ -129,7 +134,28 @@ function checkSubPath(scanData) {
   if (isOtherManual(subPath)) {
     return {
       rule: 'subpath_other',
-      message: 'Sub-path is "Other (manual)" — requires manual plan',
+      message: 'Sub-path is "Other (manual)" — degraded draft will be generated',
+      degraded: true,
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Rule 1c: Field 2 follow-up = "not sure" → full stop
+ * Per Marc: "If the facilitator picks not sure, please route that to
+ * Other (manual) and do not auto-generate the plan."
+ */
+function checkField2NotSure(scanData) {
+  const { field2Answer } = scanData;
+
+  // Only fire if Field 2 was answered "Not sure" (explicit selection)
+  // Empty/missing field2Answer means no follow-up question was shown (fine)
+  if (field2Answer && isNotSure(field2Answer)) {
+    return {
+      rule: 'field2_not_sure',
+      message: 'Field 2 follow-up is "Not sure" — requires manual plan',
     };
   }
 
@@ -225,6 +251,7 @@ function checkStopRules(scanData) {
   if (!scanData || typeof scanData !== 'object') {
     return {
       stopped: true,
+      degraded: false,
       reasons: ['No scan data provided'],
       details: [{ rule: 'no_data', message: 'No scan data provided' }],
     };
@@ -235,14 +262,23 @@ function checkStopRules(scanData) {
   const subPathResult = checkSubPath(scanData);
   if (subPathResult) details.push(subPathResult);
 
+  const field2Result = checkField2NotSure(scanData);
+  if (field2Result) details.push(field2Result);
+
   const gapResult = checkGapChanged(scanData);
   if (gapResult) details.push(gapResult);
 
   const missingResult = checkMissingFields(scanData);
   if (missingResult) details.push(missingResult);
 
+  // Separate full stops from degraded results.
+  // "Other (manual)" is degraded (still generates a plan), not a full stop.
+  const fullStops = details.filter(d => !d.degraded);
+  const hasDegraded = details.some(d => d.degraded);
+
   return {
-    stopped: details.length > 0,
+    stopped: fullStops.length > 0,
+    degraded: hasDegraded && fullStops.length === 0,
     reasons: details.map(d => d.message),
     details,
   };
@@ -257,6 +293,7 @@ module.exports = {
     countFilledActions,
     countFilledMetrics,
     checkSubPath,
+    checkField2NotSure,
     checkGapChanged,
     checkMissingFields,
   },

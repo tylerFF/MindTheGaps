@@ -481,11 +481,14 @@ describe('checkStopRules — integration', () => {
     assert.ok(result.details.some(d => d.rule === 'subpath_not_sure'));
   });
 
-  it('stops for sub-path "Other (manual)"', () => {
+  it('does NOT stop for sub-path "Other (manual)" — returns degraded instead', () => {
     const data = buildScanData({ subPath: 'Other (manual)' });
     const result = checkStopRules(data);
-    assert.equal(result.stopped, true);
+    // Phase 5 (3.5): "Other (manual)" is degraded, not a full stop
+    assert.equal(result.stopped, false);
+    assert.equal(result.degraded, true);
     assert.ok(result.details.some(d => d.rule === 'subpath_other'));
+    assert.ok(result.details.some(d => d.degraded === true));
   });
 
   it('stops for gap change without reason', () => {
@@ -624,5 +627,155 @@ describe('checkStopRules — edge cases', () => {
     const result = checkStopRules(data);
     assert.equal(result.stopped, true);
     assert.ok(result.details.some(d => d.rule === 'subpath_not_sure'));
+  });
+});
+
+// ===========================================================================
+// Phase 5: degraded flag behavior
+// ===========================================================================
+
+describe('checkStopRules — Phase 5 degraded behavior', () => {
+  it('returns degraded=true for "Other (manual)" with all other fields valid', () => {
+    const data = buildScanData({ subPath: 'Other (manual)' });
+    const result = checkStopRules(data);
+    assert.equal(result.stopped, false);
+    assert.equal(result.degraded, true);
+    assert.equal(result.reasons.length, 1);
+    assert.ok(result.reasons[0].includes('degraded'));
+  });
+
+  it('returns degraded=true for "Other (forces manual plan)"', () => {
+    const data = buildScanData({ subPath: 'Other (forces manual plan)' });
+    const result = checkStopRules(data);
+    assert.equal(result.stopped, false);
+    assert.equal(result.degraded, true);
+  });
+
+  it('"Not sure" remains a full stop (not degraded)', () => {
+    const data = buildScanData({ subPath: 'Not sure' });
+    const result = checkStopRules(data);
+    assert.equal(result.stopped, true);
+    assert.equal(result.degraded, false);
+  });
+
+  it('degraded=false when no rules fire', () => {
+    const data = buildScanData();
+    const result = checkStopRules(data);
+    assert.equal(result.stopped, false);
+    assert.equal(result.degraded, false);
+  });
+
+  it('"Other" + missing fields = stopped=true (missing fields is a full stop)', () => {
+    const data = buildScanData({
+      subPath: 'Other (manual)',
+      oneLever: '', // missing field → triggers missing_fields rule
+    });
+    const result = checkStopRules(data);
+    // missing_fields is a full stop, so stopped=true
+    assert.equal(result.stopped, true);
+    // degraded is false because there IS a full stop alongside
+    assert.equal(result.degraded, false);
+    assert.ok(result.details.some(d => d.rule === 'subpath_other'));
+    assert.ok(result.details.some(d => d.rule === 'missing_fields'));
+  });
+
+  it('"Other" + gap changed without reason = stopped=true', () => {
+    const data = buildScanData({
+      subPath: 'Other (manual)',
+      primaryGap: PILLARS.ACQUISITION,
+      quizPrimaryGap: PILLARS.CONVERSION,
+      gapChangeReason: '',
+    });
+    const result = checkStopRules(data);
+    assert.equal(result.stopped, true);
+    assert.equal(result.degraded, false);
+    assert.ok(result.details.some(d => d.rule === 'subpath_other'));
+    assert.ok(result.details.some(d => d.rule === 'gap_changed_no_reason'));
+  });
+
+  it('checkSubPath returns degraded:true flag for "Other" variants', () => {
+    const { checkSubPath } = _internal;
+    const result = checkSubPath({ subPath: 'Other (manual)' });
+    assert.notEqual(result, null);
+    assert.equal(result.degraded, true);
+    assert.equal(result.rule, 'subpath_other');
+  });
+
+  it('checkSubPath does NOT return degraded for "Not sure"', () => {
+    const { checkSubPath } = _internal;
+    const result = checkSubPath({ subPath: 'Not sure' });
+    assert.notEqual(result, null);
+    assert.equal(result.degraded, undefined);
+    assert.equal(result.rule, 'subpath_not_sure');
+  });
+
+  it('checkSubPath does NOT return degraded for valid sub-path', () => {
+    const { checkSubPath } = _internal;
+    const result = checkSubPath({ subPath: 'Speed-to-lead' });
+    assert.equal(result, null);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Field 2 "Not sure" stop rule (item 2.2)
+// ---------------------------------------------------------------------------
+
+describe('stopRules — Field 2 "Not sure" (2.2)', () => {
+  it('checkField2NotSure returns stop when field2Answer is "Not sure"', () => {
+    const { checkField2NotSure } = _internal;
+    const result = checkField2NotSure({ field2Answer: 'Not sure' });
+    assert.notEqual(result, null);
+    assert.equal(result.rule, 'field2_not_sure');
+  });
+
+  it('checkField2NotSure is case-insensitive', () => {
+    const { checkField2NotSure } = _internal;
+    const result = checkField2NotSure({ field2Answer: 'not sure' });
+    assert.notEqual(result, null);
+    assert.equal(result.rule, 'field2_not_sure');
+  });
+
+  it('checkField2NotSure returns null for a real answer', () => {
+    const { checkField2NotSure } = _internal;
+    const result = checkField2NotSure({ field2Answer: 'Same day' });
+    assert.equal(result, null);
+  });
+
+  it('checkField2NotSure returns null when field2Answer is empty', () => {
+    const { checkField2NotSure } = _internal;
+    const result = checkField2NotSure({ field2Answer: '' });
+    assert.equal(result, null);
+  });
+
+  it('checkField2NotSure returns null when field2Answer is undefined', () => {
+    const { checkField2NotSure } = _internal;
+    const result = checkField2NotSure({});
+    assert.equal(result, null);
+  });
+
+  it('checkStopRules: field2Answer "Not sure" triggers full stop', () => {
+    const scanData = buildScanData({ field2Answer: 'Not sure' });
+    const result = checkStopRules(scanData);
+    assert.equal(result.stopped, true);
+    assert.ok(result.reasons.some(r => r.includes('Field 2')));
+  });
+
+  it('checkStopRules: field2Answer "Not sure" is NOT degraded (it is a full stop)', () => {
+    const scanData = buildScanData({ field2Answer: 'Not sure' });
+    const result = checkStopRules(scanData);
+    assert.equal(result.stopped, true);
+    assert.equal(result.degraded, false);
+  });
+
+  it('checkStopRules: valid field2Answer does not trigger stop', () => {
+    const scanData = buildScanData({ field2Answer: 'Same day' });
+    const result = checkStopRules(scanData);
+    assert.equal(result.stopped, false);
+  });
+
+  it('checkStopRules: empty field2Answer does not trigger stop', () => {
+    const scanData = buildScanData({ field2Answer: '' });
+    const result = checkStopRules(scanData);
+    assert.equal(result.stopped, false);
   });
 });

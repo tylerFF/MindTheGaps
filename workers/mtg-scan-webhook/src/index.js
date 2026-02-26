@@ -22,7 +22,7 @@ const { calculateConfidence } = require('./confidence');
 const { generatePlan } = require('./planGenerator');
 const { buildDocx } = require('./docxBuilder');
 const { uploadPlan } = require('./storage');
-const { notifyPlanReady, notifyStopRule } = require('./notifications');
+const { notifyPlanReady, notifyDegradedPlan, notifyStopRule } = require('./notifications');
 const { createHubSpotClient } = require('../../shared/hubspot');
 const { isValidEmail, normalizeEmail, sanitizeString } = require('../../shared/validation');
 const { PILLARS, BASELINE_FIELDS } = require('../../shared/constants');
@@ -44,12 +44,30 @@ const JOTFORM_SCAN_FIELD_MAP = {
     q9_primaryGap: 'primaryGap',
     q7_quizPrimaryGap: 'quizPrimaryGap',
     q10_gapChangeReason: 'gapChangeReason',
+    // Phase 5 (3.4): Contradiction note — QID 79 confirmed in JotForm scan worksheet
+    q79_contradictionNote: 'contradictionNote',
   },
   // Sub-path: one per pillar, extracted based on primaryGap
   subPathByPillar: {
     Conversion: 'q11_subPathConversion',
     Acquisition: 'q12_subPathAcquisition',
     Retention: 'q13_subPathRetention',
+  },
+  // Field 2: one follow-up question per sub-path (keyed by exact sub-path dropdown value)
+  field2BySubPath: {
+    // Conversion sub-paths
+    'Speed-to-lead':                       { field: 'q80_field2SpeedToLead',         label: 'First response time' },
+    'Booking friction':                    { field: 'q81_field2BookingFriction',     label: 'Days to first appointment' },
+    'Show rate':                           { field: 'q82_field2ShowRate',            label: 'Show rate %' },
+    'Quote follow-up / decision drop-off': { field: 'q83_field2QuoteFollowUp',      label: 'Quote-to-close %' },
+    // Acquisition sub-paths
+    'Channel concentration risk':          { field: 'q84_field2ChannelConcentration', label: '% leads from top source' },
+    'Lead capture friction':               { field: 'q85_field2LeadCapture',         label: 'Calls answered live' },
+    'Demand capture / local visibility':   { field: 'q86_field2InboundDemand',       label: 'Inbound leads per month' },
+    // Retention sub-paths
+    'Rebook/recall gap':                   { field: 'q87_field2RebookRecall',        label: 'Next step scheduled at job end' },
+    'Referral ask gap':                    { field: 'q88_field2ReferralAsk',         label: 'Referral intros per month' },
+    'Post-service follow-up gap':          { field: 'q89_field2PostServiceFollowUp', label: '% revenue from repeat' },
   },
   // One Lever: one per pillar, extracted based on primaryGap
   oneLeverByPillar: {
@@ -137,6 +155,11 @@ for (const slot of Object.values(JOTFORM_SCAN_FIELD_MAP.actions)) {
 }
 registerFields(JOTFORM_SCAN_FIELD_MAP.metricsByPillar);
 registerFields(JOTFORM_SCAN_FIELD_MAP.constraints);
+// Register Field 2 follow-up field names
+for (const entry of Object.values(JOTFORM_SCAN_FIELD_MAP.field2BySubPath)) {
+  const match = entry.field.match(/^q(\d+)_/);
+  if (match) QID_TO_FIELD[match[1]] = entry.field;
+}
 
 /**
  * Normalize payload keys: JotForm rawRequest uses numeric QIDs ("2", "9", etc.)
@@ -245,6 +268,7 @@ function extractScanData(payload) {
   scan.primaryGap = scan.primaryGap || '';
   scan.quizPrimaryGap = scan.quizPrimaryGap || scan.primaryGap;
   scan.gapChangeReason = scan.gapChangeReason || '';
+  scan.contradictionNote = scan.contradictionNote || '';
 
   // Sub-path: pick the field matching the confirmed primary gap
   const subPathField = JOTFORM_SCAN_FIELD_MAP.subPathByPillar[scan.primaryGap];
@@ -254,6 +278,16 @@ function extractScanData(payload) {
   const oneLeverField = JOTFORM_SCAN_FIELD_MAP.oneLeverByPillar[scan.primaryGap];
   scan.oneLever = oneLeverField ? String(payload[oneLeverField] || '').trim() : '';
   scan.oneLeverSentence = String(payload[JOTFORM_SCAN_FIELD_MAP.oneLeverSentence] || '').trim();
+
+  // Field 2: follow-up question tied to the selected sub-path
+  const field2Entry = JOTFORM_SCAN_FIELD_MAP.field2BySubPath[scan.subPath];
+  if (field2Entry) {
+    scan.field2Answer = String(payload[field2Entry.field] || '').trim();
+    scan.field2Label = field2Entry.label;
+  } else {
+    scan.field2Answer = '';
+    scan.field2Label = '';
+  }
 
   // Baseline fields
   scan.baselineFields = {};
@@ -316,7 +350,7 @@ function extractScanData(payload) {
 // HubSpot property builder
 // ---------------------------------------------------------------------------
 
-function buildHubSpotProperties(scanData, confidenceResult, planUrl, stopResult) {
+function buildHubSpotProperties(scanData, confidenceResult, planUrl, stopResult, isDegraded) {
   const props = {};
 
   // Scan metadata
@@ -327,6 +361,9 @@ function buildHubSpotProperties(scanData, confidenceResult, planUrl, stopResult)
   props.mtg_scan_one_lever = scanData.oneLever;
   if (scanData.oneLeverSentence) {
     props.mtg_scan_one_lever_sentence = scanData.oneLeverSentence;
+  }
+  if (scanData.field2Answer) {
+    props.mtg_scan_field2_answer = scanData.field2Answer;
   }
 
   if (stopResult && stopResult.stopped) {
@@ -345,10 +382,17 @@ function buildHubSpotProperties(scanData, confidenceResult, planUrl, stopResult)
   // Plan
   if (planUrl) {
     props.mtg_plan_draft_link = planUrl;
-    props.mtg_plan_review_status = 'Pending';
     props.mtg_plan_drafted_at = new Date().toISOString();
     props.mtg_plan_status = 'Draft';
-    props.mtg_plan_generation_mode = 'Auto';
+
+    // Phase 5 (3.5): Degraded plans get Manual Required + Degraded mode
+    if (isDegraded) {
+      props.mtg_plan_review_status = 'Manual Required';
+      props.mtg_plan_generation_mode = 'Degraded';
+    } else {
+      props.mtg_plan_review_status = 'Pending';
+      props.mtg_plan_generation_mode = 'Auto';
+    }
   }
 
   return props;
@@ -428,10 +472,11 @@ async function handleScanWebhook(request, env, ctx) {
 
     // 4. Run stop rules
     const stopResult = checkStopRules(scanData);
+    const isDegraded = stopResult.degraded && !stopResult.stopped;
 
     if (stopResult.stopped) {
       // Write stop reason to HubSpot (non-blocking)
-      const hubspotProps = buildHubSpotProperties(scanData, null, null, stopResult);
+      const hubspotProps = buildHubSpotProperties(scanData, null, null, stopResult, false);
 
       if (env.HUBSPOT_API_KEY) {
         const writeStop = async () => {
@@ -476,6 +521,7 @@ async function handleScanWebhook(request, env, ctx) {
     const confidenceResult = calculateConfidence(scanData.baselineFields, scanData.primaryGap);
 
     // 6. Generate plan (deterministic — no AI)
+    // Phase 5 (3.5): Degraded plans are still generated, but flagged
     const planContent = generatePlan(scanData, contactInfo, confidenceResult);
 
     // 7. Build DOCX
@@ -495,7 +541,8 @@ async function handleScanWebhook(request, env, ctx) {
     }
 
     // 9. Write to HubSpot (non-blocking)
-    const hubspotProps = buildHubSpotProperties(scanData, confidenceResult, planUrl, null);
+    // Phase 5 (3.5): Degraded plans write all fields but with Manual Required + Degraded flags
+    const hubspotProps = buildHubSpotProperties(scanData, confidenceResult, planUrl, null, isDegraded);
     let hubspotStatus = 'skipped';
 
     if (env.HUBSPOT_API_KEY) {
@@ -517,13 +564,17 @@ async function handleScanWebhook(request, env, ctx) {
     }
 
     // 10. Notify Marc (non-blocking)
+    // Phase 5 (3.5): Degraded plans use special notification
     if (planUrl) {
-      const notifyCall = notifyPlanReady(env, {
+      const notifyData = {
         email,
         businessName: contactInfo.businessName,
         planUrl,
         confidence: confidenceResult.level,
-      });
+      };
+      const notifyCall = isDegraded
+        ? notifyDegradedPlan(env, notifyData)
+        : notifyPlanReady(env, notifyData);
       if (ctx && ctx.waitUntil) {
         ctx.waitUntil(notifyCall);
       } else {
@@ -535,6 +586,7 @@ async function handleScanWebhook(request, env, ctx) {
     return corsResponse({
       success: true,
       stopped: false,
+      degraded: isDegraded,
       email,
       confidence: confidenceResult.level,
       planUrl,

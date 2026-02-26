@@ -6,6 +6,7 @@
  *
  * Public API:
  *   notifyPlanReady(env, { email, businessName, planUrl, confidence }) → void
+ *   notifyDegradedPlan(env, { email, businessName, planUrl, confidence }) → void
  *   notifyStopRule(env, { email, businessName, stopReasons }) → void
  */
 
@@ -24,6 +25,22 @@ function buildPlanReadyEmail({ email, businessName, planUrl, confidence }) {
       `<p><strong>Confidence:</strong> ${confidence || 'Unknown'}</p>`,
       `<p><strong>Plan link:</strong> <a href="${planUrl}">${planUrl}</a></p>`,
       `<p>Please review and deliver within 24 hours.</p>`,
+    ].join('\n'),
+  };
+}
+
+function buildDegradedPlanEmail({ email, businessName, planUrl, confidence }) {
+  const name = businessName || email;
+  return {
+    subject: `Degraded plan draft — human review required: ${name}`,
+    html: [
+      `<h2>Degraded Plan Draft — Human Review Required</h2>`,
+      `<p><strong>Business:</strong> ${name}</p>`,
+      `<p><strong>Contact:</strong> ${email}</p>`,
+      `<p><strong>Confidence:</strong> ${confidence || 'Unknown'}</p>`,
+      `<p><strong>Plan link:</strong> <a href="${planUrl}">${planUrl}</a></p>`,
+      `<p><strong style="color: #cc0000;">Draft plan generated but sub-path was Other (manual). Human review required before sending to client.</strong></p>`,
+      `<p>This plan was auto-generated in degraded mode because the facilitator selected "Other (manual)" as the sub-path. The plan content uses generic phrasing and must be reviewed and customized before delivery.</p>`,
     ].join('\n'),
   };
 }
@@ -84,6 +101,14 @@ async function notifyPlanReady(env, data) {
   await sendEmail(env, emailContent);
 }
 
+async function notifyDegradedPlan(env, data) {
+  if (!env || !env.RESEND_API_KEY) {
+    return; // Skip silently when no API key
+  }
+  const emailContent = buildDegradedPlanEmail(data);
+  await sendEmail(env, emailContent);
+}
+
 async function notifyStopRule(env, data) {
   if (!env || !env.RESEND_API_KEY) {
     return; // Skip silently when no API key
@@ -94,9 +119,11 @@ async function notifyStopRule(env, data) {
 
 module.exports = {
   notifyPlanReady,
+  notifyDegradedPlan,
   notifyStopRule,
   _internal: {
     buildPlanReadyEmail,
+    buildDegradedPlanEmail,
     buildStopRuleEmail,
     sendEmail,
   },

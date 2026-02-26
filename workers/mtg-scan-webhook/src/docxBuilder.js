@@ -167,6 +167,85 @@ function buildSectionA(planContent) {
   const a = planContent.sectionA || {};
   const children = [
     sectionHeader('What We Found'),
+  ];
+
+  // Phase 5 (3.5): Manual plan flag — bold, prominent warning for Marc
+  if (a.manualPlanFlag) {
+    children.push(
+      new Paragraph({
+        spacing: { before: 60, after: 120 },
+        shading: { type: ShadingType.SOLID, color: 'FFF3CD' }, // yellow highlight
+        children: [
+          text(a.manualPlanFlag, { bold: true, color: 'CC0000' }),
+        ],
+      }),
+    );
+  }
+
+  // 3.1: Opener is first prominent line (oneLeverSentence verbatim)
+  if (a.opener) {
+    children.push(
+      new Paragraph({
+        spacing: { after: 120 },
+        children: [
+          text(a.opener, { bold: true, size: HEADER_SIZE }),
+        ],
+      }),
+    );
+  }
+
+  // Phase 5 (3.4): Contradiction note — placed directly under the opener
+  if (a.contradictionNote) {
+    children.push(
+      new Paragraph({
+        spacing: { after: 80 },
+        children: [
+          text('Why this focus: ', { bold: true }),
+          text(a.contradictionNote, { italics: true }),
+        ],
+      }),
+    );
+  }
+
+  // 3.6: Phrasing bank — "Most likely leak" and "What changes"
+  if (a.mostLikelyLeak) {
+    children.push(
+      new Paragraph({
+        spacing: { after: 80 },
+        children: [
+          text('Most likely leak: ', { bold: true }),
+          text(a.mostLikelyLeak),
+        ],
+      }),
+    );
+  }
+
+  if (a.whatChanges) {
+    children.push(
+      new Paragraph({
+        spacing: { after: 120 },
+        children: [
+          text('What changes if we fix it: ', { bold: true }),
+          text(a.whatChanges),
+        ],
+      }),
+    );
+  }
+
+  // Field 2: supporting data point from sub-path follow-up question
+  if (a.field2Answer && a.field2Label) {
+    children.push(
+      new Paragraph({
+        spacing: { after: 80 },
+        children: [
+          text('Sub-path confirmation: ', { bold: true }),
+          text(`${a.field2Label}: ${a.field2Answer}`),
+        ],
+      }),
+    );
+  }
+
+  children.push(
     new Paragraph({
       spacing: { after: 80 },
       children: [
@@ -181,7 +260,7 @@ function buildSectionA(planContent) {
         text(a.subDiagnosis || 'Not identified'),
       ],
     }),
-  ];
+  );
 
   if (a.supportingSignal) {
     children.push(
@@ -305,22 +384,26 @@ function buildSectionD(planContent) {
 
   const children = [sectionHeader('Action Plan')];
 
+  // 3.2: Single-line format: "{action text} Owner: {role}. Due: Day {X}."
   const headerRow = row([
     cell('#', { bold: true, shading: COLORS.HEADER_BG, headerCell: true, width: 5 }),
-    cell('Action', { bold: true, shading: COLORS.HEADER_BG, headerCell: true, width: 55 }),
-    cell('Owner', { bold: true, shading: COLORS.HEADER_BG, headerCell: true, width: 20 }),
-    cell('Timeline', { bold: true, shading: COLORS.HEADER_BG, headerCell: true, width: 20 }),
+    cell('Action', { bold: true, shading: COLORS.HEADER_BG, headerCell: true, width: 95 }),
   ]);
 
   const dataRows = [];
   for (let i = 0; i < 6; i++) {
     const action = actions[i] || {};
+    let actionLine = action.description || '';
+    if (action.owner) {
+      actionLine += ` Owner: ${action.owner}.`;
+    }
+    if (action.dueDate) {
+      actionLine += ` Due: ${action.dueDate}.`;
+    }
     dataRows.push(
       row([
         cell(String(i + 1), { width: 5 }),
-        cell(action.description || '', { width: 55 }),
-        cell(action.owner || '', { width: 20 }),
-        cell(action.dueDate || '', { width: 20 }),
+        cell(actionLine.trim(), { width: 95 }),
       ]),
     );
   }
@@ -365,6 +448,22 @@ function buildSectionE(planContent) {
       rows: [headerRow, ...dataRows],
     }),
   );
+
+  // 3.3: Add data gap note for any metric with "Start tracking weekly." target
+  const hasDataGapMetric = metrics.some(
+    (m) => m.target30Day === 'Start tracking weekly.',
+  );
+  if (hasDataGapMetric) {
+    children.push(
+      new Paragraph({
+        spacing: { before: 80, after: 80 },
+        shading: { type: ShadingType.SOLID, color: COLORS.LIGHT_BLUE },
+        children: [
+          text('This is a data gap. Track for 2 weeks, then tighten targets.', { italics: true }),
+        ],
+      }),
+    );
+  }
 
   // Personalization: stability target insight
   for (const insight of getInsightsByPlacement(planContent, 'sectionE')) {
@@ -504,7 +603,7 @@ function createStyledDoc(sections, contactInfo) {
 /**
  * Generate a One-Page Plan DOCX from plan content and scan data.
  *
- * @param {object} planContent — structured plan content (from Claude API)
+ * @param {object} planContent — structured plan content (from planGenerator)
  * @param {object} scanData — raw scan worksheet data
  * @param {object} contactInfo — { businessName, email, firstName, ... }
  * @param {object} confidenceResult — from calculateConfidence()

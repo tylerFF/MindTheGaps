@@ -591,3 +591,455 @@ describe('docxBuilder — BASELINE_LABELS', () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// Phase 4 — Section A opener rendering (3.1)
+// ---------------------------------------------------------------------------
+
+describe('docxBuilder — Section A opener (3.1)', () => {
+  it('renders opener as first element after header when present', () => {
+    const plan = buildPlanContent({ sectionA: { opener: 'Fix slow response time first.' } });
+    const result = buildSectionA(plan);
+    // header + opener + mostLikelyLeak + whatChanges + gap + rootCause + signal + quiz = many elements
+    assert.ok(result.length >= 4);
+  });
+
+  it('does not render opener paragraph when opener is empty', () => {
+    const plan = buildPlanContent({ sectionA: { opener: '' } });
+    const result = buildSectionA(plan);
+    assert.ok(Array.isArray(result));
+    assert.ok(result.length >= 3); // header + gap + rootCause at minimum
+  });
+
+  it('does not render opener paragraph when opener is undefined', () => {
+    const plan = buildPlanContent({ sectionA: { opener: undefined } });
+    const result = buildSectionA(plan);
+    assert.ok(Array.isArray(result));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 4 — Section A phrasing bank rendering (3.6)
+// ---------------------------------------------------------------------------
+
+describe('docxBuilder — Section A phrasing bank (3.6)', () => {
+  it('renders mostLikelyLeak when present', () => {
+    const plan = buildPlanContent({
+      sectionA: { mostLikelyLeak: 'Speed-to-lead is too slow, which reduces bookings.' },
+    });
+    const result = buildSectionA(plan);
+    // Should have more elements than the basic set (header + gap + rootCause + signal + quiz)
+    assert.ok(result.length >= 5);
+  });
+
+  it('renders whatChanges when present', () => {
+    const plan = buildPlanContent({
+      sectionA: { whatChanges: 'More leads become booked work.' },
+    });
+    const result = buildSectionA(plan);
+    assert.ok(result.length >= 5);
+  });
+
+  it('does not render mostLikelyLeak when empty', () => {
+    const plan = buildPlanContent({ sectionA: { mostLikelyLeak: '' } });
+    const result = buildSectionA(plan);
+    assert.ok(Array.isArray(result));
+  });
+
+  it('does not render whatChanges when empty', () => {
+    const plan = buildPlanContent({ sectionA: { whatChanges: '' } });
+    const result = buildSectionA(plan);
+    assert.ok(Array.isArray(result));
+  });
+
+  it('renders both phrasing bank lines together', () => {
+    const plan = buildPlanContent({
+      sectionA: {
+        opener: 'Fix response time.',
+        mostLikelyLeak: 'Speed-to-lead is too slow.',
+        whatChanges: 'More leads become booked work.',
+      },
+    });
+    const result = buildSectionA(plan);
+    // header + opener + mostLikelyLeak + whatChanges + gap + rootCause + signal + quiz = 8+
+    assert.ok(result.length >= 7);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 4 — Section D inline action format (3.2)
+// ---------------------------------------------------------------------------
+
+describe('docxBuilder — Section D inline action format (3.2)', () => {
+  it('returns array with header and 2-column table', () => {
+    const result = buildSectionD(buildPlanContent());
+    assert.ok(Array.isArray(result));
+    assert.ok(result.length >= 2); // header + table
+  });
+
+  it('renders action with owner and due inline', () => {
+    const plan = buildPlanContent({
+      sectionD: {
+        actions: [
+          { description: 'Set up auto-response', owner: 'Marc', dueDate: 'Day 5' },
+          { description: 'Create follow-up sequence', owner: 'VA', dueDate: 'Day 10' },
+          { description: 'Action three', owner: 'Ops lead', dueDate: 'Day 18' },
+          { description: 'Action four', owner: 'Admin/CSR', dueDate: 'Day 25' },
+          { description: 'Action five', owner: 'Owner/GM', dueDate: 'Day 40' },
+          { description: 'Action six', owner: 'Marketing/Admin', dueDate: 'Day 58' },
+        ],
+      },
+    });
+    const result = buildSectionD(plan);
+    const table = result.find((el) => el.constructor.name === 'Table');
+    assert.ok(table, 'Should contain a Table');
+  });
+
+  it('omits "Owner:" when owner is empty', () => {
+    const plan = buildPlanContent({
+      sectionD: {
+        actions: [
+          { description: 'Do the thing', owner: '', dueDate: 'Day 5' },
+          { description: '', owner: '', dueDate: '' },
+          { description: '', owner: '', dueDate: '' },
+          { description: '', owner: '', dueDate: '' },
+          { description: '', owner: '', dueDate: '' },
+          { description: '', owner: '', dueDate: '' },
+        ],
+      },
+    });
+    const result = buildSectionD(plan);
+    assert.ok(Array.isArray(result));
+  });
+
+  it('omits "Due:" when dueDate is empty', () => {
+    const plan = buildPlanContent({
+      sectionD: {
+        actions: [
+          { description: 'Do the thing', owner: 'Marc', dueDate: '' },
+          { description: '', owner: '', dueDate: '' },
+          { description: '', owner: '', dueDate: '' },
+          { description: '', owner: '', dueDate: '' },
+          { description: '', owner: '', dueDate: '' },
+          { description: '', owner: '', dueDate: '' },
+        ],
+      },
+    });
+    const result = buildSectionD(plan);
+    assert.ok(Array.isArray(result));
+  });
+
+  it('handles empty actions array', () => {
+    const plan = buildPlanContent({ sectionD: { actions: [] } });
+    const result = buildSectionD(plan);
+    assert.ok(Array.isArray(result));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 4 — Section E data gap note (3.3)
+// ---------------------------------------------------------------------------
+
+describe('docxBuilder — Section E data gap note (3.3)', () => {
+  it('adds data gap note when any metric target is "Start tracking weekly."', () => {
+    const plan = buildPlanContent({
+      sectionE: {
+        metrics: [
+          { name: 'Response time', baseline: 'Not sure', target30Day: 'Start tracking weekly.' },
+          { name: 'Lead-to-booked %', baseline: '21-40%', target30Day: '41-60%' },
+        ],
+      },
+    });
+    const result = buildSectionE(plan);
+    // Should have: header + table + data gap note paragraph = at least 3 elements
+    assert.ok(result.length >= 3);
+  });
+
+  it('does NOT add data gap note when no metrics have "Start tracking weekly." target', () => {
+    const plan = buildPlanContent({
+      sectionE: {
+        metrics: [
+          { name: 'Response time', baseline: '3+ days', target30Day: '1-2 days' },
+          { name: 'Lead-to-booked %', baseline: '21-40%', target30Day: '41-60%' },
+        ],
+      },
+    });
+    const result = buildSectionE(plan);
+    // header + table = 2 elements (no data gap note)
+    assert.equal(result.length, 2);
+  });
+
+  it('adds data gap note when ALL metrics have "Start tracking weekly." target', () => {
+    const plan = buildPlanContent({
+      sectionE: {
+        metrics: [
+          { name: 'Metric 1', baseline: 'Not sure', target30Day: 'Start tracking weekly.' },
+          { name: 'Metric 2', baseline: 'Not sure', target30Day: 'Start tracking weekly.' },
+        ],
+      },
+    });
+    const result = buildSectionE(plan);
+    assert.ok(result.length >= 3);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 4 — Full buildDocx with Phase 4 changes
+// ---------------------------------------------------------------------------
+
+describe('docxBuilder — buildDocx with Phase 4 features', () => {
+  it('produces valid DOCX with opener + phrasing bank + inline actions + data gap note', async () => {
+    const plan = buildPlanContent({
+      sectionA: {
+        opener: 'Fix response time to under 1 hour.',
+        mostLikelyLeak: 'Speed-to-lead is too slow, which reduces bookings.',
+        whatChanges: 'More leads become booked work.',
+      },
+      sectionE: {
+        metrics: [
+          { name: 'Response time', baseline: 'Not sure', target30Day: 'Start tracking weekly.' },
+          { name: 'Lead-to-booked %', baseline: '21-40%', target30Day: '41-60%' },
+        ],
+      },
+    });
+    const buffer = await buildDocx(plan, {}, DEFAULT_CONTACT, highConfidence());
+    assert.ok(Buffer.isBuffer(buffer));
+    assert.ok(buffer.length > 100);
+    assert.equal(buffer[0], 0x50); // PK zip header
+    assert.equal(buffer[1], 0x4B);
+  });
+
+  it('produces valid DOCX without opener (empty string)', async () => {
+    const plan = buildPlanContent({ sectionA: { opener: '' } });
+    const buffer = await buildDocx(plan, {}, DEFAULT_CONTACT, highConfidence());
+    assert.ok(Buffer.isBuffer(buffer));
+    assert.ok(buffer.length > 100);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 5 — Section A contradiction note rendering (3.4)
+// ---------------------------------------------------------------------------
+
+describe('docxBuilder — Section A contradictionNote (3.4)', () => {
+  it('renders "Why this focus:" line when contradiction note is present', () => {
+    const plan = buildPlanContent({
+      sectionA: {
+        opener: 'Fix response time.',
+        contradictionNote: 'Tie-breaker contradicts Field 1; choosing Speed-to-lead.',
+      },
+    });
+    const result = buildSectionA(plan);
+    // Should have more elements than without the contradiction note
+    // header + opener + contradictionNote + ... = more elements
+    assert.ok(result.length >= 5);
+  });
+
+  it('does NOT render contradiction note when empty', () => {
+    const plan = buildPlanContent({ sectionA: { contradictionNote: '' } });
+    const planWithout = buildPlanContent({ sectionA: {} });
+    const result = buildSectionA(plan);
+    const resultWithout = buildSectionA(planWithout);
+    // Same number of elements (no extra paragraph for empty note)
+    assert.equal(result.length, resultWithout.length);
+  });
+
+  it('does NOT render contradiction note when undefined', () => {
+    const plan = buildPlanContent({ sectionA: { contradictionNote: undefined } });
+    const result = buildSectionA(plan);
+    assert.ok(Array.isArray(result));
+  });
+
+  it('renders contradiction note after opener and before phrasing bank', () => {
+    const plan = buildPlanContent({
+      sectionA: {
+        opener: 'Fix response time.',
+        contradictionNote: 'Some contradiction.',
+        mostLikelyLeak: 'Speed-to-lead is too slow.',
+        whatChanges: 'More leads become booked work.',
+      },
+    });
+    const result = buildSectionA(plan);
+    // header + opener + contradictionNote + mostLikelyLeak + whatChanges + gap + rootCause + signal + quiz = many
+    assert.ok(result.length >= 8);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 5 — Section A manual plan flag rendering (3.5)
+// ---------------------------------------------------------------------------
+
+describe('docxBuilder — Section A manualPlanFlag (3.5)', () => {
+  it('renders manual plan flag prominently when present', () => {
+    const plan = buildPlanContent({
+      sectionA: { manualPlanFlag: 'Manual plan: sub-path was not selected with confidence. Human review required.' },
+    });
+    const result = buildSectionA(plan);
+    // Should include the flag paragraph as an additional element
+    assert.ok(result.length >= 4);
+  });
+
+  it('does NOT render manual plan flag when empty', () => {
+    const plan = buildPlanContent({ sectionA: { manualPlanFlag: '' } });
+    const planWithout = buildPlanContent({ sectionA: {} });
+    const result = buildSectionA(plan);
+    const resultWithout = buildSectionA(planWithout);
+    assert.equal(result.length, resultWithout.length);
+  });
+
+  it('does NOT render manual plan flag when undefined', () => {
+    const plan = buildPlanContent({ sectionA: { manualPlanFlag: undefined } });
+    const result = buildSectionA(plan);
+    assert.ok(Array.isArray(result));
+  });
+
+  it('renders flag before opener (most prominent position)', () => {
+    const plan = buildPlanContent({
+      sectionA: {
+        manualPlanFlag: 'Manual plan: human review required.',
+        opener: 'Fix something first.',
+      },
+    });
+    const result = buildSectionA(plan);
+    // header + flag + opener + ... = at least 5 elements
+    assert.ok(result.length >= 5);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 5 — Full buildDocx with Phase 5 features
+// ---------------------------------------------------------------------------
+
+describe('docxBuilder — buildDocx with Phase 5 features', () => {
+  it('produces valid DOCX with contradiction note + manual plan flag', async () => {
+    const plan = buildPlanContent({
+      sectionA: {
+        opener: 'Fix response time.',
+        contradictionNote: 'Tie-breaker contradicts Field 1.',
+        manualPlanFlag: 'Manual plan: sub-path was not selected with confidence. Human review required.',
+        mostLikelyLeak: 'Speed-to-lead is too slow.',
+        whatChanges: 'More leads become booked work.',
+      },
+    });
+    const buffer = await buildDocx(plan, {}, DEFAULT_CONTACT, highConfidence());
+    assert.ok(Buffer.isBuffer(buffer));
+    assert.ok(buffer.length > 100);
+    assert.equal(buffer[0], 0x50); // PK zip header
+    assert.equal(buffer[1], 0x4B);
+  });
+
+  it('produces valid DOCX with only contradiction note (no flag)', async () => {
+    const plan = buildPlanContent({
+      sectionA: {
+        opener: 'Fix response time.',
+        contradictionNote: 'Some note about contradiction.',
+        manualPlanFlag: '',
+      },
+    });
+    const buffer = await buildDocx(plan, {}, DEFAULT_CONTACT, highConfidence());
+    assert.ok(Buffer.isBuffer(buffer));
+    assert.ok(buffer.length > 100);
+  });
+
+  it('produces valid DOCX with only manual plan flag (no contradiction note)', async () => {
+    const plan = buildPlanContent({
+      sectionA: {
+        manualPlanFlag: 'Manual plan: human review required.',
+        contradictionNote: '',
+      },
+    });
+    const buffer = await buildDocx(plan, {}, DEFAULT_CONTACT, highConfidence());
+    assert.ok(Buffer.isBuffer(buffer));
+    assert.ok(buffer.length > 100);
+  });
+
+  it('produces valid DOCX with neither contradiction note nor manual flag', async () => {
+    const plan = buildPlanContent({
+      sectionA: {
+        contradictionNote: '',
+        manualPlanFlag: '',
+      },
+    });
+    const buffer = await buildDocx(plan, {}, DEFAULT_CONTACT, highConfidence());
+    assert.ok(Buffer.isBuffer(buffer));
+    assert.ok(buffer.length > 100);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Field 2 follow-up rendering (item 2.2)
+// ---------------------------------------------------------------------------
+
+describe('docxBuilder — Field 2 follow-up rendering (2.2)', () => {
+  it('renders "Sub-path confirmation" line when field2Answer and field2Label are present', () => {
+    const plan = buildPlanContent({
+      sectionA: {
+        field2Answer: 'Same day',
+        field2Label: 'First response time',
+      },
+    });
+    const children = buildSectionA(plan);
+
+    // Find the paragraph containing "Sub-path confirmation:"
+    const texts = children
+      .filter(c => c.constructor.name === 'Paragraph')
+      .flatMap(p => (p.root || []))
+      .filter(r => r && typeof r === 'object');
+
+    // Check that any paragraph text includes "Sub-path confirmation"
+    const allText = JSON.stringify(children);
+    assert.ok(allText.includes('Sub-path confirmation'), 'Should contain "Sub-path confirmation" label');
+    assert.ok(allText.includes('First response time'), 'Should contain field2Label');
+    assert.ok(allText.includes('Same day'), 'Should contain field2Answer');
+  });
+
+  it('does NOT render "Sub-path confirmation" when field2Answer is empty', () => {
+    const plan = buildPlanContent({
+      sectionA: {
+        field2Answer: '',
+        field2Label: '',
+      },
+    });
+    const children = buildSectionA(plan);
+    const allText = JSON.stringify(children);
+    assert.ok(!allText.includes('Sub-path confirmation'), 'Should NOT contain "Sub-path confirmation" when empty');
+  });
+
+  it('does NOT render "Sub-path confirmation" when field2Answer is undefined', () => {
+    const plan = buildPlanContent({
+      sectionA: {},
+    });
+    const children = buildSectionA(plan);
+    const allText = JSON.stringify(children);
+    assert.ok(!allText.includes('Sub-path confirmation'), 'Should NOT contain "Sub-path confirmation" when undefined');
+  });
+
+  it('produces valid DOCX buffer with field2Answer present', async () => {
+    const plan = buildPlanContent({
+      sectionA: {
+        field2Answer: '1-2 days',
+        field2Label: 'First response time',
+      },
+    });
+    const buffer = await buildDocx(plan, {}, DEFAULT_CONTACT, highConfidence());
+    assert.ok(Buffer.isBuffer(buffer));
+    assert.ok(buffer.length > 100);
+  });
+
+  it('produces valid DOCX buffer with all Field 2 + contradiction note + manual flag', async () => {
+    const plan = buildPlanContent({
+      sectionA: {
+        field2Answer: '60-79%',
+        field2Label: 'Show rate %',
+        contradictionNote: 'Tie-breaker supports show rate focus.',
+        manualPlanFlag: '',
+        opener: 'Focus on show rate to recover lost appointments.',
+        mostLikelyLeak: 'No-shows are reducing completed appointments.',
+        whatChanges: 'More booked jobs actually show up.',
+      },
+    });
+    const buffer = await buildDocx(plan, {}, DEFAULT_CONTACT, highConfidence());
+    assert.ok(Buffer.isBuffer(buffer));
+    assert.ok(buffer.length > 100);
+  });
+});

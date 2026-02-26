@@ -381,4 +381,299 @@ describe('scanWebhook — JOTFORM_SCAN_FIELD_MAP', () => {
       );
     }
   });
+
+  it('has contradiction note in scan field map', () => {
+    assert.ok(JOTFORM_SCAN_FIELD_MAP.scan.q79_contradictionNote);
+    assert.equal(JOTFORM_SCAN_FIELD_MAP.scan.q79_contradictionNote, 'contradictionNote');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 5 — extractScanData: contradiction note
+// ---------------------------------------------------------------------------
+
+describe('scanWebhook — extractScanData contradiction note (3.4)', () => {
+  it('extracts contradiction note from payload', () => {
+    const payload = {
+      q9_primaryGap: 'Conversion',
+      q79_contradictionNote: 'Tie-breaker contradicts Field 1; choosing Speed-to-lead.',
+    };
+    const scan = extractScanData(payload);
+    assert.equal(scan.contradictionNote, 'Tie-breaker contradicts Field 1; choosing Speed-to-lead.');
+  });
+
+  it('defaults contradiction note to empty string when missing', () => {
+    const payload = { q9_primaryGap: 'Conversion' };
+    const scan = extractScanData(payload);
+    assert.equal(scan.contradictionNote, '');
+  });
+
+  it('trims whitespace from contradiction note', () => {
+    const payload = {
+      q9_primaryGap: 'Conversion',
+      q79_contradictionNote: '  Some note  ',
+    };
+    const scan = extractScanData(payload);
+    assert.equal(scan.contradictionNote, 'Some note');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 5 — buildHubSpotProperties: degraded flag
+// ---------------------------------------------------------------------------
+
+describe('scanWebhook — buildHubSpotProperties degraded (3.5)', () => {
+  it('sets Manual Required + Degraded mode for degraded plans', () => {
+    const scanData = { primaryGap: 'Conversion', subPath: 'Other (manual)', oneLever: 'Fix' };
+    const props = buildHubSpotProperties(scanData, highConfidence(), 'https://r2.example.com/plan.docx', null, true);
+
+    assert.equal(props.mtg_plan_review_status, 'Manual Required');
+    assert.equal(props.mtg_plan_generation_mode, 'Degraded');
+    assert.equal(props.mtg_plan_draft_link, 'https://r2.example.com/plan.docx');
+    assert.ok(props.mtg_plan_drafted_at);
+    assert.equal(props.mtg_plan_status, 'Draft');
+  });
+
+  it('sets Pending + Auto for normal (non-degraded) plans', () => {
+    const scanData = { primaryGap: 'Conversion', subPath: 'Speed-to-lead', oneLever: 'Fix' };
+    const props = buildHubSpotProperties(scanData, highConfidence(), 'https://r2.example.com/plan.docx', null, false);
+
+    assert.equal(props.mtg_plan_review_status, 'Pending');
+    assert.equal(props.mtg_plan_generation_mode, 'Auto');
+  });
+
+  it('still sets Stopped for full stops (isDegraded parameter ignored)', () => {
+    const scanData = { primaryGap: 'Conversion', subPath: 'Not sure', oneLever: '' };
+    const stopResult = { stopped: true, reasons: ['Sub-path requires manual plan'] };
+    const props = buildHubSpotProperties(scanData, null, null, stopResult, false);
+
+    assert.equal(props.mtg_plan_review_status, 'Manual Required');
+    assert.equal(props.mtg_plan_generation_mode, 'Stopped');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 5 — handler: "Other (manual)" degraded path
+// ---------------------------------------------------------------------------
+
+describe('scanWebhook — handler degraded path (3.5)', () => {
+  it('generates plan (not stopped) for "Other (manual)" with all fields present', async () => {
+    const payload = {
+      q2_contactEmail: 'test@example.com',
+      q9_primaryGap: 'Conversion',
+      q7_quizPrimaryGap: 'Conversion',
+      q11_subPathConversion: 'Other (manual)',
+      q36_oneLeverConversion: 'Response ownership + SLA + follow-up sequence',
+      // 7 baseline fields (all answered)
+      q15_convInboundLeads: '11-25',
+      q16_convFirstResponseTime: 'same day',
+      q17_convLeadToBooked: '21-40%',
+      q18_convBookedToShow: '61-80%',
+      q19_convTimeToFirstAppt: '1-3 days',
+      q20_convQuoteSentTimeline: '48 hours',
+      q21_convQuoteToClose: '21-30%',
+      // 6 actions
+      q41_action1Desc: 'Action 1', q42_action1Owner: 'Marc', q43_action1Due: 'Day 3',
+      q44_action2Desc: 'Action 2', q45_action2Owner: 'VA', q46_action2Due: 'Day 10',
+      q47_action3Desc: 'Action 3', q48_action3Owner: 'Ops', q49_action3Due: 'Day 16',
+      q50_action4Desc: 'Action 4', q51_action4Owner: 'Marc', q52_action4Due: 'Day 22',
+      q53_action5Desc: 'Action 5', q54_action5Owner: 'VA', q55_action5Due: 'Day 38',
+      q56_action6Desc: 'Action 6', q57_action6Owner: 'Marc', q58_action6Due: 'Day 55',
+      // 3 metrics
+      q60_metricsConversion: 'Median response time\nLead to booked %\nShow rate %',
+    };
+    const request = makeRequest(payload);
+    const response = await handleScanWebhook(request, {}, null);
+
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.success, true);
+    assert.equal(body.stopped, false);
+    assert.equal(body.degraded, true);
+    assert.equal(body.confidence, 'High');
+  });
+
+  it('returns stopped=true for "Not sure" sub-path (regression check)', async () => {
+    const payload = {
+      q2_contactEmail: 'test@example.com',
+      q9_primaryGap: 'Conversion',
+      q11_subPathConversion: 'Not sure',
+    };
+    const request = makeRequest(payload);
+    const response = await handleScanWebhook(request, {}, null);
+
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.success, true);
+    assert.equal(body.stopped, true);
+    assert.ok(body.reasons.length > 0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Field 2 — extraction (item 2.2)
+// ---------------------------------------------------------------------------
+
+describe('scanWebhook — extractScanData Field 2 (2.2)', () => {
+  it('extracts field2Answer and field2Label for Speed-to-lead', () => {
+    const payload = {
+      q9_primaryGap: 'Conversion',
+      q11_subPathConversion: 'Speed-to-lead',
+      q80_field2SpeedToLead: 'Same day',
+    };
+    const scan = extractScanData(payload);
+    assert.equal(scan.field2Answer, 'Same day');
+    assert.equal(scan.field2Label, 'First response time');
+  });
+
+  it('extracts field2Answer for Acquisition sub-path', () => {
+    const payload = {
+      q9_primaryGap: 'Acquisition',
+      q12_subPathAcquisition: 'Channel concentration risk',
+      q84_field2ChannelConcentration: '61-80%',
+    };
+    const scan = extractScanData(payload);
+    assert.equal(scan.field2Answer, '61-80%');
+    assert.equal(scan.field2Label, '% leads from top source');
+  });
+
+  it('extracts field2Answer for Retention sub-path', () => {
+    const payload = {
+      q9_primaryGap: 'Retention',
+      q13_subPathRetention: 'Rebook/recall gap',
+      q87_field2RebookRecall: 'Sometimes',
+    };
+    const scan = extractScanData(payload);
+    assert.equal(scan.field2Answer, 'Sometimes');
+    assert.equal(scan.field2Label, 'Next step scheduled at job end');
+  });
+
+  it('defaults field2Answer to empty when no Field 2 for sub-path', () => {
+    const payload = {
+      q9_primaryGap: 'Retention',
+      q13_subPathRetention: 'Review rhythm gap',
+    };
+    const scan = extractScanData(payload);
+    assert.equal(scan.field2Answer, '');
+    assert.equal(scan.field2Label, '');
+  });
+
+  it('defaults field2Answer to empty when sub-path is Other (manual)', () => {
+    const payload = {
+      q9_primaryGap: 'Conversion',
+      q11_subPathConversion: 'Other (manual)',
+    };
+    const scan = extractScanData(payload);
+    assert.equal(scan.field2Answer, '');
+    assert.equal(scan.field2Label, '');
+  });
+
+  it('trims field2Answer whitespace', () => {
+    const payload = {
+      q9_primaryGap: 'Conversion',
+      q11_subPathConversion: 'Show rate',
+      q82_field2ShowRate: '  80-89%  ',
+    };
+    const scan = extractScanData(payload);
+    assert.equal(scan.field2Answer, '80-89%');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Field 2 — handler: "Not sure" triggers stop (item 2.2)
+// ---------------------------------------------------------------------------
+
+describe('scanWebhook — handler Field 2 "Not sure" stop (2.2)', () => {
+  it('returns stopped=true when Field 2 is "Not sure"', async () => {
+    const payload = {
+      q2_contactEmail: 'test@example.com',
+      q9_primaryGap: 'Conversion',
+      q7_quizPrimaryGap: 'Conversion',
+      q11_subPathConversion: 'Speed-to-lead',
+      q80_field2SpeedToLead: 'Not sure',
+      q36_oneLeverConversion: 'Response ownership',
+      q15_convInboundLeads: '11-25',
+      q16_convFirstResponseTime: 'same day',
+      q17_convLeadToBooked: '21-40%',
+      q18_convBookedToShow: '61-80%',
+      q19_convTimeToFirstAppt: '1-3 days',
+      q20_convQuoteSentTimeline: '48 hours',
+      q21_convQuoteToClose: '21-30%',
+      q41_action1Desc: 'Action 1', q42_action1Owner: 'Marc', q43_action1Due: 'Day 3',
+      q44_action2Desc: 'Action 2', q45_action2Owner: 'VA', q46_action2Due: 'Day 10',
+      q47_action3Desc: 'Action 3', q48_action3Owner: 'Ops', q49_action3Due: 'Day 16',
+      q50_action4Desc: 'Action 4', q51_action4Owner: 'Marc', q52_action4Due: 'Day 22',
+      q53_action5Desc: 'Action 5', q54_action5Owner: 'VA', q55_action5Due: 'Day 38',
+      q56_action6Desc: 'Action 6', q57_action6Owner: 'Marc', q58_action6Due: 'Day 55',
+      q60_metricsConversion: 'Median response time\nLead to booked %\nShow rate %',
+    };
+    const request = makeRequest(payload);
+    const response = await handleScanWebhook(request, {}, null);
+
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.success, true);
+    assert.equal(body.stopped, true);
+    assert.ok(body.reasons.some(r => r.includes('Field 2')));
+  });
+
+  it('proceeds normally when Field 2 has a valid answer', async () => {
+    const payload = {
+      q2_contactEmail: 'test@example.com',
+      q9_primaryGap: 'Conversion',
+      q7_quizPrimaryGap: 'Conversion',
+      q11_subPathConversion: 'Speed-to-lead',
+      q80_field2SpeedToLead: 'Same day',
+      q36_oneLeverConversion: 'Response ownership',
+      q15_convInboundLeads: '11-25',
+      q16_convFirstResponseTime: 'same day',
+      q17_convLeadToBooked: '21-40%',
+      q18_convBookedToShow: '61-80%',
+      q19_convTimeToFirstAppt: '1-3 days',
+      q20_convQuoteSentTimeline: '48 hours',
+      q21_convQuoteToClose: '21-30%',
+      q41_action1Desc: 'Action 1', q42_action1Owner: 'Marc', q43_action1Due: 'Day 3',
+      q44_action2Desc: 'Action 2', q45_action2Owner: 'VA', q46_action2Due: 'Day 10',
+      q47_action3Desc: 'Action 3', q48_action3Owner: 'Ops', q49_action3Due: 'Day 16',
+      q50_action4Desc: 'Action 4', q51_action4Owner: 'Marc', q52_action4Due: 'Day 22',
+      q53_action5Desc: 'Action 5', q54_action5Owner: 'VA', q55_action5Due: 'Day 38',
+      q56_action6Desc: 'Action 6', q57_action6Owner: 'Marc', q58_action6Due: 'Day 55',
+      q60_metricsConversion: 'Median response time\nLead to booked %\nShow rate %',
+    };
+    const request = makeRequest(payload);
+    const response = await handleScanWebhook(request, {}, null);
+
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.success, true);
+    assert.equal(body.stopped, false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Field 2 — buildHubSpotProperties includes field2Answer
+// ---------------------------------------------------------------------------
+
+describe('scanWebhook — buildHubSpotProperties Field 2 (2.2)', () => {
+  it('includes mtg_scan_field2_answer when present', () => {
+    const scanData = {
+      primaryGap: 'Conversion',
+      subPath: 'Speed-to-lead',
+      oneLever: 'Response ownership',
+      field2Answer: 'Same day',
+    };
+    const props = buildHubSpotProperties(scanData, highConfidence(), 'https://r2.example.com/plan.docx', null, false);
+    assert.equal(props.mtg_scan_field2_answer, 'Same day');
+  });
+
+  it('omits mtg_scan_field2_answer when empty', () => {
+    const scanData = {
+      primaryGap: 'Conversion',
+      subPath: 'Speed-to-lead',
+      oneLever: 'Response ownership',
+      field2Answer: '',
+    };
+    const props = buildHubSpotProperties(scanData, highConfidence(), 'https://r2.example.com/plan.docx', null, false);
+    assert.equal(props.mtg_scan_field2_answer, undefined);
+  });
 });
