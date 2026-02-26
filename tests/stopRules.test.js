@@ -753,18 +753,19 @@ describe('stopRules — Field 2 "Not sure" (2.2)', () => {
     assert.equal(result, null);
   });
 
-  it('checkStopRules: field2Answer "Not sure" triggers full stop', () => {
+  it('checkStopRules: field2Answer "Not sure" triggers degraded draft (not full stop)', () => {
     const scanData = buildScanData({ field2Answer: 'Not sure' });
     const result = checkStopRules(scanData);
-    assert.equal(result.stopped, true);
+    assert.equal(result.stopped, false);
+    assert.equal(result.degraded, true);
     assert.ok(result.reasons.some(r => r.includes('Field 2')));
   });
 
-  it('checkStopRules: field2Answer "Not sure" is NOT degraded (it is a full stop)', () => {
+  it('checkStopRules: field2Answer "Not sure" IS degraded (routed to Other manual behavior)', () => {
     const scanData = buildScanData({ field2Answer: 'Not sure' });
     const result = checkStopRules(scanData);
-    assert.equal(result.stopped, true);
-    assert.equal(result.degraded, false);
+    assert.equal(result.stopped, false);
+    assert.equal(result.degraded, true);
   });
 
   it('checkStopRules: valid field2Answer does not trigger stop', () => {
