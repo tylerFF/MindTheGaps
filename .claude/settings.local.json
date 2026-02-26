@@ -36,7 +36,23 @@
       "Bash(__NEW_LINE_9d5ce2c986445d6a__ curl -s -X POST \"https://api.jotform.com/form/260435948553162/properties\" -H \"APIKEY: a215bd6c660dd268df26062518e54abe\" --data-urlencode \"properties[conditions]=$CONDITIONS\")",
       "Bash(git add:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nUpdate README with Feb 19 progress: HubSpot fix, loading page, scan form updates\n\n- HubSpot integration fully working with ESM/CommonJS fix\n- Team size normalization mapping added\n- Loading page deployed at /loading/ with polling logic\n- End-to-end quiz flow confirmed working\n- Scan worksheet converted to card layout with branding\n- Conditional logic added for gap-based field visibility\n- Field mapping audit completed - all fields verified matching\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git push origin TFedits)"
+      "Bash(git push origin TFedits)",
+      "Bash(wc -l /c/Users/tyfox/Documents/GitHub/MindTheGaps/workers/mtg-quiz-webhook/src/*.js)",
+      "Bash(wc -l /c/Users/tyfox/Documents/GitHub/MindTheGaps/workers/mtg-scan-webhook/src/*.js)",
+      "Bash(wc -l /c/Users/tyfox/Documents/GitHub/MindTheGaps/workers/mtg-stripe-webhook/src/*.js)",
+      "Bash(wc -l /c/Users/tyfox/Documents/GitHub/MindTheGaps/workers/mtg-calendly-webhook/src/*.js /c/Users/tyfox/Documents/GitHub/MindTheGaps/workers/shared/*.js)",
+      "Bash(wc -l /c/Users/tyfox/Documents/GitHub/MindTheGaps/pages/**/*.html)",
+      "Bash(wc -l /c/Users/tyfox/Documents/GitHub/MindTheGaps/scripts/*.js)",
+      "Bash(wc -l /c/Users/tyfox/Documents/GitHub/MindTheGaps/tests/*.js)",
+      "Bash(npm install)",
+      "Bash(node -e \"let d='''';process.stdin.on\\(''data'',c=>d+=c\\);process.stdin.on\\(''end'',\\(\\)=>{const j=JSON.parse\\(d\\);const c=j.content||{};Object.keys\\(c\\).sort\\(\\(a,b\\)=>Number\\(a\\)-Number\\(b\\)\\).forEach\\(k=>{const v=c[k];console.log\\(k+'': type=''+v.type+'', name=''+\\(v.name||''''\\)+'', text=''+\\(v.text||''''\\).substring\\(0,90\\)\\)}\\)}\\)\")",
+      "Bash(node -e \"let d='''';process.stdin.on\\(''data'',c=>d+=c\\);process.stdin.on\\(''end'',\\(\\)=>{const j=JSON.parse\\(d\\);const c=j.content||{};Object.keys\\(c\\).sort\\(\\(a,b\\)=>Number\\(a\\)-Number\\(b\\)\\).forEach\\(k=>{const v=c[k];console.log\\(k+'': type=''+v.type+'', name=''+\\(v.name||''''\\)+'', text=''+\\(v.text||''''\\).substring\\(0,100\\)\\)}\\)}\\)\")",
+      "Bash(node -e \":*)",
+      "Bash(node -e \"let d='''';process.stdin.on\\(''data'',c=>d+=c\\);process.stdin.on\\(''end'',\\(\\)=>{const j=JSON.parse\\(d\\);console.log\\(''Status:'',j.responseCode,''Message:'',j.message\\);if\\(j.content\\) console.log\\(''Updated subHeader:'',j.content.subHeader\\)}\\)\")",
+      "Bash(node -e \"let d='''';process.stdin.on\\(''data'',c=>d+=c\\);process.stdin.on\\(''end'',\\(\\)=>{const j=JSON.parse\\(d\\);console.log\\(''QID 14:'',JSON.stringify\\(j.content,null,2\\)\\)}\\)\")",
+      "Bash(node \"C:\\\\Users\\\\tyfox\\\\Documents\\\\GitHub\\\\MindTheGaps\\\\scripts\\\\update-jotform-conditions.js\")",
+      "Bash(git status -u)",
+      "Bash(git commit:*)"
     ]
   }
 }
