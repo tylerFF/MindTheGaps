@@ -27,7 +27,9 @@ No redeployment needed — secrets take effect immediately.
 
 ---
 
-## Current Status (Feb 19, 2026)
+## Current Status (Feb 26, 2026)
+
+### Core System (Deployed)
 
 | Component | Status | Details |
 |-----------|--------|---------|
@@ -42,6 +44,69 @@ No redeployment needed — secrets take effect immediately.
 | Email Notifications | **Deployed** | Resend configured (test mode), emails sent to Jesse for testing |
 
 **390 tests passing, 0 failing**
+
+### MVP Feedback Implementation (In Progress)
+
+Tracked in: `docs/Marc MVP Feedback Docs/MindtheGaps_MVP_Feedback_Implementation_Checklist_FINAL_v5.md`
+
+| Phase | Scope | Status | Details |
+|-------|-------|--------|---------|
+| Phase 1 | Quiz UX (WS1: items 1.1–1.6) | ✅ **Complete** | Trust strip, helper text on 12 questions, profile support text, website/phone sublabels. Mobile CSS fixes applied. Manual validation (1.6) passed. |
+| Phase 2 | Scan Worksheet UX (WS2: items 2.1–2.2, 2.4–2.9) | ⚠️ **Mostly done** | Helper text, 10 action ladders, owner quick-picks, metric helpers, completion meter, copy/paste templates all done. **2.2 BLOCKED** — see below. Ladder conditional visibility confirmed in JotForm conditions. |
+| Phase 3 | Contradiction Note Field (WS2: item 2.3) | ✅ **Complete** | Field created: **qid 79** (`q79_contradictionNote`). Optional, max 120 chars, in Section 2B after sub-path fields. |
+| Phase 4 | Plan Output — Safe Changes (WS3: items 3.1–3.3, 3.6) | ❌ **Not started** | Plan opener, action formatting, "Not sure" handling, phrasing bank — all untouched. |
+| Phase 5 | Plan Output — Behavioral Changes (WS3: items 3.4–3.5) | ❌ **Not started** | Contradiction note wiring (partially mapped but not rendered), "Other (manual)" degraded draft — both untouched. |
+
+---
+
+### ⚠️ BLOCKERS & ACTION ITEMS — READ BEFORE NEXT SESSION
+
+#### 1. BLOCKED: Item 2.2 — Field 2 Tie-Breaker Questions (Waiting on Marc)
+
+**Status:** Email sent to Marc (Feb 26, 2026). Awaiting response.
+
+**What's missing:** The scan worksheet has Field 1 (sub-path selection) but **Field 2 (tie-breaker metric questions) were never built**. These are follow-up banded metric questions that appear after the facilitator picks a sub-path, providing quantitative evidence for the choice (e.g., "What's the typical first response time?" → Same day / 1-2 days / 3+ days).
+
+**What we asked Marc:**
+- What metric should each sub-path's tie-breaker ask about?
+- What are the answer bands for each?
+- Is it one question per gap (3 total) or one per sub-path (10 total)?
+- Or skip for MVP and rely on baseline metrics as the supporting signal?
+
+**Once Marc responds:** Create the Field 2 dropdown(s) in JotForm, add helper text per item 2.2, then wire into the backend (`JOTFORM_SCAN_FIELD_MAP` + `extractScanData()` + `planGenerator.js`).
+
+#### 2. WARNING: Sub-Path Naming Mismatch (Requires manual JotForm work)
+
+The scan worksheet dropdown values **do not match** the ladder/spec names:
+
+| Dropdown Value (what webhook sends) | Ladder/Spec Name |
+|--------------------------------------|------------------|
+| Speed-to-lead | Slow first response |
+| Booking friction | Hard to book soon |
+| Show rate | No-shows & reschedules |
+| Quote follow-up / decision drop-off | Ghosting after quote |
+| Demand capture / local visibility | Not enough inbound demand |
+| Lead capture friction | Leads aren't being captured |
+| Channel concentration risk | Too dependent on one channel |
+| Rebook/recall gap | No rebook/recall system |
+| Review rhythm gap | Low referrals & reviews |
+| Referral ask gap | Low referrals & reviews (duplicate?) |
+| Post-service follow-up gap | Low repeats |
+
+**Renaming is partially automatable.** The webhook field names don't change — only the values do. But three things must be updated in sync:
+1. **JotForm dropdown values** (3 dropdowns) — can be done via API ✅
+2. **`workers/shared/constants.js`** (lines 236-254) — can be done in code ✅
+3. **JotForm conditional visibility rules** (~30+ rules that reference dropdown values to show/hide ladder fields) — **CANNOT be done via API** ❌ (the JotForm conditions endpoint returns 404; conditions can only be edited in the JotForm builder UI)
+
+**⚠️ If you rename the dropdown values without also updating the conditional visibility rules, the ladder fields will stop appearing when a facilitator selects a sub-path.**
+
+**Two options:**
+1. **Rename in JotForm + update `constants.js` + manually update conditions in JotForm builder** — cleaner, aligns with spec/phrasing bank. Do this before Phase 4 (item 3.6) so the phrasing bank can key off sub-path names directly. Tyler must update ~30 conditions in the JotForm builder by hand (or verify they auto-update if JotForm tracks by option index rather than value).
+2. **Keep as-is, add a mapping layer in the backend** — the phrasing bank maps from dropdown values to spec names. More code, but zero risk of breaking JotForm conditions and no manual work needed.
+
+#### 3. Contradiction Note QID for Phase 5 Backend Wiring
+
+When implementing Phase 5 (item 3.4), use: **qid 79** (`q79_contradictionNote`)
 
 ---
 
@@ -243,6 +308,32 @@ The quiz webhook accepts BOTH JotForm-prefixed field names (`q3_quiz_V1`, `q14_q
 ### Non-blocking HubSpot writes
 
 All webhook handlers use `ctx.waitUntil()` for HubSpot writes. The customer-facing response returns immediately; HubSpot updates happen in the background. If HubSpot fails, the customer experience is unaffected.
+
+---
+
+## What Changed (Feb 26, 2026)
+
+MVP Feedback implementation session (Tyler + Claude):
+
+### 1. Quiz UX — Phase 1 Complete (JotForm ID: 260466844433158)
+- Added `control_text` helper elements ("Best estimate is fine...") above all 12 range questions (V2-V5, A1, C1-C4, R1-R3)
+- Removed tooltip-style descriptions from radio buttons (replaced with visible text blocks)
+- Added sublabels on Website and Phone fields with "(Optional)" helper text
+- Shortened intro trust strip for mobile (dropped "no essays" line per spec fallback rule)
+- Added mobile CSS: intro page padding, header padding, overflow constraints
+
+### 2. Scan Worksheet UX — Phase 2 & 3 Partially Complete (JotForm ID: 260435948553162)
+- Confirmed existing: Field 1 helper text, baseline reminders, owner quick-picks, action ladders (10), metric helpers, completion meter, copy/paste templates — all present from prior session
+- Created contradiction note field: **qid 79** (`q79_contradictionNote`) — optional, max 120 chars, Section 2B
+- Fixed description typos: `=200` → `≤200` (qid 10), `=160` → `≤160` (qid 39)
+- Fixed metric description: `Lead-to-booked %` → `Lead to booked %` (qid 60, matches checkbox option)
+- Verified ladder conditional visibility rules are correctly configured in JotForm conditions
+
+### 3. Audit & Documentation
+- Full audit of all 3 workstreams (findings documented in blockers section above)
+- Identified Field 2 tie-breaker questions missing — emailed Marc for spec clarification
+- Identified sub-path naming mismatch between dropdowns and spec — flagged, not changed
+- Updated README with current implementation status, blockers, and action items
 
 ---
 
