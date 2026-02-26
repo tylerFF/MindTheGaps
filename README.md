@@ -43,7 +43,7 @@ No redeployment needed — secrets take effect immediately.
 | R2 Storage | **Deployed** | `mtg-plan-drafts` bucket, DOCX download endpoint live |
 | Email Notifications | **Deployed** | Resend configured (test mode), emails sent to Jesse for testing |
 
-**390 tests passing, 0 failing**
+**505 tests passing, 0 failing**
 
 ### MVP Feedback Implementation (In Progress)
 
@@ -52,61 +52,26 @@ Tracked in: `docs/Marc MVP Feedback Docs/MindtheGaps_MVP_Feedback_Implementation
 | Phase | Scope | Status | Details |
 |-------|-------|--------|---------|
 | Phase 1 | Quiz UX (WS1: items 1.1–1.6) | ✅ **Complete** | Trust strip, helper text on 12 questions, profile support text, website/phone sublabels. Mobile CSS fixes applied. Manual validation (1.6) passed. |
-| Phase 2 | Scan Worksheet UX (WS2: items 2.1–2.2, 2.4–2.9) | ⚠️ **Mostly done** | Helper text, 10 action ladders, owner quick-picks, metric helpers, completion meter, copy/paste templates all done. **2.2 BLOCKED** — see below. Ladder conditional visibility confirmed in JotForm conditions. |
+| Phase 2 | Scan Worksheet UX (WS2: items 2.1–2.2, 2.4–2.9) | ✅ **Complete** | All items done: Field 1 helper text (2.1), Field 2 tie-breaker questions QIDs 80-89 with helper text (2.2), baseline reminders (2.4), owner quick-picks on all 6 slots (2.5), 10 action ladders with conditional visibility (2.6), metric helpers (2.7), completion meter (2.8), copy/paste templates (2.9). **Pending: validation testing (2.10).** |
 | Phase 3 | Contradiction Note Field (WS2: item 2.3) | ✅ **Complete** | Field created: **qid 79** (`q79_contradictionNote`). Optional, max 120 chars, in Section 2B after sub-path fields. |
-| Phase 4 | Plan Output — Safe Changes (WS3: items 3.1–3.3, 3.6) | ❌ **Not started** | Plan opener, action formatting, "Not sure" handling, phrasing bank — all untouched. |
-| Phase 5 | Plan Output — Behavioral Changes (WS3: items 3.4–3.5) | ❌ **Not started** | Contradiction note wiring (partially mapped but not rendered), "Other (manual)" degraded draft — both untouched. |
+| Phase 4 | Plan Output — Safe Changes (WS3: items 3.1–3.3, 3.6) | ✅ **Complete** | Plan opener uses `oneLeverSentence` verbatim (3.1). Actions formatted inline: "{text} Owner: {role}. Due: {timeline}." (3.2). "Not sure" → "Start tracking weekly." + data gap note with light blue shading (3.3). Phrasing bank: `MOST_LIKELY_LEAK` (11 sub-path entries) + `WHAT_CHANGES` (12 entries) + `WHAT_CHANGES_BY_GAP` (3 gap fallbacks) wired into Section A (3.6). |
+| Phase 5 | Plan Output — Behavioral Changes (WS3: items 3.4–3.5) | ✅ **Complete** | Contradiction note: `q79` → `extractScanData()` → `generatePlan()` → `buildSectionA()` renders "Why this focus: {note}" (3.4). "Other (manual)": degraded draft with `manualPlanFlag` (yellow bg/red bold), HubSpot `Manual Required`/`Degraded` flags, Marc notification (3.5). Field 2 "Not sure" → full stop (Rule 1c). |
 
 ---
 
 ### ⚠️ BLOCKERS & ACTION ITEMS — READ BEFORE NEXT SESSION
 
-#### 1. BLOCKED: Item 2.2 — Field 2 Tie-Breaker Questions (Waiting on Marc)
+#### 1. RESOLVED: Item 2.2 — Field 2 Tie-Breaker Questions
 
-**Status:** Email sent to Marc (Feb 26, 2026). Awaiting response.
+**Status:** Complete. Field 2 tie-breaker questions created as QIDs 80-89 (10 dropdown fields, one per sub-path). Each has helper text: "Quick tie-breaker: pick the closest band. If not sure, select Not sure (plan will require manual review)." Backend extraction fully wired via `JOTFORM_SCAN_FIELD_MAP.field2BySubPath` in `index.js`.
 
-**What's missing:** The scan worksheet has Field 1 (sub-path selection) but **Field 2 (tie-breaker metric questions) were never built**. These are follow-up banded metric questions that appear after the facilitator picks a sub-path, providing quantitative evidence for the choice (e.g., "What's the typical first response time?" → Same day / 1-2 days / 3+ days).
+#### 2. RESOLVED: Sub-Path Naming Mismatch
 
-**What we asked Marc:**
-- What metric should each sub-path's tie-breaker ask about?
-- What are the answer bands for each?
-- Is it one question per gap (3 total) or one per sub-path (10 total)?
-- Or skip for MVP and rely on baseline metrics as the supporting signal?
+The scan worksheet dropdown values don't match the spec/ladder names (e.g., "Speed-to-lead" vs "Slow first response"). **Resolution: Option 2 was chosen** — the backend phrasing bank (`MOST_LIKELY_LEAK`, `WHAT_CHANGES`) is keyed by the actual JotForm dropdown values, not the spec names. No JotForm dropdown renaming needed. Zero risk of breaking conditional visibility rules.
 
-**Once Marc responds:** Create the Field 2 dropdown(s) in JotForm, add helper text per item 2.2, then wire into the backend (`JOTFORM_SCAN_FIELD_MAP` + `extractScanData()` + `planGenerator.js`).
+#### 3. RESOLVED: Contradiction Note QID for Phase 5 Backend Wiring
 
-#### 2. WARNING: Sub-Path Naming Mismatch (Requires manual JotForm work)
-
-The scan worksheet dropdown values **do not match** the ladder/spec names:
-
-| Dropdown Value (what webhook sends) | Ladder/Spec Name |
-|--------------------------------------|------------------|
-| Speed-to-lead | Slow first response |
-| Booking friction | Hard to book soon |
-| Show rate | No-shows & reschedules |
-| Quote follow-up / decision drop-off | Ghosting after quote |
-| Demand capture / local visibility | Not enough inbound demand |
-| Lead capture friction | Leads aren't being captured |
-| Channel concentration risk | Too dependent on one channel |
-| Rebook/recall gap | No rebook/recall system |
-| Review rhythm gap | Low referrals & reviews |
-| Referral ask gap | Low referrals & reviews (duplicate?) |
-| Post-service follow-up gap | Low repeats |
-
-**Renaming is partially automatable.** The webhook field names don't change — only the values do. But three things must be updated in sync:
-1. **JotForm dropdown values** (3 dropdowns) — can be done via API ✅
-2. **`workers/shared/constants.js`** (lines 236-254) — can be done in code ✅
-3. **JotForm conditional visibility rules** (~30+ rules that reference dropdown values to show/hide ladder fields) — **CANNOT be done via API** ❌ (the JotForm conditions endpoint returns 404; conditions can only be edited in the JotForm builder UI)
-
-**⚠️ If you rename the dropdown values without also updating the conditional visibility rules, the ladder fields will stop appearing when a facilitator selects a sub-path.**
-
-**Two options:**
-1. **Rename in JotForm + update `constants.js` + manually update conditions in JotForm builder** — cleaner, aligns with spec/phrasing bank. Do this before Phase 4 (item 3.6) so the phrasing bank can key off sub-path names directly. Tyler must update ~30 conditions in the JotForm builder by hand (or verify they auto-update if JotForm tracks by option index rather than value).
-2. **Keep as-is, add a mapping layer in the backend** — the phrasing bank maps from dropdown values to spec names. More code, but zero risk of breaking JotForm conditions and no manual work needed.
-
-#### 3. Contradiction Note QID for Phase 5 Backend Wiring
-
-When implementing Phase 5 (item 3.4), use: **qid 79** (`q79_contradictionNote`)
+Phase 5 (item 3.4) is now implemented using **qid 79** (`q79_contradictionNote`). Fully wired: extraction → plan generation → DOCX rendering.
 
 ---
 

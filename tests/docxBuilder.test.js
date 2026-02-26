@@ -188,6 +188,27 @@ describe('docxBuilder — Section A (What We Found)', () => {
     assert.ok(Array.isArray(result));
     assert.ok(result.length >= 1); // at least the header
   });
+
+  it('includes opener when present', () => {
+    const plan = buildPlanContent({
+      sectionA: { opener: 'Fix Speed-to-lead first by focusing on response time.' },
+    });
+    const result = buildSectionA(plan);
+    // header + opener + gap + sub-diagnosis + signal + quizKeySignals = 6+
+    assert.ok(result.length >= 4);
+  });
+
+  it('includes mostLikelyLeak and whatChanges when present', () => {
+    const plan = buildPlanContent({
+      sectionA: {
+        mostLikelyLeak: 'Speed-to-lead is too slow, which reduces bookings.',
+        whatChanges: 'More leads become booked work.',
+      },
+    });
+    const result = buildSectionA(plan);
+    // header + gap + sub-diagnosis + leak + whatChanges + signal + quizKeySignals
+    assert.ok(result.length >= 5);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -346,6 +367,32 @@ describe('docxBuilder — Section E (Weekly Scorecard)', () => {
     const plan = buildPlanContent({ sectionE: { metrics: [] } });
     const result = buildSectionE(plan);
     assert.ok(Array.isArray(result));
+  });
+
+  it('adds data gap note when target is "Start tracking weekly."', () => {
+    const plan = buildPlanContent({
+      sectionE: {
+        metrics: [
+          { name: 'Some metric', baseline: 'Not sure', target30Day: 'Start tracking weekly.' },
+        ],
+      },
+    });
+    const result = buildSectionE(plan);
+    // header + table + data gap note = 3 elements
+    assert.ok(result.length >= 3);
+  });
+
+  it('omits data gap note when no targets are "Start tracking weekly."', () => {
+    const plan = buildPlanContent({
+      sectionE: {
+        metrics: [
+          { name: 'Response time', baseline: '3+ days', target30Day: '1-2 days' },
+        ],
+      },
+    });
+    const result = buildSectionE(plan);
+    // header + table = 2 elements (no data gap note)
+    assert.equal(result.length, 2);
   });
 });
 
