@@ -9,7 +9,7 @@
  * Stop rules:
  *   1a. Sub-path = "not sure"  → full stop (no plan generated)
  *   1b. Sub-path starts with "Other" → degraded draft (plan IS generated, flagged)
- *   1c. Field 2 follow-up = "not sure" → full stop (no plan generated)
+ *   1c. Field 2 follow-up = "not sure" → degraded draft (plan IS generated, flagged)
  *   2. Primary gap changed from quiz without an explanation provided
  *   3. Missing required fields:
  *      - primary gap present
@@ -143,9 +143,11 @@ function checkSubPath(scanData) {
 }
 
 /**
- * Rule 1c: Field 2 follow-up = "not sure" → full stop
+ * Rule 1c: Field 2 follow-up = "not sure" → degraded draft
  * Per Marc: "If the facilitator picks not sure, please route that to
  * Other (manual) and do not auto-generate the plan."
+ * This means: generate a degraded draft (flagged for Marc's review),
+ * same as "Other (manual)" sub-path behavior.
  */
 function checkField2NotSure(scanData) {
   const { field2Answer } = scanData;
@@ -155,7 +157,8 @@ function checkField2NotSure(scanData) {
   if (field2Answer && isNotSure(field2Answer)) {
     return {
       rule: 'field2_not_sure',
-      message: 'Field 2 follow-up is "Not sure" — requires manual plan',
+      message: 'Field 2 follow-up is "Not sure" — degraded draft will be generated',
+      degraded: true,
     };
   }
 
