@@ -27,51 +27,64 @@ No redeployment needed — secrets take effect immediately.
 
 ---
 
-## Current Status (Feb 26, 2026)
+## Current Status (Feb 27, 2026)
 
-### Core System (Deployed)
+### Core System — All Deployed, All Tested
 
 | Component | Status | Details |
 |-----------|--------|---------|
-| Quiz + Scoring Engine | **Deployed** | 13-question quiz, scoring, results, eligibility |
-| Results Page | **Deployed** | Gap diagnosis, score, CTA with Stripe link |
-| Booking Page | **Deployed** | Calendly inline widget, shown after Stripe payment |
-| Stripe Payment Webhook | **Deployed** | Receives checkout.session.completed, updates HubSpot |
-| Calendly Booking Webhook | **Deployed** | Receives invitee.created, updates HubSpot |
-| Scan Worksheet Processing | **Deployed** | Stop rules, confidence, plan generation, DOCX builder |
-| HubSpot Integration | **Deployed** | 54 custom `mtg_` properties created and populated |
-| R2 Storage | **Deployed** | `mtg-plan-drafts` bucket, DOCX download endpoint live |
-| Email Notifications | **Deployed** | Resend configured (test mode), emails sent to Jesse for testing |
+| Quiz + Scoring Engine | ✅ **Live** | 13-question quiz, scoring, results, eligibility |
+| Results Page | ✅ **Live** | Gap diagnosis, score, CTA with Stripe link |
+| Booking Page | ✅ **Live** | Calendly inline widget, shown after Stripe payment |
+| Stripe Payment Webhook | ✅ **Live** | Receives checkout.session.completed, updates HubSpot (TEST mode) |
+| Calendly Booking Webhook | ✅ **Live** | Receives invitee.created, updates HubSpot |
+| Scan Worksheet Processing | ✅ **Live** | Stop rules, confidence, plan generation, DOCX builder |
+| HubSpot Integration | ✅ **Live** | 54 custom `mtg_` properties created and populated |
+| R2 Storage | ✅ **Live** | `mtg-plan-drafts` bucket, DOCX download endpoint live |
+| Email Notifications | ✅ **Live** | Resend configured (test mode), emails arriving correctly |
 
 **505 tests passing, 0 failing**
 
-### MVP Feedback Implementation (In Progress)
+### MVP Feedback Implementation — Complete
 
 Tracked in: `docs/Marc MVP Feedback Docs/MindtheGaps_MVP_Feedback_Implementation_Checklist_FINAL_v5.md`
 
-| Phase | Scope | Status | Details |
-|-------|-------|--------|---------|
-| Phase 1 | Quiz UX (WS1: items 1.1–1.6) | ✅ **Complete** | Trust strip, helper text on 12 questions, profile support text, website/phone sublabels. Mobile CSS fixes applied. Manual validation (1.6) passed. |
-| Phase 2 | Scan Worksheet UX (WS2: items 2.1–2.2, 2.4–2.9) | ✅ **Complete** | All items done: Field 1 helper text (2.1), Field 2 tie-breaker questions QIDs 80-89 with helper text (2.2), baseline reminders (2.4), owner quick-picks on all 6 slots (2.5), 10 action ladders with conditional visibility (2.6), metric helpers (2.7), completion meter (2.8), copy/paste templates (2.9). **Pending: validation testing (2.10).** |
-| Phase 3 | Contradiction Note Field (WS2: item 2.3) | ✅ **Complete** | Field created: **qid 79** (`q79_contradictionNote`). Optional, max 120 chars, in Section 2B after sub-path fields. |
-| Phase 4 | Plan Output — Safe Changes (WS3: items 3.1–3.3, 3.6) | ✅ **Complete** | Plan opener uses `oneLeverSentence` verbatim (3.1). Actions formatted inline: "{text} Owner: {role}. Due: {timeline}." (3.2). "Not sure" → "Start tracking weekly." + data gap note with light blue shading (3.3). Phrasing bank: `MOST_LIKELY_LEAK` (11 sub-path entries) + `WHAT_CHANGES` (12 entries) + `WHAT_CHANGES_BY_GAP` (3 gap fallbacks) wired into Section A (3.6). |
-| Phase 5 | Plan Output — Behavioral Changes (WS3: items 3.4–3.5) | ✅ **Complete** | Contradiction note: `q79` → `extractScanData()` → `generatePlan()` → `buildSectionA()` renders "Why this focus: {note}" (3.4). "Other (manual)": degraded draft with `manualPlanFlag` (yellow bg/red bold), HubSpot `Manual Required`/`Degraded` flags, Marc notification (3.5). Field 2 "Not sure" → full stop (Rule 1c). |
+| Phase | Scope | Status |
+|-------|-------|--------|
+| Phase 1 | Quiz UX (WS1: items 1.1–1.6) | ✅ Complete |
+| Phase 2 | Scan Worksheet UX (WS2: items 2.1–2.2, 2.4–2.9) | ✅ Complete |
+| Phase 3 | Contradiction Note Field (WS2: item 2.3) | ✅ Complete |
+| Phase 4 | Plan Output — Safe Changes (WS3: items 3.1–3.3, 3.6) | ✅ Complete |
+| Phase 5 | Plan Output — Behavioral Changes (WS3: items 3.4–3.5) | ✅ Complete |
+
+### QA — Full E2E Tested (Feb 26-27)
+
+All 3 pillar paths tested end-to-end through the scan worksheet:
+
+| Pillar | Test Email | Submission | Plan DOCX | Confidence | Email Notification |
+|--------|-----------|------------|-----------|------------|-------------------|
+| Acquisition | AcqTest@test.com | ✅ | ✅ Generated | High | ✅ Received |
+| Conversion | ConvTest@test.com | ✅ | ✅ Generated | High | ✅ Received |
+| Retention | RetTest@test.com | ✅ | ✅ Generated | High | ✅ Received |
+
+Bug fixed during QA: Conversion Field 2 dropdowns not appearing in live mode — resolved by setting `hidden: "Yes"` on 39 conditional JotForm fields.
 
 ---
 
-### ⚠️ BLOCKERS & ACTION ITEMS — READ BEFORE NEXT SESSION
+### Next Steps
 
-#### 1. RESOLVED: Item 2.2 — Field 2 Tie-Breaker Questions
+| # | Task | Owner | Status |
+|---|------|-------|--------|
+| 1 | **Industry list review** — Marc to confirm whether to update the category list (see `docs/industry-refinement-notes.md`) | Marc | Waiting on Marc |
+| 2 | **Resend production setup** — Marc sets up his own Resend account, verifies domain, swaps `RESEND_API_KEY` + `FROM_EMAIL` + `MARC_EMAIL` | Marc | Not started |
+| 3 | **Stripe live mode** — Switch from test payment link to live, update `STRIPE_WEBHOOK_SECRET` (last thing before go-live) | Tyler + Marc | Not started |
 
-**Status:** Complete. Field 2 tie-breaker questions created as QIDs 80-89 (10 dropdown fields, one per sub-path). Each has helper text: "Quick tie-breaker: pick the closest band. If not sure, select Not sure (plan will require manual review)." Backend extraction fully wired via `JOTFORM_SCAN_FIELD_MAP.field2BySubPath` in `index.js`.
+### Previously Resolved
 
-#### 2. RESOLVED: Sub-Path Naming Mismatch
-
-The scan worksheet dropdown values don't match the spec/ladder names (e.g., "Speed-to-lead" vs "Slow first response"). **Resolution: Option 2 was chosen** — the backend phrasing bank (`MOST_LIKELY_LEAK`, `WHAT_CHANGES`) is keyed by the actual JotForm dropdown values, not the spec names. No JotForm dropdown renaming needed. Zero risk of breaking conditional visibility rules.
-
-#### 3. RESOLVED: Contradiction Note QID for Phase 5 Backend Wiring
-
-Phase 5 (item 3.4) is now implemented using **qid 79** (`q79_contradictionNote`). Fully wired: extraction → plan generation → DOCX rendering.
+- **Item 2.2 — Field 2 Tie-Breaker Questions:** Complete. QIDs 80-89 with helper text. Backend extraction wired via `JOTFORM_SCAN_FIELD_MAP.field2BySubPath`.
+- **Sub-Path Naming Mismatch:** Resolved. Backend phrasing bank keyed by actual JotForm dropdown values. No dropdown renaming needed.
+- **Contradiction Note (Phase 5):** Implemented using **qid 79**. Fully wired: extraction → plan generation → DOCX rendering.
+- **Conversion Field 2 Bug:** Fixed. 39 conditional fields set to `hidden: "Yes"` in JotForm. Verified working in live mode.
 
 ---
 
@@ -276,6 +289,30 @@ All webhook handlers use `ctx.waitUntil()` for HubSpot writes. The customer-faci
 
 ---
 
+## What Changed (Feb 27, 2026)
+
+Full QA testing session (Tyler + Claude):
+
+### 1. Scan Worksheet E2E Testing — All 3 Pillars Passed
+- Submitted full test data for Acquisition, Conversion, and Retention paths
+- Verified: JotForm submission → scan webhook → stop rules (none triggered) → plan generation → DOCX built → R2 upload → email notification
+- All 3 plans generated with correct business name, gap, sub-path, lever, actions, and metrics
+- Confidence = High on all 3 (zero "Not sure" answers in test data)
+- Email notifications received for all 3 test submissions
+
+### 2. Bug Fix: Conversion Field 2 Not Showing in Live Mode
+- Conversion sub-path Field 2 dropdowns (QIDs 80-83) were visible in JotForm preview but not in live form
+- Root cause: JotForm conditional fields default to `hidden: "No"` — preview mode ignores this, live mode respects it
+- Fix: Set `hidden: "Yes"` on all 39 conditional Field 2 fields (QIDs 80-89) via JotForm API
+- Verified: all Field 2 dropdowns now appear correctly in live mode when their sub-path is selected
+
+### 3. Documentation Updated
+- README updated with current status, QA results, and next steps
+- Created `docs/industry-refinement-notes.md` — records Marc's decision to keep current industry list stable, plus proposed future refinements
+- Test count confirmed: 505 passing, 0 failing
+
+---
+
 ## What Changed (Feb 26, 2026)
 
 MVP Feedback implementation session (Tyler + Claude):
@@ -429,6 +466,11 @@ MindTheGaps/
 │   ├── stripeWebhook.test.js    # 16 tests
 │   └── calendlyWebhook.test.js  # 19 tests
 │
+├── docs/
+│   ├── industry-refinement-notes.md  # Industry list decisions + future proposals
+│   ├── Facilitator_Guide_vs_Worksheet_QA_Report.docx
+│   └── Marc MVP Feedback Docs/      # Original MVP feedback tickets + checklist
+│
 ├── dev-server.js                # Local dev server (http://localhost:3000)
 ├── package.json
 ├── CLAUDE.md                    # Architecture guide for AI assistants
@@ -501,7 +543,7 @@ npm run dev     # Start at http://localhost:3000
 ## Running Tests
 
 ```bash
-npm test                     # Run all 390 tests
+npm test                     # Run all 505 tests
 npm run test:scoring         # Scoring engine (51)
 npm run test:results         # Results generator (25)
 npm run test:eligibility     # Eligibility check (31)
@@ -567,17 +609,20 @@ Creates a webhook subscription for `invitee.created` events. Checks for existing
 ## Remaining Work
 
 ### Before going live (see go-live checklist at top of this file)
-1. **Switch Stripe to live mode** — Replace test payment link with production link, update `STRIPE_WEBHOOK_SECRET`
-2. **Set Stripe success URL** — Redirect after payment to `https://mtg-pages-3yo.pages.dev/booking/` (in Stripe dashboard)
-3. **Swap Resend to production** — New API key with verified domain, update `FROM_EMAIL` to `@mindthegaps.biz`
-4. **Swap MARC_EMAIL** — Change from test email to `marc@mindthegaps.biz`
-5. **End-to-end testing** — Test the full flow from quiz through plan delivery + email
+1. **Marc: Resend production setup** — Create Resend account, verify `mindthegaps.biz` domain, then swap secrets:
+   - `RESEND_API_KEY` → Marc's production key
+   - `FROM_EMAIL` → `notifications@mindthegaps.biz` (or similar)
+   - `MARC_EMAIL` → `marc@mindthegaps.biz`
+2. **Marc: Industry list decision** — Confirm current list is OK or approve changes (see `docs/industry-refinement-notes.md`)
+3. **Switch Stripe to live mode** (last step) — Replace test payment link with production link, update `STRIPE_WEBHOOK_SECRET`, set success URL to `https://mtg-pages-3yo.pages.dev/booking/`
+4. **Final E2E test on live Stripe** — One full pass with real payment to confirm everything works
 
-### Nice-to-haves
+### Nice-to-haves (post-launch)
 - Tighten CORS from `*` to specific domains
 - Add Calendly webhook signature verification (needs signing key from Calendly API)
 - Marc's operational runbook (day-to-day procedures)
 - Custom domain for Cloudflare Pages (instead of `mtg-pages-3yo.pages.dev`)
+- Industry list refinement (documented in `docs/industry-refinement-notes.md`)
 
 ---
 
@@ -585,3 +630,4 @@ Creates a webhook subscription for `invitee.created` events. Checks for existing
 
 - `CLAUDE.md` — Architecture, repo structure, build order, critical rules for AI assistants
 - `PROJECT_CONTEXT.md` — Complete scoring matrix, HubSpot properties, sub-diagnosis mapping, cost-of-leak templates, scan field dictionary, stop rules, QA test cases
+- `docs/industry-refinement-notes.md` — Industry list decisions, current list, proposed future changes (no action now)
