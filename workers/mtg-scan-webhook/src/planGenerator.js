@@ -89,6 +89,34 @@ const STABILITY_TRIGGERS = Object.freeze({
 });
 
 // ---------------------------------------------------------------------------
+// Risk context — explains WHY a worst baseline value is a problem.
+// Used in the Risk/Mitigation insight (Pattern 2).
+// ---------------------------------------------------------------------------
+
+const RISK_CONTEXT = Object.freeze({
+  conv_inbound_leads:             'Low lead volume leaves the pipeline vulnerable to dry spells.',
+  conv_first_response_time:       'Slow response lets competitors win the lead first.',
+  conv_lead_to_booked:            'Low booking rates mean marketing spend is being wasted.',
+  conv_booked_to_show:            'No-shows waste scheduled time and capacity.',
+  conv_time_to_first_appointment: 'Long wait times increase the chance prospects go elsewhere.',
+  conv_quote_sent_timeline:       'Delayed quotes lose urgency and buyer momentum.',
+  conv_quote_to_close:            'Low close rates signal a quoting or follow-up gap.',
+  acq_inbound_leads:              'Low lead volume leaves the pipeline vulnerable to dry spells.',
+  acq_top_source_dependence:      'Single-source dependence means one algorithm change can cut lead flow.',
+  acq_pct_from_top_source:        'Heavy reliance on one channel is fragile.',
+  acq_calls_answered_live:        'Missed calls are missed leads.',
+  acq_website_capture_friction:   'High capture friction means website visitors leave without converting.',
+  acq_reviews_per_month:          'Few reviews reduce trust signals for new prospects.',
+  acq_referral_intros_per_month:  'Low referrals mean the business relies entirely on paid or organic leads.',
+  ret_pct_revenue_repeat:         'Low repeat revenue means constant new-customer acquisition pressure.',
+  ret_pct_revenue_referrals:      'Low referral revenue signals a missed growth lever.',
+  ret_rebook_scheduling:          'Without rebooking prompts, customers drift and forget.',
+  ret_reviews_per_month:          'Few reviews reduce trust signals for new prospects.',
+  ret_follow_up_time:             'Delayed follow-up lets the relationship go cold.',
+  ret_check_in_rhythm:            'No check-in rhythm means out-of-sight, out-of-mind.',
+});
+
+// ---------------------------------------------------------------------------
 // Phrasing bank: MOST_LIKELY_LEAK (keyed by dropdown sub-path values)
 //
 // Maps the actual JotForm dropdown values to the spec's "Most likely leak"
@@ -372,9 +400,11 @@ function buildInsights(scanData, confidenceResult) {
   if (worst || notSureCount >= 2) {
     let riskText;
     if (worst) {
-      riskText = `One risk to momentum: ${worst.label.toLowerCase()} is at ${worst.value}. This often happens when ${worst.label.toLowerCase()} is ${worst.value}. We'll reduce the risk with a small proof step in the first 14 days, not a big rebuild.`;
+      const context = RISK_CONTEXT[worst.field]
+        || `This weakens overall ${(gap || 'growth').toLowerCase()} performance.`;
+      riskText = `Risk: ${worst.label} is at ${worst.value}. ${context} Mitigation: We'll address this with a small proof step in the first 14 days, not a big rebuild.`;
     } else {
-      riskText = `One risk to momentum: ${notSureCount} baseline metrics are unknown. We'll reduce the risk with a small proof step in the first 14 days, not a big rebuild.`;
+      riskText = `Risk: ${notSureCount} baseline metrics are unknown, so targeting is based on incomplete data. Mitigation: We'll address this with a small proof step in the first 14 days, not a big rebuild.`;
     }
 
     insights.push({
@@ -572,5 +602,6 @@ module.exports = {
     MOST_LIKELY_LEAK,
     WHAT_CHANGES,
     WHAT_CHANGES_BY_GAP,
+    RISK_CONTEXT,
   },
 };

@@ -38,8 +38,8 @@ function buildPlanContent(overrides = {}) {
       baselineMetrics: [
         { field: 'Inbound leads per month', value: '11-25' },
         { field: 'Typical first response time', value: 'same day' },
-        { field: 'Lead-to-booked %', value: '21-40%' },
-        { field: 'Booked-to-show %', value: '61-80%' },
+        { field: 'Lead to booked %', value: '21-40%' },
+        { field: 'Booked to show %', value: '61-80%' },
         { field: 'Time to first appointment', value: '1-3 days' },
       ],
       ...(overrides.sectionB || {}),
@@ -63,8 +63,8 @@ function buildPlanContent(overrides = {}) {
     },
     sectionE: {
       metrics: [
-        { name: 'Response time (hours)', baseline: '3+ days', target30Day: 'Under 1 hour' },
-        { name: 'Lead-to-booked rate (%)', baseline: '21-40%', target30Day: '40-50%' },
+        { name: 'Median response time', baseline: '3+ days', target30Day: 'Under 1 hour' },
+        { name: 'Lead to booked %', baseline: '21-40%', target30Day: '41-60%' },
       ],
       ...(overrides.sectionE || {}),
     },
@@ -793,7 +793,7 @@ describe('docxBuilder — Section E data gap note (3.3)', () => {
       sectionE: {
         metrics: [
           { name: 'Response time', baseline: 'Not sure', target30Day: 'Start tracking weekly.' },
-          { name: 'Lead-to-booked %', baseline: '21-40%', target30Day: '41-60%' },
+          { name: 'Lead to booked %', baseline: '21-40%', target30Day: '41-60%' },
         ],
       },
     });
@@ -807,7 +807,7 @@ describe('docxBuilder — Section E data gap note (3.3)', () => {
       sectionE: {
         metrics: [
           { name: 'Response time', baseline: '3+ days', target30Day: '1-2 days' },
-          { name: 'Lead-to-booked %', baseline: '21-40%', target30Day: '41-60%' },
+          { name: 'Lead to booked %', baseline: '21-40%', target30Day: '41-60%' },
         ],
       },
     });
@@ -845,7 +845,7 @@ describe('docxBuilder — buildDocx with Phase 4 features', () => {
       sectionE: {
         metrics: [
           { name: 'Response time', baseline: 'Not sure', target30Day: 'Start tracking weekly.' },
-          { name: 'Lead-to-booked %', baseline: '21-40%', target30Day: '41-60%' },
+          { name: 'Lead to booked %', baseline: '21-40%', target30Day: '41-60%' },
         ],
       },
     });

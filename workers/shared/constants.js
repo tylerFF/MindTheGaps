@@ -243,8 +243,6 @@ const SUB_PATHS = Object.freeze({
     'Channel concentration risk',
     'Demand capture / local visibility',
     'Lead capture friction',
-    'Fit mismatch',
-    'Referral / partner flow is not intentional',
     'Other (manual)',
   ]),
   [PILLARS.RETENTION]: Object.freeze([

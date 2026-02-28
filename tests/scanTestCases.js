@@ -69,9 +69,9 @@ const DEFAULT_ACTIONS = Object.freeze([
  * Default metrics (3 selected, need ≥2).
  */
 const DEFAULT_METRICS = Object.freeze([
-  'Response time (hours)',
-  'Lead-to-booked rate (%)',
-  'Quote-to-close rate (%)',
+  'Median response time',
+  'Lead to booked %',
+  'Quote sent within 48h %',
 ]);
 
 /**

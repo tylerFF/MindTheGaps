@@ -292,7 +292,8 @@ describe('planGenerator — buildInsights', () => {
 
     const riskInsight = insights.find((i) => i.pattern === 'risk_callout');
     assert.ok(riskInsight);
-    assert.ok(riskInsight.text.includes('risk to momentum'));
+    assert.ok(riskInsight.text.includes('Risk:'));
+    assert.ok(riskInsight.text.includes('Mitigation:'));
     assert.equal(riskInsight.placement, 'sectionF');
   });
 

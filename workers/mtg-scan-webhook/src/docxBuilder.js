@@ -57,18 +57,20 @@ const HEADER_SIZE = 28;   // 14pt
 const TITLE_SIZE = 36;    // 18pt
 
 // Human-readable labels for baseline field keys
+// Labels must match JotForm picklist text exactly (form is source of truth).
+// Verified against JotForm API on 2026-02-27 (QIDs 15-34).
 const BASELINE_LABELS = Object.freeze({
   conv_inbound_leads: 'Inbound leads per month',
   conv_first_response_time: 'Typical first response time',
-  conv_lead_to_booked: 'Lead-to-booked %',
-  conv_booked_to_show: 'Booked-to-show %',
+  conv_lead_to_booked: 'Lead to booked %',
+  conv_booked_to_show: 'Booked to show %',
   conv_time_to_first_appointment: 'Time to first appointment',
   conv_quote_sent_timeline: 'Quote sent timeline',
-  conv_quote_to_close: 'Quote-to-close %',
+  conv_quote_to_close: 'Quote to close %',
   acq_inbound_leads: 'Inbound leads per month',
   acq_top_source_dependence: 'Top lead source dependence',
   acq_pct_from_top_source: '% of leads from top source',
-  acq_calls_answered_live: 'Calls answered live',
+  acq_calls_answered_live: 'Calls answered live %',
   acq_website_capture_friction: 'Website lead capture friction',
   acq_reviews_per_month: 'Reviews per month',
   acq_referral_intros_per_month: 'Referral intros per month',
