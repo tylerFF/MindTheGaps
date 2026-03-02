@@ -102,6 +102,7 @@ const PROPERTIES = [
     options: ['High', 'Med', 'Low'],
   },
   { name: 'mtg_confidence_not_sure_count', label: 'MTG Confidence Not Sure Count', type: 'number', fieldType: 'number' },
+  { name: 'mtg_scan_field2_answer', label: 'MTG Scan Field 2 Answer', type: 'string', fieldType: 'text' },
   { name: 'mtg_scan_stop_reason', label: 'MTG Scan Stop Reason', type: 'string', fieldType: 'text' },
 
   // --- Plan Fields ---
@@ -119,7 +120,7 @@ const PROPERTIES = [
   },
   {
     name: 'mtg_plan_generation_mode', label: 'MTG Plan Generation Mode', type: 'enumeration', fieldType: 'select',
-    options: ['Auto', 'Stopped'],
+    options: ['Auto', 'Degraded', 'Stopped'],
   },
 ];
 

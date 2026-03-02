@@ -583,8 +583,8 @@ describe('scanWebhook — extractScanData Field 2 (2.2)', () => {
 // Field 2 — handler: "Not sure" triggers stop (item 2.2)
 // ---------------------------------------------------------------------------
 
-describe('scanWebhook — handler Field 2 "Not sure" stop (2.2)', () => {
-  it('returns stopped=true when Field 2 is "Not sure"', async () => {
+describe('scanWebhook — handler Field 2 "Not sure" degraded (2.2)', () => {
+  it('returns degraded=true (not stopped) when Field 2 is "Not sure"', async () => {
     const payload = {
       q2_contactEmail: 'test@example.com',
       q9_primaryGap: 'Conversion',
@@ -613,8 +613,8 @@ describe('scanWebhook — handler Field 2 "Not sure" stop (2.2)', () => {
     assert.equal(response.status, 200);
     const body = await response.json();
     assert.equal(body.success, true);
-    assert.equal(body.stopped, true);
-    assert.ok(body.reasons.some(r => r.includes('Field 2')));
+    assert.equal(body.stopped, false);
+    assert.equal(body.degraded, true);
   });
 
   it('proceeds normally when Field 2 has a valid answer', async () => {

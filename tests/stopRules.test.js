@@ -721,11 +721,12 @@ describe('checkStopRules — Phase 5 degraded behavior', () => {
 // ---------------------------------------------------------------------------
 
 describe('stopRules — Field 2 "Not sure" (2.2)', () => {
-  it('checkField2NotSure returns stop when field2Answer is "Not sure"', () => {
+  it('checkField2NotSure returns degraded when field2Answer is "Not sure"', () => {
     const { checkField2NotSure } = _internal;
     const result = checkField2NotSure({ field2Answer: 'Not sure' });
     assert.notEqual(result, null);
     assert.equal(result.rule, 'field2_not_sure');
+    assert.equal(result.degraded, true);
   });
 
   it('checkField2NotSure is case-insensitive', () => {
@@ -753,18 +754,12 @@ describe('stopRules — Field 2 "Not sure" (2.2)', () => {
     assert.equal(result, null);
   });
 
-  it('checkStopRules: field2Answer "Not sure" triggers full stop', () => {
+  it('checkStopRules: field2Answer "Not sure" triggers degraded draft (not full stop)', () => {
     const scanData = buildScanData({ field2Answer: 'Not sure' });
     const result = checkStopRules(scanData);
-    assert.equal(result.stopped, true);
+    assert.equal(result.stopped, false);
+    assert.equal(result.degraded, true);
     assert.ok(result.reasons.some(r => r.includes('Field 2')));
-  });
-
-  it('checkStopRules: field2Answer "Not sure" is NOT degraded (it is a full stop)', () => {
-    const scanData = buildScanData({ field2Answer: 'Not sure' });
-    const result = checkStopRules(scanData);
-    assert.equal(result.stopped, true);
-    assert.equal(result.degraded, false);
   });
 
   it('checkStopRules: valid field2Answer does not trigger stop', () => {
