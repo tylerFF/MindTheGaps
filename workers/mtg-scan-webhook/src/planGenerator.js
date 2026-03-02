@@ -194,7 +194,7 @@ const METRIC_TO_BASELINE = Object.freeze({
 
   // Retention metrics
   'Rebook rate (or count)':               'ret_rebook_scheduling',
-  'Follow-up time after service':          'ret_follow_up_time',
+  'Days to follow-up after service':       'ret_follow_up_time',
   'Repeat revenue band':                  'ret_pct_revenue_repeat',
 });
 
