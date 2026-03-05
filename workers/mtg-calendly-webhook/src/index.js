@@ -23,8 +23,17 @@ async function verifySignature(payload, sigHeader, secret) {
 
   if (!sigHeader) return false;
 
-  const encoder = new TextEncoder();
+  // Calendly signature header format: "v1,{timestamp},{signature}"
+  const parts = sigHeader.split(',');
+  if (parts.length < 3 || parts[0] !== 'v1') return false;
 
+  const timestamp = parts[1];
+  const receivedSig = parts.slice(2).join(',');
+
+  // Calendly signs "{timestamp}.{body}"
+  const signedPayload = `${timestamp}.${payload}`;
+
+  const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
     'raw',
     encoder.encode(secret),
@@ -33,12 +42,12 @@ async function verifySignature(payload, sigHeader, secret) {
     ['sign'],
   );
 
-  const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(payload));
+  const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(signedPayload));
   const expected = Array.from(new Uint8Array(sig))
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
 
-  return expected === sigHeader;
+  return expected === receivedSig;
 }
 
 // ---------------------------------------------------------------------------
