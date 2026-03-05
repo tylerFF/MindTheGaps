@@ -122,6 +122,17 @@
       line-height: 1.45;
       margin-bottom: 1.5rem;
     }
+    .helper-text {
+      font-size: 0.8rem;
+      color: #888;
+      margin-top: -1rem;
+      margin-bottom: 1.25rem;
+    }
+    .field-helper {
+      font-size: 0.78rem;
+      color: #999;
+      margin-top: 0.2rem;
+    }
 
     /* ================================================================
        Radio Options
@@ -383,6 +394,7 @@
           <div class="question-card">
             <span class="question-id">Question 2 of 13</span>
             <div class="question-text">About how many new inbound leads do you get in a typical month?</div>
+            <div class="helper-text">Best estimate is fine. If you're not sure, choose "Not sure."</div>
             <div class="radio-group">
               <label class="radio-option">
                 <input type="radio" name="V2" value="0-9">
@@ -421,6 +433,7 @@
           <div class="question-card">
             <span class="question-id">Question 3 of 13</span>
             <div class="question-text">How fast do leads typically get a first response?</div>
+            <div class="helper-text">Best estimate is fine. If you're not sure, choose "Not sure."</div>
             <div class="radio-group">
               <label class="radio-option">
                 <input type="radio" name="V3" value="Within 15 minutes">
@@ -463,6 +476,7 @@
           <div class="question-card">
             <span class="question-id">Question 4 of 13</span>
             <div class="question-text">When a first meeting is booked, what % actually show up?</div>
+            <div class="helper-text">Best estimate is fine. If you're not sure, choose "Not sure."</div>
             <div class="radio-group">
               <label class="radio-option">
                 <input type="radio" name="V4" value="80%+">
@@ -501,6 +515,7 @@
           <div class="question-card">
             <span class="question-id">Question 5 of 13</span>
             <div class="question-text">How dependent are you on your top lead source?</div>
+            <div class="helper-text">Best estimate is fine. If you're not sure, choose "Not sure."</div>
             <div class="radio-group">
               <label class="radio-option">
                 <input type="radio" name="V5" value="Most leads come from one source">
@@ -535,6 +550,7 @@
           <div class="question-card">
             <span class="question-id">Almost there — tell us about you</span>
             <div class="question-text">A few quick details so we can personalize your results.</div>
+            <div class="helper-text">A few quick details so we can tailor your results and next steps.</div>
             <div class="profile-grid">
               <div class="field-group">
                 <label for="firstName">First name</label>
@@ -591,10 +607,12 @@
               <div class="field-group">
                 <label for="website">Website URL <span class="optional-tag">(optional)</span></label>
                 <input type="url" id="website" name="website" placeholder="https://...">
+                <div class="field-helper">Helps us tailor your results. Skip if not handy.</div>
               </div>
               <div class="field-group">
                 <label for="phone">Phone <span class="optional-tag">(optional)</span></label>
                 <input type="tel" id="phone" name="phone" placeholder="(555) 123-4567">
+                <div class="field-helper">Not required to get your results.</div>
               </div>
             </div>
           </div>
@@ -613,6 +631,7 @@
           <div class="question-card">
             <span class="question-id">Question 6 of 13</span>
             <div class="question-text">Thinking of your last 20 inbound leads, about how many were a good fit for you?</div>
+            <div class="helper-text">Best estimate is fine. If you're not sure, choose "Not sure."</div>
             <div class="radio-group">
               <label class="radio-option">
                 <input type="radio" name="A1" value="0-5">
@@ -651,6 +670,7 @@
           <div class="question-card">
             <span class="question-id">Question 7 of 13</span>
             <div class="question-text">Who responds first most often when a new lead comes in?</div>
+            <div class="helper-text">Best estimate is fine. If you're not sure, choose "Not sure."</div>
             <div class="radio-group">
               <label class="radio-option">
                 <input type="radio" name="C1" value="Coordinator/Front desk">
@@ -697,6 +717,7 @@
           <div class="question-card">
             <span class="question-id">Question 8 of 13</span>
             <div class="question-text">How long does it usually take from first contact to the first meeting?</div>
+            <div class="helper-text">Best estimate is fine. If you're not sure, choose "Not sure."</div>
             <div class="radio-group">
               <label class="radio-option">
                 <input type="radio" name="C2" value="Same day">
@@ -739,6 +760,7 @@
           <div class="question-card">
             <span class="question-id">Question 9 of 13</span>
             <div class="question-text">What's the biggest reason leads don't book (or don't move forward)?</div>
+            <div class="helper-text">Best estimate is fine. If you're not sure, choose "Not sure."</div>
             <div class="radio-group">
               <label class="radio-option">
                 <input type="radio" name="C3" value="Can't reach them / slow follow-up">
@@ -777,6 +799,7 @@
           <div class="question-card">
             <span class="question-id">Question 10 of 13</span>
             <div class="question-text">How long does it usually take to close a deal after first contact?</div>
+            <div class="helper-text">Best estimate is fine. If you're not sure, choose "Not sure."</div>
             <div class="radio-group">
               <label class="radio-option">
                 <input type="radio" name="C4" value="Same day">
@@ -823,6 +846,7 @@
           <div class="question-card">
             <span class="question-id">Question 11 of 13</span>
             <div class="question-text">How often do you proactively review client accounts or renewals?</div>
+            <div class="helper-text">Best estimate is fine. If you're not sure, choose "Not sure."</div>
             <div class="radio-group">
               <label class="radio-option">
                 <input type="radio" name="R1" value="Monthly">
@@ -865,6 +889,7 @@
           <div class="question-card">
             <span class="question-id">Question 12 of 13</span>
             <div class="question-text">Over the last 2 quarters, has revenue from existing clients grown, stayed flat, or shrunk?</div>
+            <div class="helper-text">Best estimate is fine. If you're not sure, choose "Not sure."</div>
             <div class="radio-group">
               <label class="radio-option">
                 <input type="radio" name="R2" value="Grown">
@@ -899,6 +924,7 @@
           <div class="question-card">
             <span class="question-id">Question 13 of 13</span>
             <div class="question-text">In a typical month, which is more true?</div>
+            <div class="helper-text">Best estimate is fine. If you're not sure, choose "Not sure."</div>
             <div class="radio-group">
               <label class="radio-option">
                 <input type="radio" name="R3" value="Most revenue comes from new customers">
