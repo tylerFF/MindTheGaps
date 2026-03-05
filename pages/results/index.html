@@ -376,9 +376,9 @@
             '<p style="margin-bottom: 1rem; color: #555;">Get a 45-minute facilitator-led scan to build your custom One-Page Growth Plan.</p>' +
             '<a id="checkout-link" href="#" class="cta-button ' + gapClass + '">Book the 45-Minute Growth Gap Scan &mdash; CAD $295</a>';
 
-          // Stripe payment link
-          // LIVE: var STRIPE_CHECKOUT_URL = 'https://buy.stripe.com/cNi3cwaRtgRMd9laYg1sQ00';
-          var STRIPE_CHECKOUT_URL = 'https://book.stripe.com/test_bJebJ28Jl30W3yL8Q81sQ01';
+          // Stripe payment link — swap comments to go live
+          // var STRIPE_CHECKOUT_URL = 'https://buy.stripe.com/cNi3cwaRtgRMd9laYg1sQ00'; // LIVE
+          var STRIPE_CHECKOUT_URL = 'https://book.stripe.com/test_bJebJ28Jl30W3yL8Q81sQ01'; // TEST
           var checkoutLink = document.getElementById('checkout-link');
           checkoutLink.href = STRIPE_CHECKOUT_URL;
         } else if (eligibility) {
