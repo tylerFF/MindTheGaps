@@ -219,7 +219,7 @@ function extractQuizAnswers(payload) {
 /**
  * Build the full set of HubSpot contact properties from all processing results.
  */
-function buildHubSpotProperties(contactInfo, answers, scoringResult, resultsContent, eligibilityResult) {
+function buildHubSpotProperties(contactInfo, answers, scoringResult, resultsContent, eligibilityResult, trackingParams) {
   const props = {};
 
   // Contact info
@@ -265,6 +265,11 @@ function buildHubSpotProperties(contactInfo, answers, scoringResult, resultsCont
     props.mtg_fix_first_reason = eligibilityResult.fixFirstReason;
   }
 
+  // Cohort / campaign tracking (written from URL query params)
+  if (trackingParams && trackingParams.cohort_id) props.mtg_cohort_id = trackingParams.cohort_id;
+  if (trackingParams && trackingParams.variant_id) props.mtg_variant_id = trackingParams.variant_id;
+  if (trackingParams && trackingParams.source_channel) props.mtg_source_channel = trackingParams.source_channel;
+
   return props;
 }
 
@@ -303,6 +308,13 @@ async function handleQuizWebhook(request, env, ctx) {
     const contactInfo = extractContactInfo(payload);
     const answers = extractQuizAnswers(payload);
 
+    // 2b. Extract tracking params (cohort, variant, source channel)
+    const trackingParams = {
+      cohort_id: payload.cohort_id || '',
+      variant_id: payload.variant_id || '',
+      source_channel: payload.source_channel || '',
+    };
+
     // 3. Validate email
     const rawEmail = contactInfo.email || payload.email || '';
     const email = normalizeEmail(rawEmail);
@@ -323,6 +335,7 @@ async function handleQuizWebhook(request, env, ctx) {
     // 7. Build HubSpot properties
     const hubspotProps = buildHubSpotProperties(
       contactInfo, answers, scoringResult, resultsContent, eligibilityResult,
+      trackingParams,
     );
 
     // 8. Write to HubSpot (non-blocking — don't fail the user-facing response)

@@ -275,6 +275,7 @@
        Dev Badge
        ================================================================ */
     .dev-badge {
+      display: none;
       text-align: center;
       padding: 0.35rem 0.75rem;
       background: #fff3cd;
@@ -1067,9 +1068,15 @@
       // ---------------------------------------------------------------
       // Form submission — fetch to API, then redirect to results
       // ---------------------------------------------------------------
-      var QUIZ_API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      var isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      var QUIZ_API_URL = isLocal
         ? '/submit'
         : 'https://mtg-quiz-webhook.mindthegaps-biz-account.workers.dev';
+
+      // Only show dev badge on localhost
+      if (isLocal) {
+        document.querySelector('.dev-badge').style.display = 'block';
+      }
 
       document.getElementById('quizForm').addEventListener('submit', function (e) {
         e.preventDefault();
@@ -1080,6 +1087,12 @@
 
         var data = {};
         new FormData(this).forEach(function (value, key) { data[key] = value; });
+
+        // Read tracking params from URL query string
+        var urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('cohort_id')) data.cohort_id = urlParams.get('cohort_id');
+        if (urlParams.get('variant_id')) data.variant_id = urlParams.get('variant_id');
+        if (urlParams.get('source_channel')) data.source_channel = urlParams.get('source_channel');
 
         fetch(QUIZ_API_URL, {
           method: 'POST',
