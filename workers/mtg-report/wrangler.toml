@@ -1,0 +1,11 @@
+name = "mtg-report"
+main = "src/index.js"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# Environment variables (set via wrangler secret or Cloudflare dashboard)
+# HUBSPOT_API_KEY - HubSpot private app token
+# REPORT_SECRET   - Optional bearer token to protect the endpoint
+
+[vars]
+# No static vars needed - secrets are set via dashboard/CLI
