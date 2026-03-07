@@ -8,8 +8,8 @@
  *
  * Stop rules:
  *   1a. Sub-path = "not sure"  → full stop (no plan generated)
- *   1b. Sub-path starts with "Other" → degraded draft (plan IS generated, flagged)
- *   1c. Field 2 follow-up = "not sure" → degraded draft (plan IS generated, flagged)
+ *   1b. Sub-path starts with "Other" → full stop (no plan generated)
+ *   1c. Field 2 follow-up = "not sure" → full stop (no plan generated)
  *   2. Primary gap changed from quiz without an explanation provided
  *   3. Missing required fields:
  *      - primary gap present
@@ -25,7 +25,7 @@
  * StopRulesResult shape:
  *   {
  *     stopped:  boolean,       // true = full stop, plan NOT generated
- *     degraded: boolean,       // true = "Other (manual)", plan IS generated but flagged
+ *     degraded: boolean,       // reserved for future use (currently always false)
  *     reasons:  string[],      // human-readable stop reason(s)
  *     details:  object[],      // machine-readable details per fired rule
  *   }
@@ -134,8 +134,7 @@ function checkSubPath(scanData) {
   if (isOtherManual(subPath)) {
     return {
       rule: 'subpath_other',
-      message: 'Sub-path is "Other (manual)" — degraded draft will be generated',
-      degraded: true,
+      message: 'Sub-path is "Other (manual)" — requires manual plan',
     };
   }
 
@@ -143,11 +142,9 @@ function checkSubPath(scanData) {
 }
 
 /**
- * Rule 1c: Field 2 follow-up = "not sure" → degraded draft
+ * Rule 1c: Field 2 follow-up = "not sure" → full stop
  * Per Marc: "If the facilitator picks not sure, please route that to
  * Other (manual) and do not auto-generate the plan."
- * This means: generate a degraded draft (flagged for Marc's review),
- * same as "Other (manual)" sub-path behavior.
  */
 function checkField2NotSure(scanData) {
   const { field2Answer } = scanData;
@@ -157,8 +154,7 @@ function checkField2NotSure(scanData) {
   if (field2Answer && isNotSure(field2Answer)) {
     return {
       rule: 'field2_not_sure',
-      message: 'Field 2 follow-up is "Not sure" — degraded draft will be generated',
-      degraded: true,
+      message: 'Field 2 follow-up is "Not sure" — requires manual plan',
     };
   }
 
@@ -274,8 +270,7 @@ function checkStopRules(scanData) {
   const missingResult = checkMissingFields(scanData);
   if (missingResult) details.push(missingResult);
 
-  // Separate full stops from degraded results.
-  // "Other (manual)" is degraded (still generates a plan), not a full stop.
+  // All rule results are full stops (no degraded behavior currently).
   const fullStops = details.filter(d => !d.degraded);
   const hasDegraded = details.some(d => d.degraded);
 

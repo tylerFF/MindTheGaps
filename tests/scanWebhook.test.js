@@ -453,11 +453,11 @@ describe('scanWebhook — buildHubSpotProperties degraded (3.5)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Phase 5 — handler: "Other (manual)" degraded path
+// Phase 5 — handler: "Other (manual)" full stop
 // ---------------------------------------------------------------------------
 
-describe('scanWebhook — handler degraded path (3.5)', () => {
-  it('generates plan (not stopped) for "Other (manual)" with all fields present', async () => {
+describe('scanWebhook — handler "Other (manual)" full stop', () => {
+  it('stops (no plan generated) for "Other (manual)" even with all fields present', async () => {
     const payload = {
       q2_contactEmail: 'test@example.com',
       q9_primaryGap: 'Conversion',
@@ -488,9 +488,8 @@ describe('scanWebhook — handler degraded path (3.5)', () => {
     assert.equal(response.status, 200);
     const body = await response.json();
     assert.equal(body.success, true);
-    assert.equal(body.stopped, false);
-    assert.equal(body.degraded, true);
-    assert.equal(body.confidence, 'High');
+    assert.equal(body.stopped, true);
+    assert.ok(body.reasons.length > 0);
   });
 
   it('returns stopped=true for "Not sure" sub-path (regression check)', async () => {
@@ -580,11 +579,11 @@ describe('scanWebhook — extractScanData Field 2 (2.2)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Field 2 — handler: "Not sure" triggers stop (item 2.2)
+// Field 2 — handler: "Not sure" triggers full stop (item 2.2)
 // ---------------------------------------------------------------------------
 
-describe('scanWebhook — handler Field 2 "Not sure" degraded (2.2)', () => {
-  it('returns degraded=true when Field 2 is "Not sure"', async () => {
+describe('scanWebhook — handler Field 2 "Not sure" full stop (2.2)', () => {
+  it('returns stopped=true when Field 2 is "Not sure"', async () => {
     const payload = {
       q2_contactEmail: 'test@example.com',
       q9_primaryGap: 'Conversion',
@@ -613,8 +612,8 @@ describe('scanWebhook — handler Field 2 "Not sure" degraded (2.2)', () => {
     assert.equal(response.status, 200);
     const body = await response.json();
     assert.equal(body.success, true);
-    assert.equal(body.degraded, true);
-    assert.equal(body.stopped, false);
+    assert.equal(body.stopped, true);
+    assert.ok(body.reasons.length > 0);
   });
 
   it('proceeds normally when Field 2 has a valid answer', async () => {
