@@ -46,7 +46,8 @@ function createHubSpotClient(apiKey) {
    * @param {string} email
    * @returns {Promise<object|null>} Contact object or null if not found
    */
-  async function getContactByEmail(email) {
+  async function getContactByEmail(email, extraProperties = []) {
+    const properties = ['email', 'firstname', 'lastname', ...extraProperties];
     const response = await fetch(`${BASE_URL}/search`, {
       method: 'POST',
       headers,
@@ -62,7 +63,7 @@ function createHubSpotClient(apiKey) {
             ],
           },
         ],
-        properties: ['email', 'firstname', 'lastname'],
+        properties,
         limit: 1,
       }),
     });

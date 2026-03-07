@@ -470,6 +470,22 @@ async function handleScanWebhook(request, env, ctx) {
       return errorResponse('A valid email address is required');
     }
 
+    // 3b. Supplement contactInfo with HubSpot data (business name from quiz)
+    if (env.HUBSPOT_API_KEY) {
+      try {
+        const client = createHubSpotClient(env.HUBSPOT_API_KEY);
+        const existing = await client.getContactByEmail(email, ['mtg_business_name']);
+        if (existing && existing.properties) {
+          const hsBizName = existing.properties.mtg_business_name;
+          if (hsBizName && hsBizName.trim()) {
+            contactInfo.businessName = hsBizName.trim();
+          }
+        }
+      } catch (err) {
+        console.error('HubSpot lookup for business name failed:', err.message);
+      }
+    }
+
     // 4. Run stop rules
     const stopResult = checkStopRules(scanData);
     const isDegraded = stopResult.degraded && !stopResult.stopped;
