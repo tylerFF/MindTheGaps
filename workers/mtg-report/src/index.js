@@ -4,9 +4,10 @@
  * On-demand report: quiz completions by cohort_id, broken down by variant_id.
  *
  * Usage:
- *   GET /                → last week (Mon–Sun) report
+ *   GET /                → last week (Mon–Sun), JSON
  *   GET /?from=2026-02-24&to=2026-03-02  → custom date range
  *   GET /?format=html    → HTML-formatted table (default: json)
+ *   GET /?token=SECRET   → auth token (required if REPORT_SECRET is set)
  *
  * Environment bindings:
  *   HUBSPOT_API_KEY  — HubSpot private app token
@@ -17,15 +18,20 @@ const HUBSPOT_SEARCH_URL = 'https://api.hubapi.com/crm/v3/objects/contacts/searc
 
 const PROPERTIES_TO_FETCH = [
   'email',
+  'mtg_first_name',
+  'mtg_last_name',
   'mtg_quiz_completed',
   'mtg_quiz_completed_at',
   'mtg_cohort_id',
   'mtg_variant_id',
   'mtg_source_channel',
   'mtg_primary_gap',
-  'mtg_first_name',
   'mtg_business_name',
 ];
+
+// ---------------------------------------------------------------------------
+// Date helpers
+// ---------------------------------------------------------------------------
 
 function getLastWeekRange(refDate) {
   const d = new Date(refDate);
@@ -51,6 +57,10 @@ function parseDate(str) {
 function fmtDate(d) {
   return d.toISOString().slice(0, 10);
 }
+
+// ---------------------------------------------------------------------------
+// HubSpot search — paginated fetch of completed-quiz contacts in date range
+// ---------------------------------------------------------------------------
 
 async function searchCompletedContacts(apiKey, from, to) {
   const allContacts = [];
@@ -95,6 +105,10 @@ async function searchCompletedContacts(apiKey, from, to) {
   return allContacts;
 }
 
+// ---------------------------------------------------------------------------
+// Aggregate: group by cohort → variant, with contact details
+// ---------------------------------------------------------------------------
+
 function buildReport(contacts, from, to) {
   const cohorts = {};
   let totalCompletions = 0;
@@ -108,6 +122,7 @@ function buildReport(contacts, from, to) {
     const sourceChannel = props.mtg_source_channel || '';
     const completedAt = props.mtg_quiz_completed_at || '';
     const firstName = props.mtg_first_name || '';
+    const lastName = props.mtg_last_name || '';
     const businessName = props.mtg_business_name || '';
 
     if (!cohorts[cohortId]) cohorts[cohortId] = { total: 0, variants: {} };
@@ -117,7 +132,7 @@ function buildReport(contacts, from, to) {
     }
     cohorts[cohortId].variants[variantId].count++;
     cohorts[cohortId].variants[variantId].contacts.push({
-      email, firstName, businessName, primaryGap, sourceChannel, completedAt,
+      email, firstName, lastName, businessName, primaryGap, sourceChannel, completedAt,
     });
     totalCompletions++;
   }
@@ -131,48 +146,67 @@ function buildReport(contacts, from, to) {
   };
 }
 
+// ---------------------------------------------------------------------------
+// HTML renderer
+// ---------------------------------------------------------------------------
+
 function esc(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 function reportToHtml(report) {
-  let html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>MTG Quiz Completion Report</title>';
-  html += '<style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:900px;margin:40px auto;padding:0 20px;color:#1a1a1a}';
-  html += 'h1{color:#0f4c5c;border-bottom:2px solid #0f4c5c;padding-bottom:8px}h2{color:#2d6a4f;margin-top:32px}';
-  html += 'h3{color:#40916c;margin-top:20px}.meta{color:#666;font-size:14px;margin-bottom:24px}';
-  html += '.summary{background:#f0f7f4;border-left:4px solid #2d6a4f;padding:12px 16px;margin:16px 0;border-radius:4px}';
-  html += 'table{border-collapse:collapse;width:100%;margin:12px 0}th,td{border:1px solid #ddd;padding:8px 12px;text-align:left;font-size:14px}';
-  html += 'th{background:#f5f5f5;font-weight:600}tr:nth-child(even){background:#fafafa}.empty{color:#999;font-style:italic}';
-  html += '</style></head><body>';
-  html += '<h1>MTG Quiz Completion Report</h1>';
-  html += '<div class="meta">Period: ' + report.period.from + ' to ' + report.period.to + ' | Generated: ' + report.generatedAt.slice(0,16).replace('T',' ') + ' UTC</div>';
-  html += '<div class="summary"><strong>Total completions:</strong> ' + report.totalCompletions + '</div>';
+  let html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>MTG Quiz Completion Report</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;max-width:960px;margin:40px auto;padding:0 20px;color:#1a1a1a}
+h1{color:#0f4c5c;border-bottom:2px solid #0f4c5c;padding-bottom:8px}
+h2{color:#2d6a4f;margin-top:32px}
+h3{color:#40916c;margin-top:20px}
+.meta{color:#666;font-size:14px;margin-bottom:24px}
+.summary{background:#f0f7f4;border-left:4px solid #2d6a4f;padding:12px 16px;margin:16px 0;border-radius:4px}
+.adjust{background:#fffbeb;border:1px solid #fde68a;padding:10px 16px;margin:12px 0;border-radius:4px;font-size:13px}
+code{background:#f3f4f6;padding:2px 6px;border-radius:3px;font-size:13px}
+table{border-collapse:collapse;width:100%;margin:12px 0}
+th,td{border:1px solid #ddd;padding:8px 12px;text-align:left;font-size:14px}
+th{background:#f5f5f5;font-weight:600}
+tr:nth-child(even){background:#fafafa}
+.empty{color:#999;font-style:italic}
+</style></head><body>`;
+
+  html += `<h1>MTG Quiz Completion Report</h1>`;
+  html += `<div class="meta">Period: ${report.period.from} to ${report.period.to} &nbsp;|&nbsp; Generated: ${report.generatedAt.slice(0, 16).replace('T', ' ')} UTC</div>`;
+  html += `<div class="summary"><strong>Total completions:</strong> ${report.totalCompletions}</div>`;
+  html += `<div class="adjust"><strong>Adjust date range:</strong> Add <code>?from=YYYY-MM-DD&to=YYYY-MM-DD</code> to the URL. Default is last Monday\u2013Sunday.</div>`;
 
   if (report.totalCompletions === 0) {
-    html += '<p class="empty">No quiz completions found in this period.</p>';
+    html += `<p class="empty">No quiz completions found in this period.</p>`;
   } else {
-    var cohortKeys = Object.keys(report.cohorts).sort();
-    for (var i = 0; i < cohortKeys.length; i++) {
-      var cohortId = cohortKeys[i];
-      var cohort = report.cohorts[cohortId];
-      html += '<h2>Cohort: ' + esc(cohortId) + ' (' + cohort.total + ' completion' + (cohort.total !== 1 ? 's' : '') + ')</h2>';
-      var variantKeys = Object.keys(cohort.variants).sort();
-      for (var j = 0; j < variantKeys.length; j++) {
-        var variantId = variantKeys[j];
-        var variant = cohort.variants[variantId];
-        html += '<h3>Variant: ' + esc(variantId) + ' (' + variant.count + ')</h3>';
-        html += '<table><tr><th>Email</th><th>Name</th><th>Business</th><th>Primary Gap</th><th>Source</th><th>Completed</th></tr>';
-        for (var k = 0; k < variant.contacts.length; k++) {
-          var c = variant.contacts[k];
-          html += '<tr><td>' + esc(c.email) + '</td><td>' + esc(c.firstName) + '</td><td>' + esc(c.businessName) + '</td><td>' + esc(c.primaryGap) + '</td><td>' + esc(c.sourceChannel) + '</td><td>' + esc(c.completedAt ? c.completedAt.slice(0,16).replace('T',' ') : '') + '</td></tr>';
+    const cohortKeys = Object.keys(report.cohorts).sort();
+    for (const cohortId of cohortKeys) {
+      const cohort = report.cohorts[cohortId];
+      html += `<h2>Cohort: ${esc(cohortId)} (${cohort.total} completion${cohort.total !== 1 ? 's' : ''})</h2>`;
+
+      const variantKeys = Object.keys(cohort.variants).sort();
+      for (const variantId of variantKeys) {
+        const variant = cohort.variants[variantId];
+        html += `<h3>Variant: ${esc(variantId)} (${variant.count})</h3>`;
+        html += `<table><tr><th>Email</th><th>Name</th><th>Business</th><th>Primary Gap</th><th>Source</th><th>Completed</th></tr>`;
+        for (const c of variant.contacts) {
+          const name = [c.firstName, c.lastName].filter(Boolean).join(' ') || '\u2014';
+          const completed = c.completedAt ? c.completedAt.slice(0, 16).replace('T', ' ') : '';
+          html += `<tr><td>${esc(c.email)}</td><td>${esc(name)}</td><td>${esc(c.businessName)}</td><td>${esc(c.primaryGap)}</td><td>${esc(c.sourceChannel)}</td><td>${esc(completed)}</td></tr>`;
         }
-        html += '</table>';
+        html += `</table>`;
       }
     }
   }
-  html += '</body></html>';
+
+  html += `</body></html>`;
   return html;
 }
+
+// ---------------------------------------------------------------------------
+// CORS headers
+// ---------------------------------------------------------------------------
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -180,7 +214,12 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
+// ---------------------------------------------------------------------------
+// Main handler
+// ---------------------------------------------------------------------------
+
 async function handleRequest(request, env) {
+  // CORS preflight
   if (request.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
   }
@@ -190,11 +229,12 @@ async function handleRequest(request, env) {
     });
   }
 
+  // Auth check (optional — only enforced if REPORT_SECRET is set)
   if (env.REPORT_SECRET) {
     const authHeader = request.headers.get('Authorization') || '';
     const url = new URL(request.url);
     const tokenParam = url.searchParams.get('token');
-    const token = authHeader.replace('Bearer ', '') || tokenParam || '';
+    const token = authHeader.replace(/^Bearer\s+/i, '') || tokenParam || '';
     if (token !== env.REPORT_SECRET) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
@@ -208,6 +248,7 @@ async function handleRequest(request, env) {
     });
   }
 
+  // Parse date range (default: last Monday–Sunday)
   const url = new URL(request.url);
   const format = url.searchParams.get('format') || 'json';
   let from, to;
@@ -229,6 +270,7 @@ async function handleRequest(request, env) {
     to = range.to;
   }
 
+  // Fetch + build report
   try {
     const contacts = await searchCompletedContacts(env.HUBSPOT_API_KEY, from, to);
     const report = buildReport(contacts, from, to);
