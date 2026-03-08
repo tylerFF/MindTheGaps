@@ -1,0 +1,10 @@
+{
+  "name": "mtg-report",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MindtheGaps on-demand cohort report — quiz completions by cohort × variant",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  }
+}
