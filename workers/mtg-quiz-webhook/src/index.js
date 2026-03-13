@@ -18,6 +18,7 @@
 const { scoreQuiz } = require('./scoring');
 const { generateResults } = require('./results');
 const { checkEligibility } = require('./eligibility');
+const { sendQuizResultsEmail } = require('./quizEmail');
 const { createHubSpotClient } = require('../../shared/hubspot');
 const { isValidEmail, normalizeEmail, sanitizeString } = require('../../shared/validation');
 const { QUESTION_IDS, HUBSPOT_PREFIX } = require('../../shared/constants');
@@ -369,6 +370,13 @@ async function handleQuizWebhook(request, env, ctx) {
 
     // 9. Build the results page data payload
     const resultsData = {
+      contact: {
+        firstName: contactInfo.firstName || '',
+        businessName: contactInfo.businessName || '',
+        industry: contactInfo.industry || '',
+        location: contactInfo.location || '',
+        teamSize: contactInfo.teamSize || '',
+      },
       scoring: {
         primaryGap: scoringResult.primaryGap,
         baselineScore: scoringResult.baselineScore,
@@ -401,7 +409,47 @@ if (env.MTG_RESULTS_CACHE) {
     env.MTG_RESULTS_CACHE.put(`result:${submissionId}`, JSON.stringify({ resultsUrl }), { expirationTtl: 3600 })
   );
 }
-    // 10. Return results JSON for the results page
+    // 10. Send quiz results email (non-blocking)
+    let emailStatus = 'skipped';
+    if (env.RESEND_API_KEY && email) {
+      const emailSend = async () => {
+        try {
+          await sendQuizResultsEmail(env, {
+            firstName: contactInfo.firstName,
+            email,
+            businessName: contactInfo.businessName,
+            industry: contactInfo.industry,
+            location: contactInfo.location,
+            teamSize: contactInfo.teamSize,
+            primaryGap: scoringResult.primaryGap,
+            baselineScore: scoringResult.baselineScore,
+            primaryGapStatement: resultsContent.primaryGapStatement,
+            subDiagnosisDisplay: resultsContent.subDiagnosisDisplay,
+            keySignalsLine: resultsContent.keySignalsLine,
+            costOfLeak: resultsContent.costOfLeak,
+            costOfLeakAdvice: resultsContent.costOfLeakAdvice,
+            fastestNextSteps: resultsContent.fastestNextSteps,
+            eligible: eligibilityResult.eligible,
+            fixFirstReason: eligibilityResult.fixFirstReason,
+            fixFirstAdvice: eligibilityResult.fixFirstAdvice,
+            stripeCheckoutUrl: env.STRIPE_CHECKOUT_URL,
+          });
+          emailStatus = 'sent';
+          console.log('Quiz results email sent to:', email);
+        } catch (err) {
+          console.error('Quiz results email failed:', err.message);
+          emailStatus = 'error';
+        }
+      };
+
+      if (ctx && ctx.waitUntil) {
+        ctx.waitUntil(emailSend());
+      } else {
+        await emailSend();
+      }
+    }
+
+    // 11. Return results JSON for the results page
     return corsResponse({
       success: true,
       email,
@@ -409,6 +457,7 @@ if (env.MTG_RESULTS_CACHE) {
       ...resultsData,
       _meta: {
         hubspotStatus,
+        emailStatus,
         processedAt: new Date().toISOString(),
       },
     });

@@ -120,6 +120,24 @@ const JOTFORM_SCAN_FIELD_MAP = {
     2: 'q65_constraint2',
     3: 'q66_constraint3',
   },
+  // Per-sub-path owner fields (q194-q277): 14 sub-paths × 6 action slots
+  // These override shared owner fields when a predetermined sub-path is selected
+  ownerPerSubPath: {
+    'Channel concentration risk':          ['q194_ownerCCR1','q195_ownerCCR2','q196_ownerCCR3','q197_ownerCCR4','q198_ownerCCR5','q199_ownerCCR6'],
+    'Lead capture friction':               ['q200_ownerLCF1','q201_ownerLCF2','q202_ownerLCF3','q203_ownerLCF4','q204_ownerLCF5','q205_ownerLCF6'],
+    'Demand capture / local visibility':   ['q206_ownerDCV1','q207_ownerDCV2','q208_ownerDCV3','q209_ownerDCV4','q210_ownerDCV5','q211_ownerDCV6'],
+    'Other (manual):Acquisition':          ['q212_ownerOMA1','q213_ownerOMA2','q214_ownerOMA3','q215_ownerOMA4','q216_ownerOMA5','q217_ownerOMA6'],
+    'Speed-to-lead':                       ['q218_ownerSTL1','q219_ownerSTL2','q220_ownerSTL3','q221_ownerSTL4','q222_ownerSTL5','q223_ownerSTL6'],
+    'Booking friction':                    ['q224_ownerBF1','q225_ownerBF2','q226_ownerBF3','q227_ownerBF4','q228_ownerBF5','q229_ownerBF6'],
+    'Show rate':                           ['q230_ownerSR1','q231_ownerSR2','q232_ownerSR3','q233_ownerSR4','q234_ownerSR5','q235_ownerSR6'],
+    'Quote follow-up / decision drop-off': ['q236_ownerQFU1','q237_ownerQFU2','q238_ownerQFU3','q239_ownerQFU4','q240_ownerQFU5','q241_ownerQFU6'],
+    'Other (manual):Conversion':           ['q242_ownerOMC1','q243_ownerOMC2','q244_ownerOMC3','q245_ownerOMC4','q246_ownerOMC5','q247_ownerOMC6'],
+    'Rebook/recall gap':                   ['q248_ownerRRG1','q249_ownerRRG2','q250_ownerRRG3','q251_ownerRRG4','q252_ownerRRG5','q253_ownerRRG6'],
+    'Review rhythm gap':                   ['q254_ownerRVG1','q255_ownerRVG2','q256_ownerRVG3','q257_ownerRVG4','q258_ownerRVG5','q259_ownerRVG6'],
+    'Referral ask gap':                    ['q260_ownerRAG1','q261_ownerRAG2','q262_ownerRAG3','q263_ownerRAG4','q264_ownerRAG5','q265_ownerRAG6'],
+    'Post-service follow-up gap':          ['q266_ownerPSF1','q267_ownerPSF2','q268_ownerPSF3','q269_ownerPSF4','q270_ownerPSF5','q271_ownerPSF6'],
+    'Other (manual):Retention':            ['q272_ownerOMR1','q273_ownerOMR2','q274_ownerOMR3','q275_ownerOMR4','q276_ownerOMR5','q277_ownerOMR6'],
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -159,6 +177,13 @@ registerFields(JOTFORM_SCAN_FIELD_MAP.constraints);
 for (const entry of Object.values(JOTFORM_SCAN_FIELD_MAP.field2BySubPath)) {
   const match = entry.field.match(/^q(\d+)_/);
   if (match) QID_TO_FIELD[match[1]] = entry.field;
+}
+// Register per-sub-path owner field names (q194-q277)
+for (const fields of Object.values(JOTFORM_SCAN_FIELD_MAP.ownerPerSubPath)) {
+  for (const fieldName of fields) {
+    const match = fieldName.match(/^q(\d+)_/);
+    if (match) QID_TO_FIELD[match[1]] = fieldName;
+  }
 }
 
 /**
@@ -299,6 +324,8 @@ function extractScanData(payload) {
   }
 
   // Actions (6 slots)
+  // Per-sub-path owner fields override shared owner fields when populated
+  const perSubOwnerFields = JOTFORM_SCAN_FIELD_MAP.ownerPerSubPath[scan.subPath];
   scan.actions = [];
   for (let i = 1; i <= 6; i++) {
     const actionMap = JOTFORM_SCAN_FIELD_MAP.actions[i];
@@ -310,9 +337,22 @@ function extractScanData(payload) {
     } else {
       dueDate = String(rawDue || '').trim();
     }
+    // Prefer per-sub-path owner field (facilitator edits) over shared owner field
+    let owner = '';
+    if (perSubOwnerFields) {
+      const perSubOwnerField = perSubOwnerFields[i - 1]; // 0-indexed array
+      const perSubOwnerValue = String(payload[perSubOwnerField] || '').trim();
+      if (perSubOwnerValue) {
+        owner = perSubOwnerValue;
+      }
+    }
+    // Fall back to shared owner field
+    if (!owner) {
+      owner = String(payload[actionMap.owner] || '').trim();
+    }
     scan.actions.push({
       description: String(payload[actionMap.desc] || '').trim(),
-      owner: String(payload[actionMap.owner] || '').trim(),
+      owner,
       dueDate,
     });
   }
@@ -470,19 +510,33 @@ async function handleScanWebhook(request, env, ctx) {
       return errorResponse('A valid email address is required');
     }
 
-    // 3b. Supplement contactInfo with HubSpot data (business name from quiz)
+    // 3b. Supplement contactInfo with HubSpot data (business name, industry, location, team size from quiz)
     if (env.HUBSPOT_API_KEY) {
       try {
         const client = createHubSpotClient(env.HUBSPOT_API_KEY);
-        const existing = await client.getContactByEmail(email, ['mtg_business_name']);
+        const existing = await client.getContactByEmail(email, [
+          'mtg_business_name', 'mtg_industry', 'mtg_location', 'mtg_team_size',
+        ]);
         if (existing && existing.properties) {
           const hsBizName = existing.properties.mtg_business_name;
           if (hsBizName && hsBizName.trim()) {
             contactInfo.businessName = hsBizName.trim();
           }
+          if (!contactInfo.industry) {
+            const hsIndustry = existing.properties.mtg_industry;
+            if (hsIndustry && hsIndustry.trim()) contactInfo.industry = hsIndustry.trim();
+          }
+          if (!contactInfo.location) {
+            const hsLocation = existing.properties.mtg_location;
+            if (hsLocation && hsLocation.trim()) contactInfo.location = hsLocation.trim();
+          }
+          if (!contactInfo.teamSize) {
+            const hsTeamSize = existing.properties.mtg_team_size;
+            if (hsTeamSize && hsTeamSize.trim()) contactInfo.teamSize = hsTeamSize.trim();
+          }
         }
       } catch (err) {
-        console.error('HubSpot lookup for business name failed:', err.message);
+        console.error('HubSpot lookup for contact details failed:', err.message);
       }
     }
 

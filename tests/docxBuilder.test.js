@@ -1090,3 +1090,41 @@ describe('docxBuilder — Field 2 follow-up rendering (2.2)', () => {
     assert.ok(buffer.length > 100);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Personalization details line
+// ---------------------------------------------------------------------------
+
+describe('buildDocx — personalization details', () => {
+  it('generates valid DOCX with industry, location, and teamSize', async () => {
+    const contact = {
+      businessName: 'Acme Plumbing',
+      email: 'test@example.com',
+      firstName: 'Jane',
+      industry: 'Home Services',
+      location: 'Toronto, ON',
+      teamSize: '5-10',
+    };
+    const buffer = await buildDocx(buildPlanContent(), {}, contact, highConfidence());
+    assert.ok(Buffer.isBuffer(buffer));
+    assert.ok(buffer.length > 100);
+  });
+
+  it('generates valid DOCX with only some detail fields', async () => {
+    const contact = {
+      businessName: 'Test Co',
+      email: 'test@example.com',
+      firstName: 'Bob',
+      industry: 'Landscaping',
+    };
+    const buffer = await buildDocx(buildPlanContent(), {}, contact, highConfidence());
+    assert.ok(Buffer.isBuffer(buffer));
+    assert.ok(buffer.length > 100);
+  });
+
+  it('generates valid DOCX with no detail fields (same as before)', async () => {
+    const buffer = await buildDocx(buildPlanContent(), {}, DEFAULT_CONTACT, highConfidence());
+    assert.ok(Buffer.isBuffer(buffer));
+    assert.ok(buffer.length > 100);
+  });
+});
