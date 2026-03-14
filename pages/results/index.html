@@ -37,6 +37,18 @@
       font-size: 0.9rem;
       color: #6c757d;
     }
+    .greeting {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #16213e;
+      margin-top: 1rem;
+      margin-bottom: 0.25rem;
+    }
+    .personal-details {
+      font-size: 0.85rem;
+      color: #555;
+      word-wrap: break-word;
+    }
 
     /* Card */
     .card {
@@ -229,6 +241,8 @@
     <div class="header">
       <h1>Your Growth Gap Results</h1>
       <p>MindtheGaps Business Diagnostic</p>
+      <p id="greeting" class="greeting" style="display:none;"></p>
+      <p id="personal-details" class="personal-details" style="display:none;"></p>
     </div>
 
     <!-- Primary Gap Card -->
@@ -307,10 +321,29 @@
         var scoring = data.scoring;
         var results = data.results;
         var eligibility = data.eligibility;
+        var contact = data.contact || {};
 
         if (!scoring || !results) {
           showError('Invalid results data. Please retake the quiz.');
           return;
+        }
+
+        // Personalization greeting + details
+        if (contact.firstName) {
+          var greetingEl = document.getElementById('greeting');
+          greetingEl.textContent = 'Hi ' + escapeHtml(contact.firstName) + ',';
+          greetingEl.style.display = '';
+        }
+
+        var detailParts = [];
+        if (contact.businessName) detailParts.push(escapeHtml(contact.businessName));
+        if (contact.industry) detailParts.push(escapeHtml(contact.industry));
+        if (contact.location) detailParts.push(escapeHtml(contact.location));
+        if (contact.teamSize) detailParts.push('Team: ' + escapeHtml(contact.teamSize));
+        if (detailParts.length > 0) {
+          var detailsEl = document.getElementById('personal-details');
+          detailsEl.innerHTML = detailParts.join(' &middot; ');
+          detailsEl.style.display = '';
         }
 
         var gap = scoring.primaryGap;

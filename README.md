@@ -27,7 +27,7 @@ No redeployment needed — secrets take effect immediately.
 
 ---
 
-## Current Status (Feb 27, 2026)
+## Current Status (Mar 6, 2026)
 
 ### Core System — All Deployed, All Tested
 
@@ -289,7 +289,27 @@ All webhook handlers use `ctx.waitUntil()` for HubSpot writes. The customer-faci
 
 ---
 
-## What Changed (Feb 27, 2026)
+## What Changed (Mar 6, 2026)
+
+### 1. "Other (manual)" Changed from Degraded to Full Stop
+- **stopRules.js**: "Other (manual)" sub-path and Field 2 "Not sure" now correctly produce `stopped=true` (full stop, no plan generated) instead of `degraded=true`
+- Previously these cases still generated a plan draft with a "degraded" flag — now they halt plan generation entirely and route to Marc for manual plan creation
+- Updated tests in `stopRules.test.js` and `scanWebhook.test.js` to match new behavior
+
+### 2. JotForm "Other (manual)" Condition Fix
+- When "Other (manual)" is selected as the sub-path, sections 3-6 (baselines, one lever, actions, metrics, constraints) are now hidden in the form
+- Previously these sections remained visible even though the data would never be used
+- Updated 3 JotForm conditions (one per pillar) to hide all section 3-6 fields
+- Verified all 42 permutations of quiz gap x confirmed gap x sub-path via automated simulation — all pass
+
+### 3. Documentation Updated
+- CLAUDE.md: Fixed architecture description (deterministic plan gen, not Claude API), updated stop rules to include Field 2 "Not sure" as rule 1c
+- README.md: Updated status date, stop rules count, scan flow description, added this changelog
+- 505 tests passing, 0 failing
+
+---
+
+
 
 Full QA testing session (Tyler + Claude):
 
@@ -439,7 +459,7 @@ MindTheGaps/
 │       ├── src/
 │       │   ├── worker.js        # ESM entry point
 │       │   ├── index.js         # Main orchestrator — parse → stop rules → plan → DOCX → R2
-│       │   ├── stopRules.js     # 3 stop conditions (sub-path, gap change, missing fields)
+│       │   ├── stopRules.js     # 4 stop conditions (sub-path, field2, gap change, missing fields)
 │       │   ├── confidence.js    # Not-sure count → High/Med/Low confidence
 │       │   ├── planGenerator.js # DETERMINISTIC plan generation (lookup tables, no AI)
 │       │   ├── docxBuilder.js   # One-Page Plan DOCX generator
@@ -514,7 +534,7 @@ MindTheGaps/
 1. Marc conducts the scan, fills out JotForm scan worksheet (Form ID: `260435948553162`)
 2. JotForm sends webhook to scan webhook worker
 3. Worker extracts scan data (baseline fields, actions, metrics, sub-path, one lever)
-4. **Stop rules check**: Sub-path = "Not sure"/"Other"? Gap changed without reason? Missing required fields?
+4. **Stop rules check**: Sub-path = "Not sure"/"Other"? Field 2 = "Not sure"? Gap changed without reason? Missing required fields?
    - If stopped → writes stop reason to HubSpot, emails Marc "Manual plan required"
 5. **Confidence calculation**: Counts "Not sure" baseline answers → High/Med/Low
 6. **Plan generation** (deterministic): Lookup tables map sub-path → 30-day targets, compute personalization insights
