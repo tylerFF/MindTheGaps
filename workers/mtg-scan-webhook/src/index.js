@@ -19,7 +19,7 @@
 
 const { checkStopRules } = require('./stopRules');
 const { calculateConfidence } = require('./confidence');
-const { generatePlan } = require('./planGenerator');
+const { generatePlan, _internal: { PREDETERMINED_ACTIONS } } = require('./planGenerator');
 const { buildDocx } = require('./docxBuilder');
 const { uploadPlan } = require('./storage');
 const { notifyPlanReady, notifyDegradedPlan, notifyStopRule } = require('./notifications');
@@ -268,7 +268,13 @@ function extractContactInfo(payload) {
   for (const [jotformField, key] of Object.entries(JOTFORM_SCAN_FIELD_MAP.contact)) {
     const value = payload[jotformField];
     if (value !== undefined && value !== null && value !== '') {
-      info[key] = sanitizeString(String(value));
+      // JotForm sends phone as object: {area:"555",phone:"1234567"}
+      if (key === 'phone' && typeof value === 'object') {
+        const parts = [value.area, value.phone].filter(Boolean);
+        info[key] = sanitizeString(parts.join('-') || '');
+      } else {
+        info[key] = sanitizeString(String(value));
+      }
     }
   }
   return info;
@@ -357,6 +363,21 @@ function extractScanData(payload) {
     });
   }
 
+  // For predetermined sub-paths, fill in action descriptions from lookup tables
+  // (the old shared description fields q41/q44/q47/q50/q53/q56 are hidden;
+  //  predetermined dropdowns use different QIDs so descriptions arrive empty)
+  const predeterminedKey = scan.subPath.startsWith('Other')
+    ? scan.subPath + ':' + (scan.primaryGap || '')
+    : scan.subPath;
+  const predeterminedActions = PREDETERMINED_ACTIONS[predeterminedKey];
+  if (predeterminedActions) {
+    for (let i = 0; i < scan.actions.length && i < predeterminedActions.length; i++) {
+      if (!scan.actions[i].description) {
+        scan.actions[i].description = predeterminedActions[i].description;
+      }
+    }
+  }
+
   // Metrics: pick the checkbox field matching the confirmed primary gap
   scan.metrics = [];
   const metricsField = JOTFORM_SCAN_FIELD_MAP.metricsByPillar[scan.primaryGap];
@@ -390,7 +411,7 @@ function extractScanData(payload) {
 // HubSpot property builder
 // ---------------------------------------------------------------------------
 
-function buildHubSpotProperties(scanData, confidenceResult, planUrl, stopResult, isDegraded) {
+function buildHubSpotProperties(scanData, confidenceResult, planUrl, stopResult, isDegraded, planContent) {
   const props = {};
 
   // Scan metadata
@@ -432,6 +453,17 @@ function buildHubSpotProperties(scanData, confidenceResult, planUrl, stopResult,
     } else {
       props.mtg_plan_review_status = 'Pending';
       props.mtg_plan_generation_mode = 'Auto';
+    }
+  }
+
+  // Actions (from finalized plan content — includes lookup table defaults)
+  if (planContent && planContent.sectionD && planContent.sectionD.actions) {
+    const actions = planContent.sectionD.actions;
+    for (let i = 0; i < actions.length && i < 6; i++) {
+      const a = actions[i];
+      if (a.description) props[`mtg_scan_action${i + 1}_desc`] = a.description;
+      if (a.owner) props[`mtg_scan_action${i + 1}_owner`] = a.owner;
+      if (a.dueDate) props[`mtg_scan_action${i + 1}_due`] = a.dueDate;
     }
   }
 
@@ -518,9 +550,11 @@ async function handleScanWebhook(request, env, ctx) {
           'mtg_business_name', 'mtg_industry', 'mtg_location', 'mtg_team_size',
         ]);
         if (existing && existing.properties) {
-          const hsBizName = existing.properties.mtg_business_name;
-          if (hsBizName && hsBizName.trim()) {
-            contactInfo.businessName = hsBizName.trim();
+          if (!contactInfo.businessName) {
+            const hsBizName = existing.properties.mtg_business_name;
+            if (hsBizName && hsBizName.trim()) {
+              contactInfo.businessName = hsBizName.trim();
+            }
           }
           if (!contactInfo.industry) {
             const hsIndustry = existing.properties.mtg_industry;
@@ -547,6 +581,11 @@ async function handleScanWebhook(request, env, ctx) {
     if (stopResult.stopped) {
       // Write stop reason to HubSpot (non-blocking)
       const hubspotProps = buildHubSpotProperties(scanData, null, null, stopResult, false);
+      // Update contact info in HubSpot from scan form
+      if (contactInfo.businessName) hubspotProps.mtg_business_name = contactInfo.businessName;
+      if (contactInfo.industry) hubspotProps.mtg_industry = contactInfo.industry;
+      if (contactInfo.location) hubspotProps.mtg_location = contactInfo.location;
+      if (contactInfo.teamSize) hubspotProps.mtg_team_size = contactInfo.teamSize;
 
       if (env.HUBSPOT_API_KEY) {
         const writeStop = async () => {
@@ -565,18 +604,17 @@ async function handleScanWebhook(request, env, ctx) {
       }
 
       // Notify Marc
+      const stopNotifyData = {
+        email,
+        businessName: contactInfo.businessName,
+        stopReasons: stopResult.reasons,
+        scanData,
+        contactInfo,
+      };
       if (ctx && ctx.waitUntil) {
-        ctx.waitUntil(notifyStopRule(env, {
-          email,
-          businessName: contactInfo.businessName,
-          stopReasons: stopResult.reasons,
-        }));
+        ctx.waitUntil(notifyStopRule(env, stopNotifyData));
       } else {
-        await notifyStopRule(env, {
-          email,
-          businessName: contactInfo.businessName,
-          stopReasons: stopResult.reasons,
-        });
+        await notifyStopRule(env, stopNotifyData);
       }
 
       return corsResponse({
@@ -612,7 +650,12 @@ async function handleScanWebhook(request, env, ctx) {
 
     // 9. Write to HubSpot (non-blocking)
     // Phase 5 (3.5): Degraded plans write all fields but with Manual Required + Degraded flags
-    const hubspotProps = buildHubSpotProperties(scanData, confidenceResult, planUrl, null, isDegraded);
+    const hubspotProps = buildHubSpotProperties(scanData, confidenceResult, planUrl, null, isDegraded, planContent);
+    // Update contact info in HubSpot from scan form
+    if (contactInfo.businessName) hubspotProps.mtg_business_name = contactInfo.businessName;
+    if (contactInfo.industry) hubspotProps.mtg_industry = contactInfo.industry;
+    if (contactInfo.location) hubspotProps.mtg_location = contactInfo.location;
+    if (contactInfo.teamSize) hubspotProps.mtg_team_size = contactInfo.teamSize;
     let hubspotStatus = 'skipped';
 
     if (env.HUBSPOT_API_KEY) {
@@ -641,6 +684,9 @@ async function handleScanWebhook(request, env, ctx) {
         businessName: contactInfo.businessName,
         planUrl,
         confidence: confidenceResult.level,
+        scanData,
+        contactInfo,
+        planContent,
       };
       const notifyCall = isDegraded
         ? notifyDegradedPlan(env, notifyData)
