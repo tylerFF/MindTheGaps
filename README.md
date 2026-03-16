@@ -13,9 +13,9 @@ Consulting automation system for Marc (marc@mindthegaps.biz). Automates the full
 | 1 | **Stripe Payment Link** | `https://book.stripe.com/test_bJebJ28Jl30W3yL8Q81sQ01` (TEST mode) | Create a new **live** payment link in Stripe dashboard | `pages/results/index.html` — the `href` on the "Book the 45-Minute Growth Gap Scan" button |
 | 2 | **Stripe Webhook Secret** | Test signing secret | New signing secret from live Stripe webhook endpoint | Cloudflare Worker secret: `echo "whsec_live_xxx" \| npx wrangler secret put STRIPE_WEBHOOK_SECRET` in `workers/mtg-stripe-webhook/` |
 | 3 | **Stripe Success URL** | Currently redirects to Stripe default | Set to `https://mtg-pages-3yo.pages.dev/booking/` (or your custom domain) | Stripe Dashboard → Payment Links → Edit → After payment → Redirect URL |
-| 4 | **RESEND_API_KEY** | `re_KWb3PhrW_...` (test/burner key) | Production Resend API key (with verified domain) | Cloudflare Worker secret: `echo "re_live_xxx" \| npx wrangler secret put RESEND_API_KEY` in `workers/mtg-scan-webhook/` |
-| 5 | **FROM_EMAIL** | `onboarding@resend.dev` (Resend test sender) | `notifications@mindthegaps.biz` (or similar, must be verified in Resend) | Cloudflare Worker secret: `echo "notifications@mindthegaps.biz" \| npx wrangler secret put FROM_EMAIL` in `workers/mtg-scan-webhook/` |
-| 6 | **MARC_EMAIL** | `tyler@bryantworks.com` (Resend account owner — test keys can ONLY send to this address) | `marc@mindthegaps.biz` | Cloudflare Worker secret: `echo "marc@mindthegaps.biz" \| npx wrangler secret put MARC_EMAIL` in `workers/mtg-scan-webhook/` |
+| 4 | **RESEND_API_KEY** | Production key set (`re_5HDk...`) | Already configured | Cloudflare Worker secret on `mtg-scan-webhook` |
+| 5 | **FROM_EMAIL** | `MindtheGaps <notifications@mindthegaps.biz>` | Already configured | Cloudflare Worker secret on `mtg-scan-webhook` |
+| 6 | **MARC_EMAIL** | `marc@mindthegaps.biz` | Already configured | Cloudflare Worker secret on `mtg-scan-webhook` |
 | 7 | **Custom Domain** (optional) | `mtg-pages-3yo.pages.dev` | Custom domain (e.g. `app.mindthegaps.biz`) | Cloudflare Dashboard → Pages → Custom Domains. Then update Stripe success URL and any hardcoded references. |
 
 **How to change a Cloudflare Worker secret:**
@@ -27,7 +27,7 @@ No redeployment needed — secrets take effect immediately.
 
 ---
 
-## Current Status (Feb 27, 2026)
+## Current Status (Mar 16, 2026)
 
 ### Core System — All Deployed, All Tested
 
@@ -39,11 +39,11 @@ No redeployment needed — secrets take effect immediately.
 | Stripe Payment Webhook | ✅ **Live** | Receives checkout.session.completed, updates HubSpot (TEST mode) |
 | Calendly Booking Webhook | ✅ **Live** | Receives invitee.created, updates HubSpot |
 | Scan Worksheet Processing | ✅ **Live** | Stop rules, confidence, plan generation, DOCX builder |
-| HubSpot Integration | ✅ **Live** | 54 custom `mtg_` properties created and populated |
+| HubSpot Integration | ✅ **Live** | 72 custom `mtg_` properties created and populated (54 base + 18 action) |
 | R2 Storage | ✅ **Live** | `mtg-plan-drafts` bucket, DOCX download endpoint live |
-| Email Notifications | ✅ **Live** | Resend configured (test mode), emails arriving correctly |
+| Email Notifications | ✅ **Live** | Resend sends scan notifications to Marc (JotForm emails disabled) |
 
-**505 tests passing, 0 failing**
+**571 tests passing, 0 failing**
 
 ### MVP Feedback Implementation — Complete
 
@@ -57,17 +57,18 @@ Tracked in: `docs/Marc MVP Feedback Docs/MindtheGaps_MVP_Feedback_Implementation
 | Phase 4 | Plan Output — Safe Changes (WS3: items 3.1–3.3, 3.6) | ✅ Complete |
 | Phase 5 | Plan Output — Behavioral Changes (WS3: items 3.4–3.5) | ✅ Complete |
 
-### QA — Full E2E Tested (Feb 26-27)
+### QA — Full E2E Tested (Mar 14-16)
 
-All 3 pillar paths tested end-to-end through the scan worksheet:
+Smoke tests run against live deployed system (v3 test scripts in `docs/`):
 
-| Pillar | Test Email | Submission | Plan DOCX | Confidence | Email Notification |
-|--------|-----------|------------|-----------|------------|-------------------|
-| Acquisition | AcqTest@test.com | ✅ | ✅ Generated | High | ✅ Received |
-| Conversion | ConvTest@test.com | ✅ | ✅ Generated | High | ✅ Received |
-| Retention | RetTest@test.com | ✅ | ✅ Generated | High | ✅ Received |
+| Test | Sub-Path | Pillar Switch | Plan/Stop | Result |
+|------|----------|---------------|-----------|--------|
+| A1 | Channel concentration risk | Acquisition → Acquisition | ✅ DOCX generated | ✅ Pass |
+| C1 | Speed-to-lead | Acquisition → Conversion | ✅ DOCX generated | ✅ Pass |
+| R1 | Rebook/recall gap | Acquisition → Retention | ✅ DOCX generated | ✅ Pass |
+| M1 | Other (manual):Acquisition | Acquisition → Acquisition | ✅ Stop rule fired | ✅ Pass |
 
-Bug fixed during QA: Conversion Field 2 dropdowns not appearing in live mode — resolved by setting `hidden: "Yes"` on 39 conditional JotForm fields.
+All DOCX plans verified: correct business name, industry, gap, sub-path, lever, actions (text + owners + due dates), metrics, and confidence. Email notifications received for all tests.
 
 ---
 
@@ -76,7 +77,7 @@ Bug fixed during QA: Conversion Field 2 dropdowns not appearing in live mode —
 | # | Task | Owner | Status |
 |---|------|-------|--------|
 | 1 | **Industry list review** — Marc to confirm whether to update the category list (see `docs/industry-refinement-notes.md`) | Marc | Waiting on Marc |
-| 2 | **Resend production setup** — Marc sets up his own Resend account, verifies domain, swaps `RESEND_API_KEY` + `FROM_EMAIL` + `MARC_EMAIL` | Marc | Not started |
+| 2 | ~~**Resend production setup**~~ | Tyler | ✅ Complete |
 | 3 | **Stripe live mode** — Switch from test payment link to live, update `STRIPE_WEBHOOK_SECRET` (last thing before go-live) | Tyler + Marc | Not started |
 
 ### Previously Resolved
@@ -85,6 +86,9 @@ Bug fixed during QA: Conversion Field 2 dropdowns not appearing in live mode —
 - **Sub-Path Naming Mismatch:** Resolved. Backend phrasing bank keyed by actual JotForm dropdown values. No dropdown renaming needed.
 - **Contradiction Note (Phase 5):** Implemented using **qid 79**. Fully wired: extraction → plan generation → DOCX rendering.
 - **Conversion Field 2 Bug:** Fixed. 39 conditional fields set to `hidden: "Yes"` in JotForm. Verified working in live mode.
+- **Predetermined Action Descriptions:** Fixed. `PREDETERMINED_ACTIONS` in `planGenerator.js` now matches `MTG_Action_Ladder_Reference_v2.xlsx` exactly (all 14 sub-paths × 6 actions).
+- **JotForm Owner Field Defaults:** Fixed. 7 retention owner fields (R1-R4) had per-action values instead of reference line values. All 84 owner fields now verified against v2 reference.
+- **Business Name / Industry Write-Back:** Fixed. Scan webhook now writes `mtg_business_name` and `mtg_industry` from scan form data to HubSpot.
 
 ---
 
@@ -155,12 +159,12 @@ npm test
 npm run test:scoring         # Quiz scoring engine (51 tests)
 npm run test:results         # Results content generator (25 tests)
 npm run test:eligibility     # Eligibility check (31 tests)
-npm run test:stoprules       # Stop rules engine (76 tests)
+npm run test:stoprules       # Stop rules engine (94 tests)
 npm run test:confidence      # Confidence calculator (36 tests)
-npm run test:docxbuilder     # DOCX builder (51 tests)
-npm run test:plangenerator   # Plan generator (44 tests)
+npm run test:docxbuilder     # DOCX builder (93 tests)
+npm run test:plangenerator   # Plan generator (84 tests)
 npm run test:notifications   # Storage + notifications (15 tests)
-npm run test:scanwebhook     # Scan webhook handler (23 tests)
+npm run test:scanwebhook     # Scan webhook handler (50 tests)
 npm run test:stripewebhook   # Stripe webhook handler (16 tests)
 npm run test:calendlywebhook # Calendly webhook handler (19 tests)
 ```
@@ -251,7 +255,7 @@ Requires Node 18+ (uses built-in `node:test` runner). Only external dependency: 
 
 | Worker | Secrets Set |
 |--------|------------|
-| mtg-quiz-webhook | `HUBSPOT_API_KEY`, `RESULTS_PAGE_URL` |
+| mtg-quiz-webhook | `HUBSPOT_API_KEY`, `RESULTS_PAGE_URL`, `FROM_EMAIL`, `RESEND_API_KEY`, `STRIPE_CHECKOUT_URL` |
 | mtg-stripe-webhook | `HUBSPOT_API_KEY`, `STRIPE_WEBHOOK_SECRET` |
 | mtg-calendly-webhook | `HUBSPOT_API_KEY` |
 | mtg-scan-webhook | `HUBSPOT_API_KEY`, `RESEND_API_KEY`, `MARC_EMAIL`, `FROM_EMAIL` |
@@ -270,12 +274,13 @@ Requires Node 18+ (uses built-in `node:test` runner). Only external dependency: 
 
 ### HubSpot property naming
 
-All 54 custom properties use the `mtg_` prefix and live in the "mindthegaps" property group:
+All 72 custom properties use the `mtg_` prefix and live in the "mindthegaps" property group:
 - Quiz fields: `mtg_quiz_v1`, `mtg_quiz_completed`, `mtg_primary_gap`, etc.
 - Payment fields: `mtg_payment_status`, `mtg_stripe_payment_id`, `mtg_payment_date`
 - Booking fields: `mtg_scan_booked`, `mtg_scan_scheduled_for`, `mtg_calendly_event_id`
 - Scan fields: `mtg_scan_completed`, `mtg_scan_confidence`, `mtg_scan_primary_gap_confirmed`
 - Plan fields: `mtg_plan_draft_link`, `mtg_plan_status`, `mtg_plan_review_status`
+- Action fields: `mtg_scan_action1_desc` through `mtg_scan_action6_due` (18 properties — desc/owner/due for each of 6 actions)
 
 ### Dual field name support
 
@@ -289,7 +294,86 @@ All webhook handlers use `ctx.waitUntil()` for HubSpot writes. The customer-faci
 
 ---
 
-## What Changed (Feb 27, 2026)
+## What Changed (Mar 16, 2026 — Session 2)
+
+### 1. Resend Email Notifications for Scan Webhook
+- Configured production Resend API key, `FROM_EMAIL` (`notifications@mindthegaps.biz`), and `MARC_EMAIL` (`marc@mindthegaps.biz`) on the scan webhook
+- Scan submissions now send styled HTML emails to Marc via Resend with: plan link, confidence, contact info, scan diagnosis, baseline answers, action plan table (6 actions with owners + due dates), metrics, and constraints
+- Three email types: "Plan Draft Ready" (blue header), "Degraded Plan — Human Review Required" (amber header), "Scan Stopped — Manual Plan Required" (red header)
+
+### 2. JotForm Emails Disabled
+- Removed JotForm notification email (was showing `{}` for 80+ hidden predetermined fields and had broken "Form Title" header)
+- Removed JotForm autoresponder (not needed per spec — plans are never auto-sent to clients)
+- All scan notifications now handled exclusively by Resend via the Cloudflare Worker
+
+### 3. HubSpot Action Properties (18 new)
+- Created 18 new HubSpot properties: `mtg_scan_action1_desc` through `mtg_scan_action6_due` (description, owner, due date for each of 6 actions)
+- Scan webhook now writes finalized action data (from plan generator lookup tables, with facilitator overrides) to HubSpot
+- Total HubSpot properties: 72 (was 54)
+
+### 4. Phone Number Fix
+- JotForm sends phone as `{area:"555",phone:"1234567"}` object — was showing as `[object Object]` in emails and HubSpot
+- Fixed `extractContactInfo()` to parse phone objects into readable format (`555-1234567`)
+
+### 5. "Managed Services" Added to Quiz + Scan Worksheet
+- Added "Managed Services" as a Business Type / Industry option to the quiz page (`pages/quiz/index.html`) and JotForm scan worksheet (Form ID: 260435948553162)
+
+---
+
+## What Changed (Mar 14-16, 2026)
+
+QA testing session (Tyler + Claude) — full smoke test pass with live JotForm + deployed Workers.
+
+### 1. Predetermined Action Descriptions Fixed
+- `PREDETERMINED_ACTIONS` lookup table in `planGenerator.js` was missing or had incorrect action text for several sub-paths
+- Rebuilt all 14 sub-paths × 6 actions to match `MTG_Action_Ladder_Reference_v2.xlsx` exactly
+- Added comprehensive test coverage: 84 plan generator tests (up from 44), 93 DOCX builder tests (up from 51)
+
+### 2. JotForm Owner Field Defaults Corrected
+- 7 per-sub-path owner fields in Retention (R1-R4) had incorrect default values from source doc per-action text instead of reference line values
+- All 84 owner fields (14 sub-paths × 6 actions) verified against v2 reference spreadsheet — all now correct
+
+### 3. Business Name + Industry Write-Back
+- Scan webhook now writes `mtg_business_name` and `mtg_industry` from scan form data to HubSpot
+- Previously these fields were only set by the quiz webhook and never updated by the scan
+
+### 4. JotForm Field 2 Conditional Logic
+- Added conditional visibility for Field 2 follow-up questions on all sub-paths
+- Fixed "What We Fix" (WWF) field ordering in predetermined field blocks
+
+### 5. QA Test Scripts v3
+- Created `docs/MindtheGaps_QA_Test_Scripts_Complete_v3.md` with 8 test scripts covering all pillars + manual stop rules
+- Action text, owners, and due days validated against `MTG_Action_Ladder_Reference_v2.xlsx`
+
+### 6. Test Count: 571 passing (up from 505)
+- Stop rules: 94 tests (was 76)
+- DOCX builder: 93 tests (was 51)
+- Plan generator: 84 tests (was 44)
+- Scan webhook: 50 tests (was 23)
+
+---
+
+## What Changed (Mar 6, 2026)
+
+### 1. "Other (manual)" Changed from Degraded to Full Stop
+- **stopRules.js**: "Other (manual)" sub-path and Field 2 "Not sure" now correctly produce `stopped=true` (full stop, no plan generated) instead of `degraded=true`
+- Previously these cases still generated a plan draft with a "degraded" flag — now they halt plan generation entirely and route to Marc for manual plan creation
+- Updated tests in `stopRules.test.js` and `scanWebhook.test.js` to match new behavior
+
+### 2. JotForm "Other (manual)" Condition Fix
+- When "Other (manual)" is selected as the sub-path, sections 3-6 (baselines, one lever, actions, metrics, constraints) are now hidden in the form
+- Previously these sections remained visible even though the data would never be used
+- Updated 3 JotForm conditions (one per pillar) to hide all section 3-6 fields
+- Verified all 42 permutations of quiz gap x confirmed gap x sub-path via automated simulation — all pass
+
+### 3. Documentation Updated
+- CLAUDE.md: Fixed architecture description (deterministic plan gen, not Claude API), updated stop rules to include Field 2 "Not sure" as rule 1c
+- README.md: Updated status date, stop rules count, scan flow description, added this changelog
+- 571 tests passing, 0 failing
+
+---
+
+
 
 Full QA testing session (Tyler + Claude):
 
@@ -309,7 +393,7 @@ Full QA testing session (Tyler + Claude):
 ### 3. Documentation Updated
 - README updated with current status, QA results, and next steps
 - Created `docs/industry-refinement-notes.md` — records Marc's decision to keep current industry list stable, plus proposed future refinements
-- Test count confirmed: 505 passing, 0 failing
+- Test count confirmed: 571 passing, 0 failing
 
 ---
 
@@ -439,7 +523,7 @@ MindTheGaps/
 │       ├── src/
 │       │   ├── worker.js        # ESM entry point
 │       │   ├── index.js         # Main orchestrator — parse → stop rules → plan → DOCX → R2
-│       │   ├── stopRules.js     # 3 stop conditions (sub-path, gap change, missing fields)
+│       │   ├── stopRules.js     # 4 stop conditions (sub-path, field2, gap change, missing fields)
 │       │   ├── confidence.js    # Not-sure count → High/Med/Low confidence
 │       │   ├── planGenerator.js # DETERMINISTIC plan generation (lookup tables, no AI)
 │       │   ├── docxBuilder.js   # One-Page Plan DOCX generator
@@ -457,16 +541,17 @@ MindTheGaps/
 │   ├── scoring.test.js          # 51 tests
 │   ├── results.test.js          # 25 tests
 │   ├── eligibility.test.js      # 31 tests
-│   ├── stopRules.test.js        # 76 tests
+│   ├── stopRules.test.js        # 94 tests
 │   ├── confidence.test.js       # 36 tests
-│   ├── docxBuilder.test.js      # 51 tests
-│   ├── planGenerator.test.js    # 44 tests
+│   ├── docxBuilder.test.js      # 93 tests
+│   ├── planGenerator.test.js    # 84 tests
 │   ├── notifications.test.js    # 15 tests (storage + notifications)
-│   ├── scanWebhook.test.js      # 23 tests
+│   ├── scanWebhook.test.js      # 50 tests
 │   ├── stripeWebhook.test.js    # 16 tests
 │   └── calendlyWebhook.test.js  # 19 tests
 │
 ├── docs/
+│   ├── MindtheGaps_QA_Test_Scripts_Complete_v3.md  # 8 QA test scripts (v3, validated against v2 reference)
 │   ├── industry-refinement-notes.md  # Industry list decisions + future proposals
 │   ├── Facilitator_Guide_vs_Worksheet_QA_Report.docx
 │   └── Marc MVP Feedback Docs/      # Original MVP feedback tickets + checklist
@@ -514,14 +599,14 @@ MindTheGaps/
 1. Marc conducts the scan, fills out JotForm scan worksheet (Form ID: `260435948553162`)
 2. JotForm sends webhook to scan webhook worker
 3. Worker extracts scan data (baseline fields, actions, metrics, sub-path, one lever)
-4. **Stop rules check**: Sub-path = "Not sure"/"Other"? Gap changed without reason? Missing required fields?
+4. **Stop rules check**: Sub-path = "Not sure"/"Other"? Field 2 = "Not sure"? Gap changed without reason? Missing required fields?
    - If stopped → writes stop reason to HubSpot, emails Marc "Manual plan required"
 5. **Confidence calculation**: Counts "Not sure" baseline answers → High/Med/Low
 6. **Plan generation** (deterministic): Lookup tables map sub-path → 30-day targets, compute personalization insights
 7. **DOCX builder**: Generates One-Page Plan with 6 sections (What We Found, Baseline, One Lever, Action Plan, Scorecard, Risks)
 8. **R2 upload**: Stores DOCX at `plans/{email}/{timestamp}.docx`
 9. **HubSpot update**: Plan URL, confidence level, status, timestamps
-10. **Email Marc**: "Plan draft ready for review" (via Resend — configured and live)
+10. **Email Marc** via Resend (`notifications@mindthegaps.biz`): styled HTML with plan link, scan summary, action table, and confidence level
 
 ---
 
@@ -543,16 +628,16 @@ npm run dev     # Start at http://localhost:3000
 ## Running Tests
 
 ```bash
-npm test                     # Run all 505 tests
+npm test                     # Run all 571 tests
 npm run test:scoring         # Scoring engine (51)
 npm run test:results         # Results generator (25)
 npm run test:eligibility     # Eligibility check (31)
-npm run test:stoprules       # Stop rules (76)
+npm run test:stoprules       # Stop rules (94)
 npm run test:confidence      # Confidence calculator (36)
-npm run test:docxbuilder     # DOCX builder (51)
-npm run test:plangenerator   # Plan generator (44)
+npm run test:docxbuilder     # DOCX builder (93)
+npm run test:plangenerator   # Plan generator (84)
 npm run test:notifications   # Storage + notifications (15)
-npm run test:scanwebhook     # Scan webhook handler (23)
+npm run test:scanwebhook     # Scan webhook handler (50)
 npm run test:stripewebhook   # Stripe webhook handler (16)
 npm run test:calendlywebhook # Calendly webhook handler (19)
 ```
@@ -609,10 +694,7 @@ Creates a webhook subscription for `invitee.created` events. Checks for existing
 ## Remaining Work
 
 ### Before going live (see go-live checklist at top of this file)
-1. **Marc: Resend production setup** — Create Resend account, verify `mindthegaps.biz` domain, then swap secrets:
-   - `RESEND_API_KEY` → Marc's production key
-   - `FROM_EMAIL` → `notifications@mindthegaps.biz` (or similar)
-   - `MARC_EMAIL` → `marc@mindthegaps.biz`
+1. ~~**Resend production setup**~~ — ✅ Done. Production API key set, `FROM_EMAIL` = `notifications@mindthegaps.biz`, `MARC_EMAIL` = `marc@mindthegaps.biz`
 2. **Marc: Industry list decision** — Confirm current list is OK or approve changes (see `docs/industry-refinement-notes.md`)
 3. **Switch Stripe to live mode** (last step) — Replace test payment link with production link, update `STRIPE_WEBHOOK_SECRET`, set success URL to `https://mtg-pages-3yo.pages.dev/booking/`
 4. **Final E2E test on live Stripe** — One full pass with real payment to confirm everything works

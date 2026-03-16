@@ -453,11 +453,11 @@ describe('scanWebhook — buildHubSpotProperties degraded (3.5)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Phase 5 — handler: "Other (manual)" degraded path
+// Phase 5 — handler: "Other (manual)" full stop
 // ---------------------------------------------------------------------------
 
-describe('scanWebhook — handler degraded path (3.5)', () => {
-  it('generates plan (not stopped) for "Other (manual)" with all fields present', async () => {
+describe('scanWebhook — handler "Other (manual)" full stop', () => {
+  it('stops (no plan generated) for "Other (manual)" even with all fields present', async () => {
     const payload = {
       q2_contactEmail: 'test@example.com',
       q9_primaryGap: 'Conversion',
@@ -488,9 +488,8 @@ describe('scanWebhook — handler degraded path (3.5)', () => {
     assert.equal(response.status, 200);
     const body = await response.json();
     assert.equal(body.success, true);
-    assert.equal(body.stopped, false);
-    assert.equal(body.degraded, true);
-    assert.equal(body.confidence, 'High');
+    assert.equal(body.stopped, true);
+    assert.ok(body.reasons.length > 0);
   });
 
   it('returns stopped=true for "Not sure" sub-path (regression check)', async () => {
@@ -580,11 +579,83 @@ describe('scanWebhook — extractScanData Field 2 (2.2)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Field 2 — handler: "Not sure" triggers stop (item 2.2)
+// Per-sub-path owner fields override shared owner fields
 // ---------------------------------------------------------------------------
 
-describe('scanWebhook — handler Field 2 "Not sure" degraded (2.2)', () => {
-  it('returns degraded=true when Field 2 is "Not sure"', async () => {
+describe('scanWebhook — extractScanData per-sub-path owner override', () => {
+  it('prefers per-sub-path owner over shared owner when both present', () => {
+    const payload = {
+      q9_primaryGap: 'Conversion',
+      q11_subPathConversion: 'Speed-to-lead',
+      q41_action1Desc: 'Assign one person to own all new-lead responses.',
+      q42_action1Owner: 'Shared Owner',
+      q43_action1Due: 'Day 7',
+      q218_ownerSTL1: 'Owner/GM',
+    };
+    const scan = extractScanData(payload);
+    assert.equal(scan.actions[0].owner, 'Owner/GM');
+  });
+
+  it('falls back to shared owner when per-sub-path owner is empty', () => {
+    const payload = {
+      q9_primaryGap: 'Conversion',
+      q11_subPathConversion: 'Speed-to-lead',
+      q42_action1Owner: 'Admin/CSR',
+      q218_ownerSTL1: '',
+    };
+    const scan = extractScanData(payload);
+    assert.equal(scan.actions[0].owner, 'Admin/CSR');
+  });
+
+  it('falls back to shared owner for unknown sub-paths', () => {
+    const payload = {
+      q9_primaryGap: 'Conversion',
+      q11_subPathConversion: 'Unknown sub-path',
+      q42_action1Owner: 'Ops lead',
+    };
+    const scan = extractScanData(payload);
+    assert.equal(scan.actions[0].owner, 'Ops lead');
+  });
+
+  it('reads all 6 per-sub-path owner slots', () => {
+    const payload = {
+      q9_primaryGap: 'Retention',
+      q13_subPathRetention: 'Rebook/recall gap',
+      q248_ownerRRG1: 'Ops lead',
+      q249_ownerRRG2: 'Ops lead',
+      q250_ownerRRG3: 'Admin/CSR',
+      q251_ownerRRG4: 'Ops lead',
+      q252_ownerRRG5: 'Owner/GM',
+      q253_ownerRRG6: 'Owner/GM',
+    };
+    const scan = extractScanData(payload);
+    assert.equal(scan.actions[0].owner, 'Ops lead');
+    assert.equal(scan.actions[1].owner, 'Ops lead');
+    assert.equal(scan.actions[2].owner, 'Admin/CSR');
+    assert.equal(scan.actions[3].owner, 'Ops lead');
+    assert.equal(scan.actions[4].owner, 'Owner/GM');
+    assert.equal(scan.actions[5].owner, 'Owner/GM');
+  });
+
+  it('per-sub-path owner with facilitator edit overrides default', () => {
+    const payload = {
+      q9_primaryGap: 'Acquisition',
+      q12_subPathAcquisition: 'Channel concentration risk',
+      // Facilitator changed slot 3 owner from default "Marketing/Admin" to "Owner/GM"
+      q196_ownerCCR3: 'Owner/GM',
+      q48_action3Owner: '',  // shared owner hidden/empty
+    };
+    const scan = extractScanData(payload);
+    assert.equal(scan.actions[2].owner, 'Owner/GM');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Field 2 — handler: "Not sure" triggers full stop (item 2.2)
+// ---------------------------------------------------------------------------
+
+describe('scanWebhook — handler Field 2 "Not sure" full stop (2.2)', () => {
+  it('returns stopped=true when Field 2 is "Not sure"', async () => {
     const payload = {
       q2_contactEmail: 'test@example.com',
       q9_primaryGap: 'Conversion',
@@ -613,8 +684,8 @@ describe('scanWebhook — handler Field 2 "Not sure" degraded (2.2)', () => {
     assert.equal(response.status, 200);
     const body = await response.json();
     assert.equal(body.success, true);
-    assert.equal(body.degraded, true);
-    assert.equal(body.stopped, false);
+    assert.equal(body.stopped, true);
+    assert.ok(body.reasons.length > 0);
   });
 
   it('proceeds normally when Field 2 has a valid answer', async () => {

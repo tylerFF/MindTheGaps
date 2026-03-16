@@ -557,6 +557,47 @@ function createStyledDoc(sections, contactInfo) {
   const businessName = (contactInfo && contactInfo.businessName) || 'Your Business';
   const dateStr = new Date().toLocaleDateString('en-CA');
 
+  // Build optional personalization details line
+  const details = [];
+  if (contactInfo && contactInfo.industry) details.push(contactInfo.industry);
+  if (contactInfo && contactInfo.location) details.push(contactInfo.location);
+  if (contactInfo && contactInfo.teamSize) details.push('Team: ' + contactInfo.teamSize);
+
+  const hasDetails = details.length > 0;
+
+  // Header paragraphs
+  const headerParagraphs = [
+    // Title
+    new Paragraph({
+      spacing: { after: 40 },
+      alignment: AlignmentType.CENTER,
+      children: [
+        text('One-Page Growth Plan', { size: TITLE_SIZE, bold: true, color: COLORS.PRIMARY }),
+      ],
+    }),
+    // Business name + date (tighter spacing if details follow)
+    new Paragraph({
+      spacing: { after: hasDetails ? 40 : 280 },
+      alignment: AlignmentType.CENTER,
+      children: [
+        text(`${businessName} — ${dateStr}`, { italics: true }),
+      ],
+    }),
+  ];
+
+  // Add details line if any personalization fields exist
+  if (hasDetails) {
+    headerParagraphs.push(
+      new Paragraph({
+        spacing: { after: 280 },
+        alignment: AlignmentType.CENTER,
+        children: [
+          text(details.join(' \u00B7 '), { italics: true, size: 20 }),
+        ],
+      }),
+    );
+  }
+
   return new Document({
     styles: {
       default: {
@@ -574,22 +615,7 @@ function createStyledDoc(sections, contactInfo) {
           },
         },
         children: [
-          // Title
-          new Paragraph({
-            spacing: { after: 40 },
-            alignment: AlignmentType.CENTER,
-            children: [
-              text('One-Page Growth Plan', { size: TITLE_SIZE, bold: true, color: COLORS.PRIMARY }),
-            ],
-          }),
-          // Business name + date
-          new Paragraph({
-            spacing: { after: 280 },
-            alignment: AlignmentType.CENTER,
-            children: [
-              text(`${businessName} — ${dateStr}`, { italics: true }),
-            ],
-          }),
+          ...headerParagraphs,
           // All sections flattened
           ...sections,
         ],

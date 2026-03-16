@@ -3,8 +3,11 @@ main = "src/worker.js"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
-# Environment variables (set via wrangler secret or Cloudflare dashboard)
-# HUBSPOT_API_KEY — HubSpot private app token
+# Secrets (set via `wrangler secret put` or Cloudflare dashboard):
+# HUBSPOT_API_KEY      — HubSpot private app token
+# RESEND_API_KEY       — Resend email API key (for quiz results email)
+# FROM_EMAIL           — Sender address, e.g. "MindtheGaps <notifications@mindthegaps.biz>"
+# STRIPE_CHECKOUT_URL  — Stripe checkout link for scan booking CTA in email
 
 [vars]
 # Set RESULTS_PAGE_URL to the live results page URL in production

@@ -135,7 +135,7 @@ describe('notifications — buildStopRuleEmail', () => {
 
     assert.ok(email.html.includes('Missing sub-path'));
     assert.ok(email.html.includes('Gap changed without reason'));
-    assert.ok(email.html.includes('<li>'));
+    assert.ok(email.html.includes('<li'));
   });
 
   it('handles empty stop reasons', () => {

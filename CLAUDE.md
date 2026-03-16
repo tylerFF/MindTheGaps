@@ -14,7 +14,7 @@ Prospect takes Quiz (JotForm)
 
 Facilitator runs 45-min Scan (JotForm worksheet, prefilled from quiz)
     → Cloudflare Worker runs stop rules + confidence check
-    → If OK: Claude API generates plan content → DOCX built → uploaded to R2
+    → If OK: Deterministic plan generator builds plan content → DOCX built → uploaded to R2
     → Marc notified via Resend email
     → Marc reviews, edits, sends plan within 24 hours
 ```
@@ -26,7 +26,7 @@ Facilitator runs 45-min Scan (JotForm worksheet, prefilled from quiz)
 | CRM | HubSpot (Contacts only) | All data on Contact records, dedupe by email, `mtg_` prefix properties |
 | Forms | JotForm | Quiz + Scan Worksheet, webhooks to Workers |
 | Automation/Logic | Cloudflare Workers | All scoring, stop rules, plan gen, webhook handling |
-| AI | Claude API (via Workers) | Plan draft generation from scan data |
+| Plan Generation | Deterministic (lookup tables) | No AI — rule-based plan builder from scan data |
 | Storage | Cloudflare R2 | DOCX plan drafts stored here |
 | Payments | Stripe | $295 CAD one-time for scan |
 | Booking | Calendly | 45-min scan session |
@@ -126,10 +126,11 @@ mindthegaps-mvp/
 - **Human-in-the-loop** — plans are NEVER auto-sent to clients
 
 ### Stop Rules (plan generation halted if ANY are true)
-1. Sub-path = "not sure" or "Other (manual)"
+1a. Sub-path = "not sure" → full stop (no plan generated)
+1b. Sub-path starts with "Other" → full stop (no plan generated)
+1c. Field 2 follow-up = "not sure" → full stop (no plan generated)
 2. Primary gap changed from quiz without explanation
-3. Missing required fields (primary gap + sub-path + one lever + ≥5 baseline fields + all 6 actions + ≥2 metrics)
-4. Fewer than 5 non-"Not sure" baseline field answers
+3. Missing required fields (primary gap + sub-path + one lever + ≥5 non-"Not sure" baseline answers + all 6 actions + ≥2 metrics)
 
 ### Confidence Calculation
 - ≥4 "Not sure" answers → Low

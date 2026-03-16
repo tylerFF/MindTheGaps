@@ -370,27 +370,32 @@ describe('planGenerator — generatePlan', () => {
   });
 
   it('Section C uses oneLever from scan (leverDescription moved to sectionA.opener)', () => {
-    const scanData = buildScanData({ oneLever: 'Response ownership + SLA + follow-up sequence' });
+    // Use unknown sub-path so oneLeverSentence fallback is exercised
+    const scanData = buildScanData({ subPath: 'Unknown test sub-path', oneLever: 'Response ownership + SLA + follow-up sequence' });
     scanData.oneLeverSentence = 'Fix response time to under 1 hour.';
     const plan = generatePlan(scanData, {}, highConfidence());
 
     assert.equal(plan.sectionC.leverName, 'Response ownership + SLA + follow-up sequence');
     // 3.1: leverDescription moved to sectionA.opener
     assert.equal(plan.sectionC.leverDescription, '');
-    // oneLeverSentence is now in sectionA.opener
+    // oneLeverSentence is fallback for unknown sub-paths
     assert.equal(plan.sectionA.opener, 'Fix response time to under 1 hour.');
   });
 
-  it('Section D passes through exactly 6 actions', () => {
-    const scanData = buildScanData();
+  it('Section D has exactly 6 predetermined actions for known sub-path', () => {
+    const scanData = buildScanData(); // defaults to Speed-to-lead
     const plan = generatePlan(scanData, {}, highConfidence());
 
     assert.equal(plan.sectionD.actions.length, 6);
-    assert.equal(plan.sectionD.actions[0].description, DEFAULT_ACTIONS[0].description);
+    // Known sub-path uses predetermined descriptions, not form data
+    assert.ok(plan.sectionD.actions[0].description.length > 0);
   });
 
-  it('Section D pads to 6 when fewer actions provided', () => {
-    const scanData = buildScanData({ actions: [{ description: 'Only one', owner: 'Me', dueDate: 'Now' }] });
+  it('Section D pads to 6 when fewer actions provided for unknown sub-path', () => {
+    const scanData = buildScanData({
+      subPath: 'Unknown test sub-path',
+      actions: [{ description: 'Only one', owner: 'Me', dueDate: 'Now' }],
+    });
     const plan = generatePlan(scanData, {}, highConfidence());
 
     assert.equal(plan.sectionD.actions.length, 6);
@@ -470,20 +475,29 @@ describe('planGenerator — RANGE_PROGRESSIONS', () => {
 // ---------------------------------------------------------------------------
 
 describe('planGenerator — sectionA.opener (3.1)', () => {
-  it('uses oneLeverSentence verbatim as opener', () => {
-    const scanData = buildScanData();
+  it('uses predetermined text as opener for known sub-path (overrides oneLeverSentence)', () => {
+    const scanData = buildScanData(); // defaults to Speed-to-lead
+    scanData.oneLeverSentence = 'Fix slow response time first.';
+    const plan = generatePlan(scanData, {}, highConfidence());
+
+    // Known sub-path uses STEP5_WHAT_WE_FIX, not oneLeverSentence
+    assert.equal(plan.sectionA.opener, 'Speed up first response: assign one owner, meet a same-day response rule, and run a simple follow-up sequence.');
+  });
+
+  it('falls back to oneLeverSentence for unknown sub-path', () => {
+    const scanData = buildScanData({ subPath: 'Unknown test sub-path', oneLever: 'Lead response SLA' });
     scanData.oneLeverSentence = 'Fix slow response time first.';
     const plan = generatePlan(scanData, {}, highConfidence());
 
     assert.equal(plan.sectionA.opener, 'Fix slow response time first.');
   });
 
-  it('falls back to "Fix {sub-path} first by focusing on {lever}." when oneLeverSentence is blank', () => {
-    const scanData = buildScanData({ subPath: 'Speed-to-lead', oneLever: 'Lead response SLA' });
+  it('falls back to "Fix {sub-path}..." when unknown sub-path and no oneLeverSentence', () => {
+    const scanData = buildScanData({ subPath: 'Custom sub-path', oneLever: 'Lead response SLA' });
     scanData.oneLeverSentence = '';
     const plan = generatePlan(scanData, {}, highConfidence());
 
-    assert.equal(plan.sectionA.opener, 'Fix Speed-to-lead first by focusing on Lead response SLA.');
+    assert.equal(plan.sectionA.opener, 'Fix Custom sub-path first by focusing on Lead response SLA.');
   });
 
   it('returns empty opener when both oneLeverSentence and subPath/oneLever are missing', () => {
