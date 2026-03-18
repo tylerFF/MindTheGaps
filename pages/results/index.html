@@ -403,9 +403,12 @@
         var container = document.getElementById('cta-card');
 
         if (eligibility && eligibility.eligible) {
-          // Eligible — show scan booking CTA (spec-exact label)
+          // Eligible — show product info + scan booking CTA
           container.innerHTML =
-            '<div class="section-heading">Ready for Your Personalized Plan?</div>' +
+            '<h1 style="font-size:1.5rem;font-weight:700;color:#16213e;margin-bottom:0.5rem;">Ready for Your Personalized Plan?</h1>' +
+            '<h2 style="font-size:1.15rem;font-weight:700;color:#1a1a2e;margin-bottom:0.25rem;">MindtheGaps 45-Minute Growth Scan</h2>' +
+            '<h3 style="font-size:1.05rem;font-weight:700;color:#1a1a2e;margin-bottom:0.75rem;">CA$295.00</h3>' +
+            '<hr style="border:none;border-top:1px solid #e2e6ea;margin-bottom:1.25rem;">' +
             '<p style="margin-bottom: 0.75rem; color: #555;">A facilitated 45-minute working session to confirm your biggest growth gap, choose the one lever to fix first, and map the next 60 days with confidence. Within 24 hours after human review, you\u2019ll receive a personalized 1-page action plan you can use right away.</p>' +
             '<ul style="list-style:none;padding:0;margin:0 0 1rem 0;display:inline-block;text-align:left;">' +
             '<li style="display:flex;align-items:flex-start;gap:0.5rem;font-size:0.9rem;color:#333;margin-bottom:0.4rem;"><span style="color:#28a745;font-weight:700;flex-shrink:0;">\u2713</span> One clear lever to focus on</li>' +
