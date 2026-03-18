@@ -251,6 +251,8 @@ Requires Node 18+ (uses built-in `node:test` runner). Only external dependency: 
 | Stripe Checkout | `https://book.stripe.com/test_bJebJ28Jl30W3yL8Q81sQ01` (TEST mode) |
 | Calendly Booking | `https://calendly.com/marc-tribeon/45-minute-growth-gap-scan` |
 
+**Live customer flow:** Quiz (`/quiz/`) → Results (`/results/`) → Stripe → Booking (`/booking/`). The `/landing/` and `/scan/` pages are **not** part of the customer flow — they were early marketing page experiments and can be ignored.
+
 ### Secrets configured on workers (all set)
 
 | Worker | Secrets Set |
@@ -489,8 +491,8 @@ MindTheGaps/
 │   ├── quiz/index.html          # Multi-step quiz (15 steps, progress bar)
 │   ├── results/index.html       # Results page (reads base64 from URL hash)
 │   ├── booking/index.html       # Post-payment booking page (Calendly inline widget)
-│   ├── landing/index.html       # Marketing landing page (from Figma)
-│   └── scan/index.html          # Scan booking page (from Figma)
+│   ├── landing/index.html       # Marketing landing page — OUT OF SCOPE, not in customer flow, can be ignored
+│   └── scan/index.html          # Standalone scan landing page — OUT OF SCOPE, not in customer flow, can be ignored
 │
 ├── workers/
 │   ├── shared/

@@ -406,7 +406,14 @@
           // Eligible — show scan booking CTA (spec-exact label)
           container.innerHTML =
             '<div class="section-heading">Ready for Your Personalized Plan?</div>' +
-            '<p style="margin-bottom: 1rem; color: #555;">Get a 45-minute facilitator-led scan to build your custom One-Page Growth Plan.</p>' +
+            '<p style="margin-bottom: 0.75rem; color: #555;">A facilitated 45-minute working session to confirm your biggest growth gap, choose the one lever to fix first, and map the next 60 days with confidence. Within 24 hours after human review, you\u2019ll receive a personalized 1-page action plan you can use right away.</p>' +
+            '<ul style="list-style:none;padding:0;margin:0 0 1rem 0;display:inline-block;text-align:left;">' +
+            '<li style="display:flex;align-items:flex-start;gap:0.5rem;font-size:0.9rem;color:#333;margin-bottom:0.4rem;"><span style="color:#28a745;font-weight:700;flex-shrink:0;">\u2713</span> One clear lever to focus on</li>' +
+            '<li style="display:flex;align-items:flex-start;gap:0.5rem;font-size:0.9rem;color:#333;margin-bottom:0.4rem;"><span style="color:#28a745;font-weight:700;flex-shrink:0;">\u2713</span> 6 actions with owners + 14 / 30 / 60-day due dates</li>' +
+            '<li style="display:flex;align-items:flex-start;gap:0.5rem;font-size:0.9rem;color:#333;margin-bottom:0.4rem;"><span style="color:#28a745;font-weight:700;flex-shrink:0;">\u2713</span> A weekly scoreboard with 2\u20134 key metrics</li>' +
+            '</ul>' +
+            '<p style="font-size:0.85rem;color:#666;margin-bottom:0.4rem;">No logins. No customer lists. No sensitive uploads. If you do not know your exact numbers, ranges are fine.</p>' +
+            '<p style="font-size:0.85rem;color:#16213e;font-weight:600;margin-bottom:1.25rem;">Best for Owner/GM, or a lead who owns growth and can act on the plan.</p>' +
             '<a id="checkout-link" href="#" class="cta-button ' + gapClass + '">Book the 45-Minute Growth Gap Scan &mdash; CAD $295</a>';
 
           // Stripe payment link — swap comments to go live
