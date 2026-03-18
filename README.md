@@ -27,7 +27,7 @@ No redeployment needed — secrets take effect immediately.
 
 ---
 
-## Current Status (Mar 16, 2026)
+## Current Status (Mar 18, 2026)
 
 ### Core System — All Deployed, All Tested
 
@@ -39,11 +39,12 @@ No redeployment needed — secrets take effect immediately.
 | Stripe Payment Webhook | ✅ **Live** | Receives checkout.session.completed, updates HubSpot (TEST mode) |
 | Calendly Booking Webhook | ✅ **Live** | Receives invitee.created, updates HubSpot |
 | Scan Worksheet Processing | ✅ **Live** | Stop rules, confidence, plan generation, DOCX builder |
-| HubSpot Integration | ✅ **Live** | 72 custom `mtg_` properties created and populated (54 base + 18 action) |
+| HubSpot Integration | ✅ **Live** | 73 custom `mtg_` properties created and populated (54 base + 18 action + 1 prefill) |
 | R2 Storage | ✅ **Live** | `mtg-plan-drafts` bucket, DOCX download endpoint live |
-| Email Notifications | ✅ **Live** | Resend sends scan notifications to Marc (JotForm emails disabled) |
+| Email Notifications | ✅ **Live** | Resend sends scan + quiz notifications to Marc (JotForm emails disabled) |
+| Quiz → Scan Prefill | ✅ **Live** | Quiz submission generates prefilled scan worksheet URL, stored in HubSpot |
 
-**571 tests passing, 0 failing**
+**575 tests passing, 0 failing**
 
 ### MVP Feedback Implementation — Complete
 
@@ -79,6 +80,8 @@ All DOCX plans verified: correct business name, industry, gap, sub-path, lever, 
 | 1 | **Industry list review** — Marc to confirm whether to update the category list (see `docs/industry-refinement-notes.md`) | Marc | Waiting on Marc |
 | 2 | ~~**Resend production setup**~~ | Tyler | ✅ Complete |
 | 3 | **Stripe live mode** — Switch from test payment link to live, update `STRIPE_WEBHOOK_SECRET` (last thing before go-live) | Tyler + Marc | Not started |
+| 4 | **Disable JotForm autoresponder** — Must be toggled manually in JotForm dashboard (API doesn't work) | Tyler | Pending |
+| 5 | **Create `mtg_scan_prefill_url` in HubSpot** — Single-line text property in "mindthegaps" group (code writes it, but property may need to be created in dashboard) | Tyler | Pending |
 
 ### Previously Resolved
 
@@ -152,12 +155,12 @@ Check HubSpot: `mtg_plan_draft_link` should contain the download URL, `mtg_scan_
 ### Option 3: Run the Automated Tests
 
 ```bash
-# Run ALL 390 tests
+# Run ALL 575 tests
 npm test
 
 # Or run tests for a specific module:
 npm run test:scoring         # Quiz scoring engine (51 tests)
-npm run test:results         # Results content generator (25 tests)
+npm run test:results         # Results content generator (29 tests)
 npm run test:eligibility     # Eligibility check (31 tests)
 npm run test:stoprules       # Stop rules engine (94 tests)
 npm run test:confidence      # Confidence calculator (36 tests)
@@ -257,7 +260,7 @@ Requires Node 18+ (uses built-in `node:test` runner). Only external dependency: 
 
 | Worker | Secrets Set |
 |--------|------------|
-| mtg-quiz-webhook | `HUBSPOT_API_KEY`, `RESULTS_PAGE_URL`, `FROM_EMAIL`, `RESEND_API_KEY`, `STRIPE_CHECKOUT_URL` |
+| mtg-quiz-webhook | `HUBSPOT_API_KEY`, `RESULTS_PAGE_URL`, `FROM_EMAIL`, `RESEND_API_KEY`, `MARC_EMAIL`, `STRIPE_CHECKOUT_URL` |
 | mtg-stripe-webhook | `HUBSPOT_API_KEY`, `STRIPE_WEBHOOK_SECRET` |
 | mtg-calendly-webhook | `HUBSPOT_API_KEY` |
 | mtg-scan-webhook | `HUBSPOT_API_KEY`, `RESEND_API_KEY`, `MARC_EMAIL`, `FROM_EMAIL` |
@@ -276,13 +279,14 @@ Requires Node 18+ (uses built-in `node:test` runner). Only external dependency: 
 
 ### HubSpot property naming
 
-All 72 custom properties use the `mtg_` prefix and live in the "mindthegaps" property group:
+All 73 custom properties use the `mtg_` prefix and live in the "mindthegaps" property group:
 - Quiz fields: `mtg_quiz_v1`, `mtg_quiz_completed`, `mtg_primary_gap`, etc.
 - Payment fields: `mtg_payment_status`, `mtg_stripe_payment_id`, `mtg_payment_date`
 - Booking fields: `mtg_scan_booked`, `mtg_scan_scheduled_for`, `mtg_calendly_event_id`
 - Scan fields: `mtg_scan_completed`, `mtg_scan_confidence`, `mtg_scan_primary_gap_confirmed`
 - Plan fields: `mtg_plan_draft_link`, `mtg_plan_status`, `mtg_plan_review_status`
 - Action fields: `mtg_scan_action1_desc` through `mtg_scan_action6_due` (18 properties — desc/owner/due for each of 6 actions)
+- Prefill: `mtg_scan_prefill_url` (prefilled scan worksheet link, generated at quiz time)
 
 ### Dual field name support
 
@@ -293,6 +297,46 @@ The quiz webhook accepts BOTH JotForm-prefixed field names (`q3_quiz_V1`, `q14_q
 ### Non-blocking HubSpot writes
 
 All webhook handlers use `ctx.waitUntil()` for HubSpot writes. The customer-facing response returns immediately; HubSpot updates happen in the background. If HubSpot fails, the customer experience is unaffected.
+
+---
+
+## What Changed (Mar 18, 2026) — Marc QA Feedback Round 1
+
+Addressed 7 items from Marc's first facilitator-led QA run (A1 / Channel concentration risk scenario).
+
+### 1. Scan Worksheet Prefill from Quiz
+- Quiz webhook now generates a prefilled JotForm scan worksheet URL with contact info (name, email, business, industry) and primary gap pre-selected
+- Prefill URL included in Marc's quiz notification email (blue box with clickable link)
+- Prefill URL stored on HubSpot contact as `mtg_scan_prefill_url` for easy access
+- Both `quizPrimaryGap` (q7) and `primaryGap` (q9) are prefilled so the facilitator doesn't need to re-select
+
+### 2. Quiz Notification Email for Marc
+- New styled HTML email sent to Marc on every quiz submission via Resend
+- Includes: contact info, primary gap + score, sub-diagnosis, pillar totals, all quiz answers, and prefilled scan worksheet link
+- Uses `ctx.waitUntil()` for non-blocking delivery
+- `MARC_EMAIL` and `RESEND_API_KEY` secrets added to quiz webhook worker
+
+### 3. Sub-Diagnosis-Specific Next Steps
+- Results page now shows next steps tailored to the specific sub-diagnosis (e.g., "Channel concentration risk" vs "Demand shortfall") instead of generic pillar-level advice
+- 11 sub-diagnosis entries added to `FASTEST_NEXT_STEPS` in `results.js`
+- Pillar-level fallbacks preserved for edge cases with no sub-diagnosis match
+
+### 4. JotForm Form Fixes (via API)
+- q9 (Confirmed Primary Gap): Added helper text "Defaulted from quiz — change only if needed."
+- q25 (Calls answered live): Added "Automated attendant / auto-answer" option
+- q96 (A1 Action 2): Removed "secondary" from description text
+- q27/q28 (Reviews/Referrals per month): Split "6+" into "6-10" and "11+" bands per Marc's request
+- q43/q46/q49/q52/q55/q58: Updated due date labels to "Action N Due Date" format
+
+### 5. Plan Generator Fix
+- Updated A1 Action 2 description from "Choose ONE secondary warm channel to add." to "Choose ONE warm channel to add." (matches JotForm update)
+
+### 6. JotForm Autoresponder
+- API call to disable participant auto-email returns success but doesn't take effect — needs manual toggle in JotForm dashboard
+
+### 7. Test Count: 575 passing (up from 571)
+- Added sub-diagnosis next steps coverage tests
+- Added fallback next steps tests
 
 ---
 
@@ -506,7 +550,8 @@ MindTheGaps/
 │   │   │   ├── index.js         # Main handler — parse, score, results, HubSpot
 │   │   │   ├── scoring.js       # Quiz scoring engine (pillar totals, tie-breaks)
 │   │   │   ├── results.js       # Results content generator (diagnosis, cost of leak)
-│   │   │   └── eligibility.js   # Scan eligibility check
+│   │   │   ├── eligibility.js   # Scan eligibility check
+│   │   │   └── quizEmail.js     # Quiz results email, Marc notification, scan prefill URL
 │   │   └── wrangler.toml
 │   │
 │   ├── mtg-stripe-webhook/
@@ -541,7 +586,7 @@ MindTheGaps/
 │   ├── testCases.js             # 12 quiz fixtures + buildAnswers() helper
 │   ├── scanTestCases.js         # Scan worksheet fixtures + helpers
 │   ├── scoring.test.js          # 51 tests
-│   ├── results.test.js          # 25 tests
+│   ├── results.test.js          # 29 tests
 │   ├── eligibility.test.js      # 31 tests
 │   ├── stopRules.test.js        # 94 tests
 │   ├── confidence.test.js       # 36 tests
@@ -630,7 +675,7 @@ npm run dev     # Start at http://localhost:3000
 ## Running Tests
 
 ```bash
-npm test                     # Run all 571 tests
+npm test                     # Run all 575 tests
 npm run test:scoring         # Scoring engine (51)
 npm run test:results         # Results generator (25)
 npm run test:eligibility     # Eligibility check (31)

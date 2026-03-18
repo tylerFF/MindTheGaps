@@ -13,7 +13,7 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { scoreQuiz } = require('../workers/mtg-quiz-webhook/src/scoring');
-const { generateResults, _internal } = require('../workers/mtg-quiz-webhook/src/results');
+const { generateResults, _internal, SUB_DIAGNOSES, FASTEST_NEXT_STEPS, FASTEST_NEXT_STEPS_FALLBACK } = require('../workers/mtg-quiz-webhook/src/results');
 const { PILLARS } = require('../workers/shared/constants');
 const { fixtures, buildAnswers } = require('./testCases');
 
@@ -169,6 +169,35 @@ describe('formatSignalsLine', () => {
 });
 
 // ===================================================================
+// Sub-diagnosis-specific next steps coverage
+// ===================================================================
+
+describe('FASTEST_NEXT_STEPS — coverage', () => {
+  it('every sub-diagnosis name has a matching next-steps entry', () => {
+    for (const pillar of Object.values(PILLARS)) {
+      const subs = SUB_DIAGNOSES[pillar];
+      if (!subs) continue;
+      for (const sub of subs) {
+        assert.ok(
+          FASTEST_NEXT_STEPS[sub.name],
+          `Missing FASTEST_NEXT_STEPS entry for sub-diagnosis "${sub.name}"`
+        );
+        assert.equal(FASTEST_NEXT_STEPS[sub.name].length, 2,
+          `FASTEST_NEXT_STEPS["${sub.name}"] should have exactly 2 bullets`);
+      }
+    }
+  });
+
+  it('fallback entries exist for all pillars', () => {
+    for (const pillar of Object.values(PILLARS)) {
+      assert.ok(FASTEST_NEXT_STEPS_FALLBACK[pillar],
+        `Missing FASTEST_NEXT_STEPS_FALLBACK for pillar "${pillar}"`);
+      assert.equal(FASTEST_NEXT_STEPS_FALLBACK[pillar].length, 2);
+    }
+  });
+});
+
+// ===================================================================
 // Full integration via generateResults()
 // ===================================================================
 
@@ -183,6 +212,29 @@ describe('generateResults — integration', () => {
     assert.ok(results.subDiagnosisDisplay.includes('demand shortfall'));
     assert.equal(results.costOfLeak, 'Often 1-3 missed opportunities/month');
     assert.equal(results.fastestNextSteps.length, 2);
+  });
+
+  it('returns sub-diagnosis-specific next steps for Demand shortfall', () => {
+    const fixture = fixtures.CLEAR_ACQUISITION;
+    const scoring = scoreQuiz(fixture.answers);
+    const results = generateResults(scoring, fixture.answers);
+
+    assert.equal(results.subDiagnosis, 'Demand shortfall');
+    assert.ok(results.fastestNextSteps[0].includes('lead volume'),
+      'Demand shortfall next step should mention lead volume, not channel dependence');
+    assert.ok(!results.fastestNextSteps[0].includes('single channel'),
+      'Demand shortfall next step should NOT mention single channel');
+  });
+
+  it('returns sub-diagnosis-specific next steps for Channel concentration risk', () => {
+    const answers = buildAnswers({ V2: '25-49', V5: 'Most leads come from one source' });
+    const scoring = scoreQuiz(answers);
+    const results = generateResults(scoring, answers);
+
+    // Channel concentration should mention single channel
+    if (results.subDiagnosis === 'Channel concentration risk') {
+      assert.ok(results.fastestNextSteps[0].includes('single channel'));
+    }
   });
 
   it('generates correct results for clear Conversion win', () => {
@@ -208,7 +260,7 @@ describe('generateResults — integration', () => {
     assert.ok(results.costOfLeakAdvice.includes('compound'));
   });
 
-  it('handles neutral answers gracefully (no sub-diagnosis)', () => {
+  it('handles neutral answers gracefully (no sub-diagnosis) — uses fallback next steps', () => {
     const scoring = scoreQuiz(buildAnswers({}));
     const results = generateResults(scoring, buildAnswers({}));
 
@@ -216,7 +268,7 @@ describe('generateResults — integration', () => {
     assert.equal(results.subDiagnosisDisplay, null);
     assert.equal(results.keySignals.length, 0);
     assert.equal(results.keySignalsLine, '');
-    // Should still have gap statement and next steps
+    // Should still have gap statement and fallback next steps
     assert.ok(results.primaryGapStatement.length > 0);
     assert.equal(results.fastestNextSteps.length, 2);
   });

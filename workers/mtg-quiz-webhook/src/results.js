@@ -148,11 +148,64 @@ const COST_OF_LEAK = {
 };
 
 // ---------------------------------------------------------------------------
-// Fastest next-step templates
+// Fastest next-step templates (keyed by sub-diagnosis name)
 // ---------------------------------------------------------------------------
 const FASTEST_NEXT_STEPS = {
+  // Acquisition
+  'Demand shortfall': [
+    'Increase lead volume by adding one consistent demand-generation activity (referrals, local visibility, or outbound).',
+    'Track weekly lead count so you can spot shortfalls early and adjust.',
+  ],
+  'Channel concentration risk': [
+    'Add one additional reliable lead source so growth isn\'t dependent on a single channel.',
+    'Document which channels produce the best-fit leads so you can double down intentionally.',
+  ],
+  'Lead quality mismatch': [
+    'Tighten your ideal customer definition so your marketing attracts better-fit leads.',
+    'Add a simple qualification step early in the process to filter out poor-fit leads faster.',
+  ],
+
+  // Conversion
+  'Speed-to-lead leak': [
+    'Set a same-day first-response standard and assign one owner so no lead waits.',
+    'Automate an instant acknowledgment (text or email) to buy time for a personal follow-up.',
+  ],
+  'Ownership leak': [
+    'Assign one person as the default first responder for every new lead.',
+    'Create a simple handoff rule so leads never sit unowned between steps.',
+  ],
+  'Booking friction leak': [
+    'Reduce time-to-meeting by offering a simple online booking link or same-call scheduling.',
+    'Eliminate back-and-forth by confirming the next step before the conversation ends.',
+  ],
+  'Attendance leak': [
+    'Send a confirmation + reminder sequence (book, 24h before, 1h before) to reduce no-shows.',
+    'Make rescheduling easy so prospects shift instead of ghost.',
+  ],
+  'Follow-up leak': [
+    'Build a simple 3-touch follow-up sequence after every quote or proposal.',
+    'Assign one owner to follow up on every open quote until it\'s won or closed.',
+  ],
+
+  // Retention
+  'No retention cadence': [
+    'Create a simple review cadence (monthly or quarterly) with a clear owner.',
+    'Set a recurring calendar reminder so account reviews don\'t slip.',
+  ],
+  'Low compounding': [
+    'Add a referral ask and a rebooking prompt to your post-service process.',
+    'Grow existing-customer revenue with a simple follow-up rhythm after each job.',
+  ],
+  'At-risk base': [
+    'Reach out to your top 10 existing clients this week with a check-in or value-add.',
+    'Track repeat-customer revenue monthly so you can spot churn before it compounds.',
+  ],
+};
+
+// Fallback next steps when no sub-diagnosis matches (edge case)
+const FASTEST_NEXT_STEPS_FALLBACK = {
   [PILLARS.ACQUISITION]: [
-    'Add one additional reliable lead source (so you\'re not dependent on a single channel).',
+    'Add one additional reliable lead source or optimize lead capture so growth is less dependent on any single weak point.',
     'Improve lead fit by tightening your offer + ideal customer definition.',
   ],
   [PILLARS.CONVERSION]: [
@@ -283,7 +336,7 @@ function generateResults(scoringResult, answers) {
     keySignalsLine: formatSignalsLine(signals),
     costOfLeak: leak.text,
     costOfLeakAdvice: leak.advice,
-    fastestNextSteps: FASTEST_NEXT_STEPS[primaryGap],
+    fastestNextSteps: (sub && FASTEST_NEXT_STEPS[sub.name]) || FASTEST_NEXT_STEPS_FALLBACK[primaryGap],
   };
 }
 
@@ -301,4 +354,5 @@ module.exports = {
   GAP_STATEMENTS,
   COST_OF_LEAK,
   FASTEST_NEXT_STEPS,
+  FASTEST_NEXT_STEPS_FALLBACK,
 };
