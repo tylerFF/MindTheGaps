@@ -34,7 +34,7 @@ No redeployment needed — secrets take effect immediately.
 | Component | Status | Details |
 |-----------|--------|---------|
 | Quiz + Scoring Engine | ✅ **Live** | 13-question quiz, scoring, results, eligibility |
-| Results Page | ✅ **Live** | Gap diagnosis, score, CTA with Stripe link |
+| Results Page | ✅ **Live** | Gap diagnosis, score, product info + CTA with Stripe link |
 | Booking Page | ✅ **Live** | Calendly inline widget, shown after Stripe payment |
 | Stripe Payment Webhook | ✅ **Live** | Receives checkout.session.completed, updates HubSpot (TEST mode) |
 | Calendly Booking Webhook | ✅ **Live** | Receives invitee.created, updates HubSpot |
@@ -297,6 +297,16 @@ The quiz webhook accepts BOTH JotForm-prefixed field names (`q3_quiz_V1`, `q14_q
 ### Non-blocking HubSpot writes
 
 All webhook handlers use `ctx.waitUntil()` for HubSpot writes. The customer-facing response returns immediately; HubSpot updates happen in the background. If HubSpot fails, the customer experience is unaffected.
+
+---
+
+## What Changed (Mar 18, 2026) — Results Page Product Info
+
+### Results Page CTA — Product Info Block
+- Added product summary block to the top of the results page CTA card (visible when eligible)
+- Shows: product name ("MindtheGaps 45-Minute Growth Scan"), price (CA$295.00), and short description
+- Matches the product listing shown on the Stripe checkout page for visual consistency
+- Separated from the existing "Ready for Your Personalized Plan?" section by a divider
 
 ---
 
