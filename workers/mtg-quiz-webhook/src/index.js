@@ -18,7 +18,7 @@
 const { scoreQuiz } = require('./scoring');
 const { generateResults } = require('./results');
 const { checkEligibility } = require('./eligibility');
-const { sendQuizResultsEmail } = require('./quizEmail');
+const { sendQuizResultsEmail, sendQuizNotificationToMarc, buildScanPrefillUrl } = require('./quizEmail');
 const { createHubSpotClient } = require('../../shared/hubspot');
 const { isValidEmail, normalizeEmail, sanitizeString } = require('../../shared/validation');
 const { QUESTION_IDS, HUBSPOT_PREFIX } = require('../../shared/constants');
@@ -266,6 +266,16 @@ function buildHubSpotProperties(contactInfo, answers, scoringResult, resultsCont
     props.mtg_fix_first_reason = eligibilityResult.fixFirstReason;
   }
 
+  // Scan worksheet prefill URL (uses contactInfo.email which may be raw;
+  // caller should set contactInfo.email to the normalized email before calling)
+  props.mtg_scan_prefill_url = buildScanPrefillUrl({
+    firstName: contactInfo.firstName,
+    email: contactInfo.email,
+    businessName: contactInfo.businessName,
+    industry: contactInfo.industry,
+    primaryGap: scoringResult.primaryGap,
+  });
+
   // Cohort / campaign tracking (written from URL query params)
   if (trackingParams && trackingParams.cohort_id) props.mtg_cohort_id = trackingParams.cohort_id;
   if (trackingParams && trackingParams.variant_id) props.mtg_variant_id = trackingParams.variant_id;
@@ -449,7 +459,34 @@ if (env.MTG_RESULTS_CACHE) {
       }
     }
 
-    // 11. Return results JSON for the results page
+    // 11. Send quiz notification to Marc (non-blocking)
+    if (env.RESEND_API_KEY && env.MARC_EMAIL) {
+      const marcNotify = async () => {
+        try {
+          await sendQuizNotificationToMarc(env, {
+            firstName: contactInfo.firstName,
+            email,
+            businessName: contactInfo.businessName,
+            industry: contactInfo.industry,
+            primaryGap: scoringResult.primaryGap,
+            baselineScore: scoringResult.baselineScore,
+            subDiagnosis: resultsContent.subDiagnosis,
+            pillarTotals: scoringResult.pillarTotals,
+            answers,
+          });
+          console.log('Quiz notification sent to Marc');
+        } catch (err) {
+          console.error('Marc notification failed:', err.message);
+        }
+      };
+      if (ctx && ctx.waitUntil) {
+        ctx.waitUntil(marcNotify());
+      } else {
+        await marcNotify();
+      }
+    }
+
+    // 12. Return results JSON for the results page
     return corsResponse({
       success: true,
       email,

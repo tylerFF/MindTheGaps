@@ -241,7 +241,7 @@ const PREDETERMINED_ACTIONS = Object.freeze({
     { description: 'Identify top source and why it dominates.',
       helperNarration: 'First, we take one practical step without a big rebuild. The action is:',
       owner: 'Owner/GM', dueDay: 7 },
-    { description: 'Choose ONE secondary warm channel to add.',
+    { description: 'Choose ONE warm channel to add.',
       helperNarration: 'Next, we pick one clear path so leads don\'t get lost. The action is:',
       owner: 'Owner/GM', dueDay: 7 },
     { description: 'Create one simple message + call-to-action for that channel.',
