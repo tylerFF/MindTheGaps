@@ -122,10 +122,19 @@ function buildQuizResultsEmail(data) {
   if (data.eligible) {
     ctaHtml = `
       <td style="background:#fff;border-radius:12px;padding:28px 24px;text-align:center;">
-        <p style="font-size:17px;font-weight:600;color:#16213e;margin:0 0 8px 0;">Ready for Your Personalized Plan?</p>
-        <p style="font-size:14px;color:#555;margin:0 0 20px 0;">Get a 45-minute facilitator-led scan to build your custom One-Page Growth Plan.</p>
-        <a href="${escapeHtml(stripeUrl)}" style="display:inline-block;padding:14px 32px;border-radius:8px;background:${pillar.color};color:#fff;text-decoration:none;font-weight:600;font-size:16px;">Book the 45-Minute Growth Gap Scan</a>
-        <p style="font-size:13px;color:#6c757d;margin:10px 0 0 0;">CAD $295 &mdash; one-time</p>
+        <h2 style="font-size:20px;font-weight:700;color:#16213e;margin:0 0 8px 0;">Ready for Your Personalized Plan?</h2>
+        <p style="font-size:16px;font-weight:700;color:#1a1a2e;margin:0 0 4px 0;">MindtheGaps 45-Minute Growth Scan</p>
+        <p style="font-size:15px;font-weight:700;color:#1a1a2e;margin:0 0 16px 0;">CA$295.00</p>
+        <hr style="border:none;border-top:1px solid #e2e6ea;margin:0 0 16px 0;">
+        <p style="font-size:14px;color:#555;margin:0 0 16px 0;">A facilitated 45-minute working session to confirm your biggest growth gap, choose the one lever to fix first, and map the next 60 days with confidence. Within 24 hours after human review, you\u2019ll receive a personalized 1-page action plan you can use right away.</p>
+        <table cellpadding="0" cellspacing="0" style="margin:0 auto 16px auto;text-align:left;">
+          <tr><td style="padding:4px 0;font-size:14px;color:#333;"><span style="color:#28a745;font-weight:700;">&#10003;</span>&nbsp; One clear lever to focus on</td></tr>
+          <tr><td style="padding:4px 0;font-size:14px;color:#333;"><span style="color:#28a745;font-weight:700;">&#10003;</span>&nbsp; 6 actions with owners + 14 / 30 / 60-day due dates</td></tr>
+          <tr><td style="padding:4px 0;font-size:14px;color:#333;"><span style="color:#28a745;font-weight:700;">&#10003;</span>&nbsp; A weekly scoreboard with 2&#8211;4 key metrics</td></tr>
+        </table>
+        <p style="font-size:13px;color:#666;margin:0 0 6px 0;">No logins. No customer lists. No sensitive uploads. If you do not know your exact numbers, ranges are fine.</p>
+        <p style="font-size:13px;color:#16213e;font-weight:600;margin:0 0 20px 0;">Best for Owner/GM, or a lead who owns growth and can act on the plan.</p>
+        <a href="${escapeHtml(stripeUrl)}" style="display:inline-block;padding:14px 32px;border-radius:8px;background:${pillar.color};color:#fff;text-decoration:none;font-weight:600;font-size:16px;">Book the 45-Minute Growth Gap Scan &mdash; CAD $295</a>
       </td>`;
   } else {
     const fixReason = escapeHtml(data.fixFirstReason || '');
