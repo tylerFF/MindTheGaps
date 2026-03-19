@@ -1,6 +1,6 @@
 # MindtheGaps MVP — Complete Rebuild Guide
 
-**Last updated:** March 16, 2026
+**Last updated:** March 18, 2026
 
 This document contains everything needed to rebuild the MindtheGaps system from scratch. It covers every service, every field, every business rule, every integration, and every configuration detail. Hand this to any developer and they can reconstruct the entire system.
 
@@ -82,7 +82,7 @@ MindtheGaps (MTG) is a consulting automation system for a consultant named Marc.
 
 | Function | Service | Details |
 |----------|---------|---------|
-| CRM | HubSpot | Contacts only, no Deals. 72 custom `mtg_` properties. Dedupe by email. |
+| CRM | HubSpot | Contacts only, no Deals. 73 custom `mtg_` properties. Dedupe by email. |
 | Quiz Form | Custom HTML/JS | `pages/quiz/index.html` — hosted on Cloudflare Pages |
 | Scan Worksheet | JotForm | Form ID: `260435948553162`. EU endpoint (`eu-api.jotform.com`). |
 | Automation | Cloudflare Workers | 4 workers handle all webhooks + logic |
@@ -93,7 +93,7 @@ MindtheGaps (MTG) is a consulting automation system for a consultant named Marc.
 | Booking | Calendly | Marc's calendar: `calendly.com/marc-tribeon/45-minute-growth-gap-scan` |
 | Email | Resend | From: `notifications@mindthegaps.biz`. Domain verified. |
 | Hosting | Cloudflare Pages | Project: `mtg-pages`. Static HTML/JS/CSS. |
-| Tests | Node.js built-in | `node:test` runner. 571 tests. Only dependency: `docx`. |
+| Tests | Node.js built-in | `node:test` runner. 575 tests. Only dependency: `docx`. |
 
 ---
 
@@ -113,7 +113,7 @@ MindtheGaps (MTG) is a consulting automation system for a consultant named Marc.
 
 | Worker | Secrets |
 |--------|---------|
-| mtg-quiz-webhook | `HUBSPOT_API_KEY`, `RESULTS_PAGE_URL`, `FROM_EMAIL`, `RESEND_API_KEY`, `STRIPE_CHECKOUT_URL` |
+| mtg-quiz-webhook | `HUBSPOT_API_KEY`, `RESULTS_PAGE_URL`, `FROM_EMAIL`, `RESEND_API_KEY`, `MARC_EMAIL`, `STRIPE_CHECKOUT_URL` |
 | mtg-stripe-webhook | `HUBSPOT_API_KEY`, `STRIPE_WEBHOOK_SECRET` |
 | mtg-calendly-webhook | `HUBSPOT_API_KEY` |
 | mtg-scan-webhook | `HUBSPOT_API_KEY`, `RESEND_API_KEY`, `MARC_EMAIL`, `FROM_EMAIL` |
@@ -282,8 +282,10 @@ Custom HTML/JS page (not a JotForm embed). Multi-step form with progress bar —
 5. `generateResults(scoringResult, answers)` → results content
 6. `checkEligibility(scoringResult, answers)` → eligibility
 7. Build HubSpot properties
-8. Upsert Contact in HubSpot (non-blocking via `ctx.waitUntil()`)
-9. Return JSON with `resultsUrl` (results data is base64-encoded in URL hash)
+8. Build scan prefill URL (`buildScanPrefillUrl()`) and include in HubSpot properties
+9. Upsert Contact in HubSpot (non-blocking via `ctx.waitUntil()`)
+10. Send notification email to Marc via Resend (non-blocking via `ctx.waitUntil()`)
+11. Return JSON with `resultsUrl` (results data is base64-encoded in URL hash)
 
 ### Field Map (quiz page sends simple names)
 
@@ -312,6 +314,7 @@ Static HTML/JS page. Reads base64-encoded results from the URL hash (`#`), decod
 - Key signals ("Based on your answers...")
 - Cost-of-leak estimate
 - Fastest next steps
+- Product info block: product name ("MindtheGaps 45-Minute Growth Scan"), price (CA$295.00), description
 - CTA: "Book the 45-Minute Growth Gap Scan — CAD $295" → Stripe checkout
 
 ---
@@ -401,7 +404,7 @@ Embedded Calendly inline widget for Marc's 45-Minute Growth Gap Scan.
 | q83 | Quote follow-up | Quote-to-close % |
 | q84 | Channel concentration risk | % leads from top source |
 | q85 | Lead capture friction | Calls answered live |
-| q86 | Demand capture / local visibility | Inbound leads per month |
+| q86 | Demand capture / local visibility | Inbound leads per month (0-9, 10-24, 25-49, 50+, Not sure — aligned to quiz) |
 | q87 | Rebook/recall gap | Next step scheduled at job end |
 | q88 | Referral ask gap | Referral intros per month |
 | q89 | Post-service follow-up gap | % revenue from repeat |
@@ -500,9 +503,9 @@ q179-q192 (one per sub-path, same order as above)
 **Metrics (one checkbox field per pillar):**
 | QID | Pillar |
 |-----|--------|
-| q60 | Conversion metrics |
-| q61 | Acquisition metrics |
-| q62 | Retention metrics |
+| q60 | Conversion metrics: Median response time, Lead to booked %, Show rate %, Quote sent within 48h % |
+| q61 | Acquisition metrics: Leads/week, % leads from top source, Calls answered live %, Median response time, Reviews/week, Referral intros/week, Leads to booked % |
+| q62 | Retention metrics: Rebook rate (or count), Reviews/week, Referral intros/week, Days to follow-up after service, Repeat revenue band |
 
 **Constraints:**
 | QID | Field |
@@ -532,7 +535,7 @@ q179-q192 (one per sub-path, same order as above)
 8. **Generate plan** — deterministic lookup tables (see section 16)
 9. **Build DOCX** — One-Page Plan document (see section 17)
 10. **Upload to R2** — store at `plans/{email}/{timestamp}.docx`
-11. **Write to HubSpot** — all 72 properties including action data
+11. **Write to HubSpot** — all 73 properties including action data
 12. **Email Marc** — via Resend (plan ready, degraded, or stop notification)
 13. **Return JSON** — success response with plan URL
 
@@ -732,7 +735,7 @@ All emails include a styled HTML scan summary:
 
 ---
 
-## 19. HubSpot — All 72 Properties
+## 19. HubSpot — All 73 Properties
 
 All properties use the `mtg_` prefix, live in the "mindthegaps" property group, and are on Contact records only. No Deals pipeline.
 
@@ -793,6 +796,7 @@ All properties use the `mtg_` prefix, live in the "mindthegaps" property group, 
 | mtg_confidence_not_sure_count | number | Scan webhook |
 | mtg_scan_stop_reason | text | Scan webhook |
 | mtg_scan_field2_answer | text | Scan webhook |
+| mtg_scan_prefill_url | text (URL) | Quiz webhook |
 
 ### Plan Fields (7)
 | Property | Type | Written By |
@@ -922,12 +926,12 @@ Conditional fields default to `hidden: "No"`. Preview mode ignores this but live
 
 ## 24. Testing
 
-### 571 Tests — All Passing
+### 575 Tests — All Passing
 
 ```bash
-npm test                     # Run all 571 tests
+npm test                     # Run all 575 tests
 npm run test:scoring         # Scoring engine (51)
-npm run test:results         # Results generator (25)
+npm run test:results         # Results generator (29)
 npm run test:eligibility     # Eligibility check (31)
 npm run test:stoprules       # Stop rules (94)
 npm run test:confidence      # Confidence calculator (36)
@@ -1002,7 +1006,7 @@ MindTheGaps/
 │   │   ├── scoring.js           # Scoring engine
 │   │   ├── results.js           # Results generator
 │   │   ├── eligibility.js       # Eligibility check
-│   │   └── quizEmail.js         # Quiz results email (to prospect)
+│   │   └── quizEmail.js         # Marc notification email + scan prefill URL builder
 │   │
 │   ├── mtg-stripe-webhook/src/
 │   │   ├── worker.js
@@ -1026,7 +1030,7 @@ MindTheGaps/
 │   ├── setup-hubspot-properties.js
 │   └── setup-calendly-webhook.js
 │
-├── tests/                       # 571 tests (node:test runner)
+├── tests/                       # 575 tests (node:test runner)
 │
 └── docs/
     ├── REBUILD_GUIDE.md         # THIS FILE
