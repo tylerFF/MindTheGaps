@@ -67,7 +67,7 @@ Smoke tests run against live deployed system (v3 test scripts in `docs/`):
 | A1 | Channel concentration risk | Acquisition → Acquisition | ✅ DOCX generated | ✅ Pass |
 | C1 | Speed-to-lead | Acquisition → Conversion | ✅ DOCX generated | ✅ Pass |
 | R1 | Rebook/recall gap | Acquisition → Retention | ✅ DOCX generated | ✅ Pass |
-| M1 | Other (manual):Acquisition | Acquisition → Acquisition | ✅ Stop rule fired | ✅ Pass |
+| M1 | Other (manual):Acquisition | Acquisition → Acquisition | ✅ DOCX generated | ✅ Pass |
 
 All DOCX plans verified: correct business name, industry, gap, sub-path, lever, actions (text + owners + due dates), metrics, and confidence. Email notifications received for all tests.
 
@@ -307,6 +307,32 @@ All webhook handlers use `ctx.waitUntil()` for HubSpot writes. The customer-faci
 - Shows: product name ("MindtheGaps 45-Minute Growth Scan"), price (CA$295.00), and short description
 - Matches the product listing shown on the Stripe checkout page for visual consistency
 - Separated from the existing "Ready for Your Personalized Plan?" section by a divider
+
+---
+
+## What Changed (Mar 20, 2026) — Marc QA Feedback Round 2
+
+### 1. "Other (manual)" Stop Rule Removed
+- **stopRules.js**: Removed rule 1b — "Other (manual)" sub-paths (A4/C5/R5) now flow through to plan generation normally instead of halting with "Scan Stopped — Manual Plan Required"
+- Plans for A4/C5/R5 use predetermined lookup table content (same as all other sub-paths)
+- Marc receives the standard "Plan Draft Ready" email (blue header) instead of the red stop email
+- Stop rules reduced from 5 to 4
+
+### 2. Stripe Product Updated
+- Product title: "MindtheGaps 45-Minute Growth Gap Scan" (added "Gap")
+- Description updated to Marc's confirmed copy (single paragraph)
+- Both active and inactive payment links reference the same product, so both are updated
+
+### 3. Marc QA Form Fixes (A2/A3)
+- A2 One Lever: "Add a secondary warm channel + weekly cadence" → "Add one warm channel + weekly cadence"
+- A3 One Lever: Added new option "Weekly visibility routine + one warm channel"
+- A3 Field 2 + Section 3 baseline (Inbound leads): Aligned bands to match quiz exactly (0, 1-10, 11-25, 26-50, 51-100, 100+)
+- Section 5 header: "6 Actions (Next 30 Days)" → "6 Actions (Next 60 Days)" (global across all sub-paths)
+- A2 Metrics: Added "Leads to booked %"
+
+### 4. Results Page + Quiz Email
+- Results page CTA card: Added product name, price (CA$295.00), H1/H2/H3 heading hierarchy
+- Quiz results email: Added full value proposition CTA
 
 ---
 

@@ -8,12 +8,12 @@
  *
  * Stop rules:
  *   1a. Sub-path = "not sure"  → full stop (no plan generated)
- *   1b. Sub-path starts with "Other" → full stop (no plan generated)
+ *   1b. (REMOVED — "Other" sub-paths now generate plans normally)
  *   1c. Field 2 follow-up = "not sure" → full stop (no plan generated)
  *   2. Primary gap changed from quiz without an explanation provided
  *   3. Missing required fields:
  *      - primary gap present
- *      - sub-path present (and not "not sure" / "Other")
+ *      - sub-path present (and not "not sure")
  *      - one lever present
  *      - ≥5 non-"Not sure" Tier-1 baseline field answers
  *      - all 6 action slots filled
@@ -119,7 +119,9 @@ function countFilledMetrics(metrics) {
 // ---------------------------------------------------------------------------
 
 /**
- * Rule 1: Sub-path = "not sure" or "Other (manual)"
+ * Rule 1: Sub-path = "not sure"
+ * Note: "Other (manual)" sub-paths (A4/C5/R5) now flow through to plan
+ * generation normally — stop rule 1b was removed per Marc's request.
  */
 function checkSubPath(scanData) {
   const { subPath } = scanData;
@@ -128,13 +130,6 @@ function checkSubPath(scanData) {
     return {
       rule: 'subpath_not_sure',
       message: 'Sub-path is "Not sure" — requires manual plan',
-    };
-  }
-
-  if (isOtherManual(subPath)) {
-    return {
-      rule: 'subpath_other',
-      message: 'Sub-path is "Other (manual)" — requires manual plan',
     };
   }
 
