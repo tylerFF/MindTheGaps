@@ -549,17 +549,16 @@ q179-q192 (one per sub-path, same order as above)
 
 **File:** `workers/mtg-scan-webhook/src/stopRules.js`
 
-### 5 Stop Rules (plan generation halted if ANY are true)
+### 4 Stop Rules (plan generation halted if ANY are true)
 
 | # | Rule | Condition | Result |
 |---|------|-----------|--------|
 | 1a | Sub-path = "not sure" | Sub-path value is "not sure" (case-insensitive) | Full stop |
-| 1b | Sub-path = "Other" | Sub-path starts with "Other" | Full stop* |
 | 1c | Field 2 = "not sure" | Field 2 follow-up answer is "not sure" | Full stop |
 | 2 | Gap changed without reason | q9 ≠ q7 AND gapChangeReason is empty | Full stop |
 | 3 | Missing required fields | Any of: no primary gap, no sub-path, no one lever, <5 non-"Not sure" baseline answers, <6 actions, <2 metrics | Full stop |
 
-*Rule 1b ("Other") is actually handled as **degraded** (not stopped) in the current implementation — plan IS generated but flagged for human review.
+Note: Rule 1b ("Other" sub-path = full stop) was **removed Mar 20, 2026**. "Other (manual)" sub-paths (A4/C5/R5) now generate plans normally using predetermined lookup tables.
 
 ### Output
 
@@ -642,7 +641,7 @@ Maps each sub-path to exactly 6 actions with default owners and due dates. The s
 - Referral ask gap (6 actions)
 - Post-service follow-up gap (6 actions)
 
-3 "Other (manual)" sub-paths use form-supplied data instead.
+3 "Other (manual)" sub-paths (A4/C5/R5) also have predetermined actions in the lookup table and generate plans normally.
 
 ### Lookup Table 2: STEP5_WHAT_WE_FIX
 
@@ -712,7 +711,7 @@ All JotForm emails are disabled. Notifications are sent exclusively via Resend f
 | Type | When | Subject | Header Color |
 |------|------|---------|-------------|
 | Plan Ready | Normal plan generated | "Plan draft ready: {business}" | Blue |
-| Degraded Plan | Sub-path = "Other (manual)" | "⚠️ Degraded plan draft — human review required: {business}" | Amber |
+| Degraded Plan | Reserved for future use | "⚠️ Degraded plan draft — human review required: {business}" | Amber |
 | Stop Rule | Any stop rule fired | "🛑 Manual plan required: {business}" | Red |
 
 ### Email Content
@@ -951,8 +950,8 @@ Full E2E test scripts are in `docs/MindtheGaps_QA_Test_Scripts_Complete_v3.md` c
 - A1: Channel concentration risk (Acquisition)
 - C1: Speed-to-lead (Conversion with pillar switch)
 - R1: Rebook/recall gap (Retention with pillar switch)
-- M1: Other (manual):Acquisition — stop rule
-- M2: Other (manual):Conversion — stop rule
+- M1: Other (manual):Acquisition — plan generated
+- M2: Other (manual):Conversion — plan generated
 - Plus additional scripts for other sub-paths
 
 ---
@@ -966,8 +965,8 @@ Full E2E test scripts are in `docs/MindtheGaps_QA_Test_Scripts_Complete_v3.md` c
 | **DOCX only** | Never generate PDFs. Always DOCX. |
 | **Human-in-the-loop** | Plans are NEVER auto-sent to clients. Marc reviews within 24 hours. |
 | **Deterministic plans** | No AI/LLM in plan generation. Lookup tables only. |
-| **Stop rules halt generation** | Any of 5 rules → no plan, Marc notified. |
-| **Degraded plans flagged** | "Other (manual)" sub-path → plan generated but flagged for review. |
+| **Stop rules halt generation** | Any of 4 rules → no plan, Marc notified. |
+| **"Other (manual)" generates plans** | A4/C5/R5 sub-paths flow through to plan generation using predetermined lookup tables. |
 | **Baseline formula locked** | `ROUND(100 × (gap_total / max_possible), 0)` — do not change. |
 | **Predetermined actions** | For non-manual sub-paths, descriptions come from lookup table (not editable from form). |
 | **Owner override** | Per-sub-path owner fields (q194-q277) take precedence over shared owner fields. |

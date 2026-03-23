@@ -453,11 +453,11 @@ describe('scanWebhook — buildHubSpotProperties degraded (3.5)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Phase 5 — handler: "Other (manual)" full stop
+// Phase 5 — handler: "Other (manual)" now generates plans
 // ---------------------------------------------------------------------------
 
-describe('scanWebhook — handler "Other (manual)" full stop', () => {
-  it('stops (no plan generated) for "Other (manual)" even with all fields present', async () => {
+describe('scanWebhook — handler "Other (manual)" generates plan', () => {
+  it('generates plan for "Other (manual)" with all fields present', async () => {
     const payload = {
       q2_contactEmail: 'test@example.com',
       q9_primaryGap: 'Conversion',
@@ -488,8 +488,7 @@ describe('scanWebhook — handler "Other (manual)" full stop', () => {
     assert.equal(response.status, 200);
     const body = await response.json();
     assert.equal(body.success, true);
-    assert.equal(body.stopped, true);
-    assert.ok(body.reasons.length > 0);
+    assert.equal(body.stopped, false);
   });
 
   it('returns stopped=true for "Not sure" sub-path (regression check)', async () => {

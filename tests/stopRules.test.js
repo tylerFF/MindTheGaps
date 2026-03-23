@@ -204,16 +204,14 @@ describe('Rule 1: Sub-path stop rule', () => {
     assert.equal(result.rule, 'subpath_not_sure');
   });
 
-  it('stops when sub-path is "Other (manual)"', () => {
+  it('passes for sub-path "Other (manual)" — no longer a stop rule', () => {
     const result = checkSubPath({ subPath: 'Other (manual)' });
-    assert.notEqual(result, null);
-    assert.equal(result.rule, 'subpath_other');
+    assert.equal(result, null);
   });
 
-  it('stops when sub-path is "Other (forces manual plan)"', () => {
+  it('passes for sub-path "Other (forces manual plan)" — no longer a stop rule', () => {
     const result = checkSubPath({ subPath: 'Other (forces manual plan)' });
-    assert.notEqual(result, null);
-    assert.equal(result.rule, 'subpath_other');
+    assert.equal(result, null);
   });
 
   it('passes for a valid sub-path', () => {
@@ -481,12 +479,11 @@ describe('checkStopRules — integration', () => {
     assert.ok(result.details.some(d => d.rule === 'subpath_not_sure'));
   });
 
-  it('stops for sub-path "Other (manual)" — full stop, no plan generated', () => {
+  it('passes for sub-path "Other (manual)" — no longer a stop rule', () => {
     const data = buildScanData({ subPath: 'Other (manual)' });
     const result = checkStopRules(data);
-    assert.equal(result.stopped, true);
+    assert.equal(result.stopped, false);
     assert.equal(result.degraded, false);
-    assert.ok(result.details.some(d => d.rule === 'subpath_other'));
   });
 
   it('stops for gap change without reason', () => {
@@ -632,20 +629,18 @@ describe('checkStopRules — edge cases', () => {
 // Phase 5: degraded flag behavior
 // ===========================================================================
 
-describe('checkStopRules — "Other (manual)" is full stop', () => {
-  it('returns stopped=true for "Other (manual)" with all other fields valid', () => {
+describe('checkStopRules — "Other (manual)" no longer stops', () => {
+  it('passes for "Other (manual)" with all other fields valid', () => {
     const data = buildScanData({ subPath: 'Other (manual)' });
     const result = checkStopRules(data);
-    assert.equal(result.stopped, true);
+    assert.equal(result.stopped, false);
     assert.equal(result.degraded, false);
-    assert.equal(result.reasons.length, 1);
-    assert.ok(result.reasons[0].includes('manual'));
   });
 
-  it('returns stopped=true for "Other (forces manual plan)"', () => {
+  it('passes for "Other (forces manual plan)"', () => {
     const data = buildScanData({ subPath: 'Other (forces manual plan)' });
     const result = checkStopRules(data);
-    assert.equal(result.stopped, true);
+    assert.equal(result.stopped, false);
     assert.equal(result.degraded, false);
   });
 
@@ -663,7 +658,7 @@ describe('checkStopRules — "Other (manual)" is full stop', () => {
     assert.equal(result.degraded, false);
   });
 
-  it('"Other" + missing fields = stopped=true (both are full stops)', () => {
+  it('"Other" + missing fields = stopped only for missing fields', () => {
     const data = buildScanData({
       subPath: 'Other (manual)',
       oneLever: '', // missing field → triggers missing_fields rule
@@ -671,11 +666,11 @@ describe('checkStopRules — "Other (manual)" is full stop', () => {
     const result = checkStopRules(data);
     assert.equal(result.stopped, true);
     assert.equal(result.degraded, false);
-    assert.ok(result.details.some(d => d.rule === 'subpath_other'));
+    assert.ok(!result.details.some(d => d.rule === 'subpath_other'));
     assert.ok(result.details.some(d => d.rule === 'missing_fields'));
   });
 
-  it('"Other" + gap changed without reason = stopped=true', () => {
+  it('"Other" + gap changed without reason = stopped only for gap change', () => {
     const data = buildScanData({
       subPath: 'Other (manual)',
       primaryGap: PILLARS.ACQUISITION,
@@ -685,27 +680,24 @@ describe('checkStopRules — "Other (manual)" is full stop', () => {
     const result = checkStopRules(data);
     assert.equal(result.stopped, true);
     assert.equal(result.degraded, false);
-    assert.ok(result.details.some(d => d.rule === 'subpath_other'));
+    assert.ok(!result.details.some(d => d.rule === 'subpath_other'));
     assert.ok(result.details.some(d => d.rule === 'gap_changed_no_reason'));
   });
 
-  it('checkSubPath returns full stop (no degraded flag) for "Other" variants', () => {
+  it('checkSubPath returns null for "Other" variants (no longer a stop)', () => {
     const { checkSubPath } = _internal;
     const result = checkSubPath({ subPath: 'Other (manual)' });
-    assert.notEqual(result, null);
-    assert.equal(result.degraded, undefined);
-    assert.equal(result.rule, 'subpath_other');
+    assert.equal(result, null);
   });
 
-  it('checkSubPath does NOT return degraded for "Not sure"', () => {
+  it('checkSubPath still stops for "Not sure"', () => {
     const { checkSubPath } = _internal;
     const result = checkSubPath({ subPath: 'Not sure' });
     assert.notEqual(result, null);
-    assert.equal(result.degraded, undefined);
     assert.equal(result.rule, 'subpath_not_sure');
   });
 
-  it('checkSubPath does NOT return degraded for valid sub-path', () => {
+  it('checkSubPath returns null for valid sub-path', () => {
     const { checkSubPath } = _internal;
     const result = checkSubPath({ subPath: 'Speed-to-lead' });
     assert.equal(result, null);
