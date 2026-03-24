@@ -39,7 +39,7 @@ const STANDARD_SUB_PATHS = [
 const OTHER_MANUAL_SUB_PATHS = [
   'Other (manual):Acquisition',
   'Other (manual):Conversion',
-  'Other (manual):Retention',
+  'Value review / renewal alignment gap',
 ];
 
 const ALL_SUB_PATHS = [...STANDARD_SUB_PATHS, ...OTHER_MANUAL_SUB_PATHS];
@@ -289,13 +289,13 @@ describe('generatePlan() with predetermined actions', () => {
     assert.equal(plan.sectionA.opener, STEP5_WHAT_WE_FIX['Other (manual):Conversion']);
   });
 
-  it('resolves "Other (manual)" for Retention pillar', () => {
+  it('resolves "Value review / renewal alignment gap" for Retention pillar', () => {
     const scanData = buildScanData({
-      subPath: 'Other (manual)',
+      subPath: 'Value review / renewal alignment gap',
       primaryGap: 'Retention',
     });
     const plan = generatePlan(scanData, highConfidence());
-    assert.equal(plan.sectionA.opener, STEP5_WHAT_WE_FIX['Other (manual):Retention']);
+    assert.equal(plan.sectionA.opener, STEP5_WHAT_WE_FIX['Value review / renewal alignment gap']);
   });
 
   it('action descriptions always come from lookup, never from form', () => {

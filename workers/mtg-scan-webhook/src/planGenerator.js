@@ -138,6 +138,7 @@ const MOST_LIKELY_LEAK = Object.freeze({
   'Review rhythm gap':                        'The ask is not happening at the best moment, so referrals/reviews stay low.',
   'Referral ask gap':                         'The ask is not happening at the best moment, so referrals/reviews stay low.',
   'Rebook/recall gap':                        'There is no reliable recall system to bring customers back.',
+  'Value review / renewal alignment gap':     'Value is not being made visible to clients, so renewals depend on luck.',
 });
 
 // ---------------------------------------------------------------------------
@@ -161,6 +162,7 @@ const WHAT_CHANGES = Object.freeze({
   'Review rhythm gap':                        'More happy customers leave reviews and refer others.',
   'Referral ask gap':                         'More happy customers leave reviews and refer others.',
   'Rebook/recall gap':                        'More customers come back without new ad spend.',
+  'Value review / renewal alignment gap':     'Renewals become predictable because clients see their value clearly.',
 });
 
 // Gap-level fallbacks for WHAT_CHANGES (when sub-path doesn't match)
@@ -194,7 +196,7 @@ const STEP5_WHAT_WE_FIX = Object.freeze({
   'Review rhythm gap':                   'Increase reviews: choose the best moment to ask and run a simple weekly follow-up habit.',
   'Referral ask gap':                    'Increase referrals: install a simple ask and a weekly follow-up habit so intros become consistent.',
   'Post-service follow-up gap':          'Install follow-up: add a simple check-in + next-step prompt so clients don\'t go silent after service.',
-  'Other (manual):Retention':            'Improve retention consistency: pick one follow-up habit and one metric so retention improves without a big rebuild.',
+  'Value review / renewal alignment gap': 'Make value visible: Run a simple monthly/quarterly "value review" with one owner, one scoreboard, and one next-step plan to protect renewals.',
 });
 
 // ---------------------------------------------------------------------------
@@ -218,7 +220,7 @@ const STEP5_HELPER_NARRATION = Object.freeze({
   'Review rhythm gap':                   'Based on your 12-minute quiz results and what you just confirmed today, reviews are not being asked for and collected in a steady rhythm. So our first move is:',
   'Referral ask gap':                    'Based on your 12-minute quiz results and what you just confirmed today, referrals are not being asked for in a consistent, low-pressure way. So our first move is:',
   'Post-service follow-up gap':          'Based on your 12-minute quiz results and what you just confirmed today, post-service follow-up is not happening, so repeat and referral opportunities are missed. So our first move is:',
-  'Other (manual):Retention':            'Based on your 12-minute quiz results and what you just confirmed today, the retention issue is mixed or unclear, so we\'ll pick one practical focus for the next 30 days. So our first move is:',
+  'Value review / renewal alignment gap': 'Based on your 12-minute quiz results and what you just confirmed today, value isn\'t being made visible to clients, so renewals and retention depend on luck instead of a system. So our first move is:',
 });
 
 // ---------------------------------------------------------------------------
@@ -458,45 +460,45 @@ const PREDETERMINED_ACTIONS = Object.freeze({
 
   // ── R2: Review rhythm gap ──────────────────────────────────────────────
   'Review rhythm gap': [
-    { description: 'Pick best moment to ask (end of service/after issue resolved).',
-      helperNarration: 'First, we set the foundation so this can happen every time. The action is:',
+    { description: 'Pick the review moment: ask right after a "happy moment" (job well done, compliment, or issue resolved).',
+      helperNarration: 'First, we tie the review ask to the moment they\'re happiest with you. That\'s when it feels natural.',
       owner: 'Owner/GM', dueDay: 7 },
-    { description: 'Create 2-step ask: review then introduction.',
-      helperNarration: 'Next, now that the foundation is in place, we make the next step easy for the customer. The action is:',
+    { description: 'Use one short Google review ask message that includes your Google review link (text/email).',
+      helperNarration: 'Next, we make it easy. One short message, and we include the Google review link so they can tap once and leave it.',
       owner: 'Admin/CSR', dueDay: 7 },
-    { description: 'Train team on script (10 minutes).',
-      helperNarration: 'Then, we remove friction so more people actually follow through. The action is:',
+    { description: 'Add a simple send rule: send the review ask within 24 hours of the job being completed.',
+      helperNarration: 'Then we lock in timing. Asking within a day gets the best response.',
       owner: 'Owner/GM', dueDay: 21 },
-    { description: 'Weekly follow-up for \'yes\' who didn\'t post.',
-      helperNarration: 'After that, we add a simple nudge so people don\'t forget or drift. The action is:',
+    { description: 'Set a weekly review routine: once a week, check asks sent and new Google reviews received.',
+      helperNarration: 'After that, we add a small weekly check so this stays consistent.',
       owner: 'Admin/CSR', dueDay: 21 },
-    { description: 'Track reviews/week + referral intros/week; adjust timing/script.',
-      helperNarration: 'Now, we make it consistent so the team can run it without thinking. The action is:',
+    { description: 'Track two numbers weekly: review asks sent and new Google reviews received.',
+      helperNarration: 'Now we track the simple scoreboard. If asks go out, reviews show up.',
       owner: 'Ops lead', dueDay: 45 },
-    { description: 'Create one \'thank you\' response pre-written message for referrals.',
-      helperNarration: 'Finally, we add a quick check so we know it\'s working and can tighten it. The action is:',
+    { description: 'Reply to every new Google review with a short thank-you response (same day).',
+      helperNarration: 'Finally, we close the loop. Quick replies build trust and encourage more reviews.',
       owner: 'Admin/CSR', dueDay: 45 },
   ],
 
-  // ── R3: Referral ask gap (same actions as R2, different Step 5) ────────
+  // ── R3: Referral ask gap ────────────────────────────────────────────────
   'Referral ask gap': [
-    { description: 'Pick best moment to ask (end of service/after issue resolved).',
-      helperNarration: 'First, we set the foundation so this can happen every time. The action is:',
+    { description: 'Pick the referral moment: ask right after a "happy moment" (job well done, compliment, or renewal).',
+      helperNarration: 'First, we tie the referral ask to the moments when they\'re happiest with you. That\'s when it feels natural.',
       owner: 'Owner/GM', dueDay: 7 },
-    { description: 'Create 2-step ask: review then introduction.',
-      helperNarration: 'Next, now that the foundation is in place, we make the next step easy for the customer. The action is:',
+    { description: 'Write one referral ask message that names the moment + what to forward (copy/paste).',
+      helperNarration: 'Next, we write one message that\'s easy to send right after a good moment. It tells them exactly what to do: forward one short intro.',
       owner: 'Admin/CSR', dueDay: 7 },
-    { description: 'Train team on script (10 minutes).',
-      helperNarration: 'Then, we remove friction so more people actually follow through. The action is:',
+    { description: 'Create one forwardable intro note the client can reuse anytime (email + text version).',
+      helperNarration: 'Then we make it effortless. They don\'t need to \'sell\' you. They just forward the intro note when someone mentions a need.',
       owner: 'Owner/GM', dueDay: 21 },
-    { description: 'Weekly follow-up for \'yes\' who didn\'t post.',
-      helperNarration: 'After that, we add a simple nudge so people don\'t forget or drift. The action is:',
+    { description: 'Add a simple habit: when you get a compliment or renewal, send the referral ask + forwardable intro note.',
+      helperNarration: 'After that, we tie the ask to the right moments. When they\'re happiest, we send the ask and include the forwardable intro.',
       owner: 'Admin/CSR', dueDay: 21 },
-    { description: 'Track reviews/week + referral intros/week; adjust timing/script.',
-      helperNarration: 'Now, we make it consistent so the team can run it without thinking. The action is:',
+    { description: 'Track two numbers weekly: referral asks sent (at good moments) and referral introductions received.',
+      helperNarration: 'Now we keep a simple scoreboard. If the habit happens at the right moments, introductions start showing up.',
       owner: 'Ops lead', dueDay: 45 },
-    { description: 'Create one \'thank you\' response pre-written message for referrals.',
-      helperNarration: 'Finally, we add a quick check so we know it\'s working and can tighten it. The action is:',
+    { description: 'Use a short thank-you message for every intro and report back when it turns into work.',
+      helperNarration: 'Finally, we reinforce the behavior. People refer more when they feel appreciated and kept in the loop.',
       owner: 'Admin/CSR', dueDay: 45 },
   ],
 
@@ -522,25 +524,25 @@ const PREDETERMINED_ACTIONS = Object.freeze({
       owner: 'Ops lead', dueDay: 45 },
   ],
 
-  // ── R5: Other (manual):Retention ───────────────────────────────────────
-  'Other (manual):Retention': [
-    { description: 'Confirm the biggest retention leak using one weekly metric and one owner.',
-      helperNarration: 'First, we set the foundation so this can happen every time. The action is:',
+  // ── R5: Value review / renewal alignment gap ─────────────────────────
+  'Value review / renewal alignment gap': [
+    { description: 'Define what "retained" means and pick one review cadence (monthly or quarterly).',
+      helperNarration: 'First, we get clear on what \'retained\' looks like for you, and we pick a simple schedule we can stick to.',
       owner: 'Owner/GM', dueDay: 7 },
-    { description: 'Choose one retention lever for the next 30 days and define the next-step process.',
-      helperNarration: 'Next, now that the foundation is in place, we make the next step easy for the customer. The action is:',
+    { description: 'Choose one owner for the review and one backup (so it never gets skipped).',
+      helperNarration: 'Next, we assign clear ownership. This only works if one person owns it end-to-end.',
       owner: 'Owner/GM', dueDay: 7 },
-    { description: 'Use a simple script/pre-written message for the selected follow-up step.',
-      helperNarration: 'Then, we remove friction so more people actually follow through. The action is:',
+    { description: 'Create a one-page review agenda: wins, issues, next 30-60 days (3 sections).',
+      helperNarration: 'Then, we make the review simple and repeatable. Same three sections every time.',
       owner: 'Admin/CSR', dueDay: 21 },
-    { description: 'Track the chosen retention metric weekly and note the main blocker.',
-      helperNarration: 'After that, we add a simple nudge so people don\'t forget or drift. The action is:',
+    { description: 'Build the "value proof" list: 3-5 specific results from the last period (plain language).',
+      helperNarration: 'After that, we write down the proof. This prevents renewals from turning into \'what do we even get?\'',
       owner: 'Owner/GM', dueDay: 21 },
-    { description: 'Fix one retention bottleneck (timing, wording, follow-up, or no owner).',
-      helperNarration: 'Now, we make it consistent so the team can run it without thinking. The action is:',
+    { description: 'Run the first value review and end it with one agreed next step (one priority only).',
+      helperNarration: 'Now we run the first one. We finish with one clear priority so the client feels direction.',
       owner: 'Admin/CSR', dueDay: 45 },
-    { description: 'Run a weekly retention review and make one improvement each cycle.',
-      helperNarration: 'Finally, we add a quick check so we know it\'s working and can tighten it. The action is:',
+    { description: 'Set the recurring schedule for the next 2 reviews and send a short recap after each.',
+      helperNarration: 'Finally, we lock the habit in place. Two reviews booked ahead, and a short recap keeps everyone aligned.',
       owner: 'Admin/CSR', dueDay: 45 },
   ],
 });

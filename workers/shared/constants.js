@@ -250,7 +250,7 @@ const SUB_PATHS = Object.freeze({
     'Review rhythm gap',
     'Referral ask gap',
     'Post-service follow-up gap',
-    'Other (manual)',
+    'Value review / renewal alignment gap',
   ]),
 });
 

@@ -136,7 +136,7 @@ const JOTFORM_SCAN_FIELD_MAP = {
     'Review rhythm gap':                   ['q254_ownerRVG1','q255_ownerRVG2','q256_ownerRVG3','q257_ownerRVG4','q258_ownerRVG5','q259_ownerRVG6'],
     'Referral ask gap':                    ['q260_ownerRAG1','q261_ownerRAG2','q262_ownerRAG3','q263_ownerRAG4','q264_ownerRAG5','q265_ownerRAG6'],
     'Post-service follow-up gap':          ['q266_ownerPSF1','q267_ownerPSF2','q268_ownerPSF3','q269_ownerPSF4','q270_ownerPSF5','q271_ownerPSF6'],
-    'Other (manual):Retention':            ['q272_ownerOMR1','q273_ownerOMR2','q274_ownerOMR3','q275_ownerOMR4','q276_ownerOMR5','q277_ownerOMR6'],
+    'Value review / renewal alignment gap': ['q272_ownerOMR1','q273_ownerOMR2','q274_ownerOMR3','q275_ownerOMR4','q276_ownerOMR5','q277_ownerOMR6'],
   },
 };
 
