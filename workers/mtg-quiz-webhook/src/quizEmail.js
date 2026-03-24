@@ -124,7 +124,7 @@ function buildQuizResultsEmail(data) {
       <td style="background:#fff;border-radius:12px;padding:28px 24px;text-align:center;">
         <h2 style="font-size:20px;font-weight:700;color:#16213e;margin:0 0 8px 0;">Ready for Your Personalized Plan?</h2>
         <p style="font-size:16px;font-weight:700;color:#1a1a2e;margin:0 0 4px 0;">MindtheGaps 45-Minute Growth Scan</p>
-        <p style="font-size:15px;font-weight:700;color:#1a1a2e;margin:0 0 16px 0;">CA$295.00</p>
+        <p style="font-size:15px;font-weight:700;color:#1a1a2e;margin:0 0 16px 0;">CAD $295</p>
         <hr style="border:none;border-top:1px solid #e2e6ea;margin:0 0 16px 0;">
         <p style="font-size:14px;color:#555;margin:0 0 16px 0;">A facilitated 45-minute working session to confirm your biggest growth gap, choose the one lever to fix first, and map the next 60 days with confidence. Within 24 hours after human review, you\u2019ll receive a personalized 1-page action plan you can use right away.</p>
         <table cellpadding="0" cellspacing="0" style="margin:0 auto 16px auto;text-align:left;">
