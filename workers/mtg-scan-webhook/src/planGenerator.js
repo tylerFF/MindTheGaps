@@ -224,7 +224,7 @@ const STEP5_HELPER_NARRATION = Object.freeze({
   'Review rhythm gap':                   'Based on your 12-minute quiz results and what you just confirmed today, reviews are not being asked for and collected in a steady rhythm. So our first move is:',
   'Referral ask gap':                    'Based on your 12-minute quiz results and what you just confirmed today, referrals are not being asked for in a consistent, low-pressure way. So our first move is:',
   'Post-service follow-up gap':          'Based on your 12-minute quiz results and what you just confirmed today, post-service follow-up is not happening, so repeat and referral opportunities are missed. So our first move is:',
-  'Value review / renewal alignment gap': 'Based on your 12-minute quiz results and what you just confirmed today, value isn\'t being made visible to clients, so renewals and retention depend on luck instead of a system. So our first move is:',
+  'Value review / renewal alignment gap': 'Based on your 12-minute quiz results and what you just confirmed today, the value you deliver isn\'t being reviewed in a simple, consistent way, so renewals are at risk. So our first move is:',
 });
 
 // ---------------------------------------------------------------------------
