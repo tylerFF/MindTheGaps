@@ -91,9 +91,11 @@ Priority: if multiple match, pick the one with the highest contributing score. I
 | Ownership leak | C1 = "No consistent owner" |
 | Booking friction leak | C2 = "8-14 days" or "15+ days" |
 | Attendance leak | V4 = "Under 40%" or "40-59%" |
-| Follow-up leak | C3 = "Can't reach them / slow follow-up" or "They ghost after the quote" |
+| Follow-up leak | C3 = "Can't reach them / slow follow-up" |
+| Quote follow-up leak | C3 = "They ghost after the quote" (**always wins** over Attendance leak) |
 
 Priority: pick the sub-diagnosis whose triggering answer contributed the most points. If tied, use the order above.
+Override: C3 = "They ghost after the quote" always forces Quote follow-up leak, regardless of V4 points.
 
 **If Primary Gap = Retention:**
 | Sub-diagnosis | Condition |

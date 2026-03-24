@@ -80,10 +80,28 @@ describe('selectSubDiagnosis — Conversion', () => {
     assert.equal(sub.name, 'Attendance leak');
   });
 
-  it('selects "Follow-up leak" for C3 = "They ghost after the quote"', () => {
-    const answers = buildAnswers({ C3: 'They ghost after the quote' });
+  it('selects "Follow-up leak" for C3 = "Can\'t reach them / slow follow-up"', () => {
+    const answers = buildAnswers({ C3: "Can't reach them / slow follow-up" });
     const sub = selectSubDiagnosis(PILLARS.CONVERSION, answers);
     assert.equal(sub.name, 'Follow-up leak');
+  });
+
+  it('selects "Quote follow-up leak" for C3 = "They ghost after the quote"', () => {
+    const answers = buildAnswers({ C3: 'They ghost after the quote' });
+    const sub = selectSubDiagnosis(PILLARS.CONVERSION, answers);
+    assert.equal(sub.name, 'Quote follow-up leak');
+  });
+
+  it('forces "Quote follow-up leak" over "Attendance leak" when both match', () => {
+    const answers = buildAnswers({ C3: 'They ghost after the quote', V4: 'Under 40%' });
+    const sub = selectSubDiagnosis(PILLARS.CONVERSION, answers);
+    assert.equal(sub.name, 'Quote follow-up leak');
+  });
+
+  it('keeps "Attendance leak" when V4 is low but C3 is not ghost-after-quote', () => {
+    const answers = buildAnswers({ V4: 'Under 40%', C3: 'Not sure' });
+    const sub = selectSubDiagnosis(PILLARS.CONVERSION, answers);
+    assert.equal(sub.name, 'Attendance leak');
   });
 
   it('prefers higher-scoring sub when V3 (+2) and C1 (+2) both match — uses definition order', () => {

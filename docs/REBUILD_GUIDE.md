@@ -93,7 +93,7 @@ MindtheGaps (MTG) is a consulting automation system for a consultant named Marc.
 | Booking | Calendly | Marc's calendar: `calendly.com/marc-tribeon/45-minute-growth-gap-scan` |
 | Email | Resend | From: `notifications@mindthegaps.biz`. Domain verified. |
 | Hosting | Cloudflare Pages | Project: `mtg-pages`. Static HTML/JS/CSS. |
-| Tests | Node.js built-in | `node:test` runner. 575 tests. Only dependency: `docx`. |
+| Tests | Node.js built-in | `node:test` runner. 578 tests. Only dependency: `docx`. |
 
 ---
 
@@ -203,7 +203,8 @@ Pick the one with highest contributing score. On tie, use the order above (deman
 | Ownership leak | C1 = "No consistent owner" |
 | Booking friction | C2 ∈ ["8-14 days", "15+ days"] |
 | Attendance leak | V4 ∈ ["Under 40%", "40-59%"] |
-| Follow-up leak | C3 ∈ ["Can't reach...", "ghost after quote"] |
+| Follow-up leak | C3 = "Can't reach them / slow follow-up" |
+| Quote follow-up leak | C3 = "They ghost after the quote" (override: always wins over Attendance leak) |
 
 **If Retention:**
 | Sub-Diagnosis | Trigger |
@@ -928,7 +929,7 @@ Conditional fields default to `hidden: "No"`. Preview mode ignores this but live
 ### 575 Tests — All Passing
 
 ```bash
-npm test                     # Run all 575 tests
+npm test                     # Run all 578 tests
 npm run test:scoring         # Scoring engine (51)
 npm run test:results         # Results generator (29)
 npm run test:eligibility     # Eligibility check (31)
@@ -1029,7 +1030,7 @@ MindTheGaps/
 │   ├── setup-hubspot-properties.js
 │   └── setup-calendly-webhook.js
 │
-├── tests/                       # 575 tests (node:test runner)
+├── tests/                       # 578 tests (node:test runner)
 │
 └── docs/
     ├── REBUILD_GUIDE.md         # THIS FILE
