@@ -325,7 +325,7 @@ mtg_plan_generation_mode    dropdown: Auto / Stopped
 - Review + referral moment (timing + script + 2-step ask)
 - Post-service check-in (30-day touch + simple template)
 - Win-back for dormant clients (light touch sequence)
-- Other (manual)
+- Value review / renewal alignment gap
 
 ### Tier-1 Baseline Fields (by Primary Gap)
 

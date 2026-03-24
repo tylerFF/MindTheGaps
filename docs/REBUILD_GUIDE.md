@@ -478,7 +478,7 @@ Embedded Calendly inline widget for Marc's 45-Minute Growth Gap Scan.
 | q254-q259 | Review rhythm gap (R2) |
 | q260-q265 | Referral ask gap (R3) |
 | q266-q271 | Post-service follow-up gap (R4) |
-| q272-q277 | Other (manual):Retention (R5) |
+| q272-q277 | Value review / renewal alignment gap (R5) |
 
 **Predetermined Action Description Fields (locked dropdowns):**
 | QID Range | Sub-Path | Fields |
@@ -496,7 +496,7 @@ Embedded Calendly inline widget for Marc's 45-Minute Growth Gap Scan.
 | q155-q160 | R2 (Review rhythm gap) | 6 action descriptions |
 | q161-q166 | R3 (Referral ask gap) | 6 action descriptions |
 | q167-q172 | R4 (Post-service follow-up gap) | 6 action descriptions |
-| q173-q178 | R5 (Other manual:Retention) | 6 action descriptions |
+| q173-q178 | R5 (Value review / renewal alignment gap) | 6 action descriptions |
 
 **"What We Fix" Fields (one per sub-path):**
 q179-q192 (one per sub-path, same order as above)
@@ -559,7 +559,7 @@ q179-q192 (one per sub-path, same order as above)
 | 2 | Gap changed without reason | q9 ≠ q7 AND gapChangeReason is empty | Full stop |
 | 3 | Missing required fields | Any of: no primary gap, no sub-path, no one lever, <5 non-"Not sure" baseline answers, <6 actions, <2 metrics | Full stop |
 
-Note: Rule 1b ("Other" sub-path = full stop) was **removed Mar 20, 2026**. "Other (manual)" sub-paths (A4/C5/R5) now generate plans normally using predetermined lookup tables.
+Note: Rule 1b ("Other" sub-path = full stop) was **removed Mar 20, 2026**. "Other (manual)" sub-paths (A4/C5) and "Value review / renewal alignment gap" (R5) now generate plans normally using predetermined lookup tables.
 
 ### Output
 
@@ -642,7 +642,7 @@ Maps each sub-path to exactly 6 actions with default owners and due dates. The s
 - Referral ask gap (6 actions)
 - Post-service follow-up gap (6 actions)
 
-3 "Other (manual)" sub-paths (A4/C5/R5) also have predetermined actions in the lookup table and generate plans normally.
+2 "Other (manual)" sub-paths (A4/C5) and "Value review / renewal alignment gap" (R5) also have predetermined actions in the lookup table and generate plans normally.
 
 ### Lookup Table 2: STEP5_WHAT_WE_FIX
 
@@ -967,7 +967,7 @@ Full E2E test scripts are in `docs/MindtheGaps_QA_Test_Scripts_Complete_v3.md` c
 | **Human-in-the-loop** | Plans are NEVER auto-sent to clients. Marc reviews within 24 hours. |
 | **Deterministic plans** | No AI/LLM in plan generation. Lookup tables only. |
 | **Stop rules halt generation** | Any of 4 rules → no plan, Marc notified. |
-| **"Other (manual)" generates plans** | A4/C5/R5 sub-paths flow through to plan generation using predetermined lookup tables. |
+| **"Other (manual)" generates plans** | A4/C5 sub-paths + R5 ("Value review / renewal alignment gap") flow through to plan generation using predetermined lookup tables. |
 | **Baseline formula locked** | `ROUND(100 × (gap_total / max_possible), 0)` — do not change. |
 | **Predetermined actions** | For non-manual sub-paths, descriptions come from lookup table (not editable from form). |
 | **Owner override** | Per-sub-path owner fields (q194-q277) take precedence over shared owner fields. |
