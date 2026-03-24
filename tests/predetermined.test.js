@@ -38,7 +38,7 @@ const STANDARD_SUB_PATHS = [
 
 const OTHER_MANUAL_SUB_PATHS = [
   'Lead tracking + ownership gap',
-  'Other (manual):Conversion',
+  'Stage clarity + follow-up consistency gap',
   'Value review / renewal alignment gap',
 ];
 
@@ -280,13 +280,13 @@ describe('generatePlan() with predetermined actions', () => {
     });
   });
 
-  it('resolves "Other (manual)" for Conversion pillar', () => {
+  it('resolves "Stage clarity + follow-up consistency gap" for Conversion pillar', () => {
     const scanData = buildScanData({
-      subPath: 'Other (manual)',
+      subPath: 'Stage clarity + follow-up consistency gap',
       primaryGap: 'Conversion',
     });
     const plan = generatePlan(scanData, highConfidence());
-    assert.equal(plan.sectionA.opener, STEP5_WHAT_WE_FIX['Other (manual):Conversion']);
+    assert.equal(plan.sectionA.opener, STEP5_WHAT_WE_FIX['Stage clarity + follow-up consistency gap']);
   });
 
   it('resolves "Value review / renewal alignment gap" for Retention pillar', () => {

@@ -310,7 +310,7 @@ mtg_plan_generation_mode    dropdown: Auto / Stopped
 - Booking standardization (one path) + confirmations/reminders
 - Show-rate lift package (what to expect + reminders + prep)
 - Quote turnaround + after-quote follow-up package
-- Other (manual)
+- Stage clarity + follow-up consistency gap
 
 **Acquisition levers:**
 - Add a secondary warm channel + weekly cadence (reduce single-source risk)

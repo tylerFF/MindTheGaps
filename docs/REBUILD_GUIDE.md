@@ -473,7 +473,7 @@ Embedded Calendly inline widget for Marc's 45-Minute Growth Gap Scan.
 | q224-q229 | Booking friction (C2) |
 | q230-q235 | Show rate (C3) |
 | q236-q241 | Quote follow-up / decision drop-off (C4) |
-| q242-q247 | Other (manual):Conversion (C5) |
+| q242-q247 | Stage clarity + follow-up consistency gap (C5) |
 | q248-q253 | Rebook/recall gap (R1) |
 | q254-q259 | Review rhythm gap (R2) |
 | q260-q265 | Referral ask gap (R3) |
@@ -491,7 +491,7 @@ Embedded Calendly inline widget for Marc's 45-Minute Growth Gap Scan.
 | q125-q130 | C2 (Booking friction) | 6 action descriptions |
 | q131-q136 | C3 (Show rate) | 6 action descriptions |
 | q137-q142 | C4 (Quote follow-up) | 6 action descriptions |
-| q143-q148 | C5 (Other manual:Conversion) | 6 action descriptions |
+| q143-q148 | C5 (Stage clarity + follow-up consistency gap) | 6 action descriptions |
 | q149-q154 | R1 (Rebook/recall gap) | 6 action descriptions |
 | q155-q160 | R2 (Review rhythm gap) | 6 action descriptions |
 | q161-q166 | R3 (Referral ask gap) | 6 action descriptions |
@@ -559,7 +559,7 @@ q179-q192 (one per sub-path, same order as above)
 | 2 | Gap changed without reason | q9 ≠ q7 AND gapChangeReason is empty | Full stop |
 | 3 | Missing required fields | Any of: no primary gap, no sub-path, no one lever, <5 non-"Not sure" baseline answers, <6 actions, <2 metrics | Full stop |
 
-Note: Rule 1b ("Other" sub-path = full stop) was **removed Mar 20, 2026**. "Lead tracking + ownership gap" (A4), "Other (manual):Conversion" (C5), and "Value review / renewal alignment gap" (R5) now generate plans normally using predetermined lookup tables.
+Note: Rule 1b ("Other" sub-path = full stop) was **removed Mar 20, 2026**. "Lead tracking + ownership gap" (A4), "Stage clarity + follow-up consistency gap" (C5), and "Value review / renewal alignment gap" (R5) now generate plans normally using predetermined lookup tables.
 
 ### Output
 
@@ -642,7 +642,7 @@ Maps each sub-path to exactly 6 actions with default owners and due dates. The s
 - Referral ask gap (6 actions)
 - Post-service follow-up gap (6 actions)
 
-"Lead tracking + ownership gap" (A4), "Other (manual):Conversion" (C5), and "Value review / renewal alignment gap" (R5) also have predetermined actions in the lookup table and generate plans normally.
+"Lead tracking + ownership gap" (A4), "Stage clarity + follow-up consistency gap" (C5), and "Value review / renewal alignment gap" (R5) also have predetermined actions in the lookup table and generate plans normally.
 
 ### Lookup Table 2: STEP5_WHAT_WE_FIX
 
@@ -952,7 +952,7 @@ Full E2E test scripts are in `docs/MindtheGaps_QA_Test_Scripts_Complete_v3.md` c
 - C1: Speed-to-lead (Conversion with pillar switch)
 - R1: Rebook/recall gap (Retention with pillar switch)
 - M1: Lead tracking + ownership gap (Acquisition) — plan generated
-- M2: Other (manual):Conversion — plan generated
+- M2: Stage clarity + follow-up consistency gap (Conversion) — plan generated
 - Plus additional scripts for other sub-paths
 
 ---
@@ -967,7 +967,7 @@ Full E2E test scripts are in `docs/MindtheGaps_QA_Test_Scripts_Complete_v3.md` c
 | **Human-in-the-loop** | Plans are NEVER auto-sent to clients. Marc reviews within 24 hours. |
 | **Deterministic plans** | No AI/LLM in plan generation. Lookup tables only. |
 | **Stop rules halt generation** | Any of 4 rules → no plan, Marc notified. |
-| **Renamed sub-paths generate plans** | A4 ("Lead tracking + ownership gap"), C5 ("Other manual:Conversion"), R5 ("Value review / renewal alignment gap") flow through to plan generation using predetermined lookup tables. |
+| **Renamed sub-paths generate plans** | A4 ("Lead tracking + ownership gap"), C5 ("Stage clarity + follow-up consistency gap"), R5 ("Value review / renewal alignment gap") flow through to plan generation using predetermined lookup tables. |
 | **Baseline formula locked** | `ROUND(100 × (gap_total / max_possible), 0)` — do not change. |
 | **Predetermined actions** | For non-manual sub-paths, descriptions come from lookup table (not editable from form). |
 | **Owner override** | Per-sub-path owner fields (q194-q277) take precedence over shared owner fields. |

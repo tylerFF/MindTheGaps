@@ -134,6 +134,7 @@ const MOST_LIKELY_LEAK = Object.freeze({
   'Booking friction':                         'Booking is too slow or too hard, which reduces conversion.',
   'Show rate':                                'No-shows are reducing completed appointments.',
   'Quote follow-up / decision drop-off':      'Follow-up after quoting is not consistent, reducing close rate.',
+  'Stage clarity + follow-up consistency gap': 'Leads leak between stages because follow-up isn\'t consistent and there\'s no way to see where they get stuck.',
   // Retention sub-paths
   'Post-service follow-up gap':               'There is no consistent post-service follow-up to drive repeat work.',
   'Review rhythm gap':                        'The ask is not happening at the best moment, so referrals/reviews stay low.',
@@ -159,6 +160,7 @@ const WHAT_CHANGES = Object.freeze({
   'Booking friction':                         'More booked jobs actually show up.',
   'Show rate':                                'More booked jobs actually show up.',
   'Quote follow-up / decision drop-off':      'More quotes turn into signed work.',
+  'Stage clarity + follow-up consistency gap': 'More leads become booked work.',
   // Retention sub-paths
   'Post-service follow-up gap':               'More customers come back without new ad spend.',
   'Review rhythm gap':                        'More happy customers leave reviews and refer others.',
@@ -192,7 +194,7 @@ const STEP5_WHAT_WE_FIX = Object.freeze({
   'Booking friction':                    'Make booking easy: use one booking path, confirm fast, and reduce no-shows with reminders.',
   'Show rate':                           'Lift show rate: set expectations, confirm twice, and make rescheduling simple.',
   'Quote follow-up / decision drop-off': 'Stop quote ghosting: commit to a quote same-day response rule and follow up on a clear schedule.',
-  'Other (manual):Conversion':           'Improve conversion consistency: tighten follow-up and tracking across stages so the biggest leak becomes clear and improves.',
+  'Stage clarity + follow-up consistency gap': 'Make conversion visible: define simple stages, set one follow-up rule, and track one weekly number so the biggest leak becomes clear and improves.',
   // Retention
   'Rebook/recall gap':                   'Build recall: set a recall schedule and make "next appointment" a standard step at job end.',
   'Review rhythm gap':                   'Increase reviews: choose the best moment to ask and run a simple weekly follow-up habit.',
@@ -216,7 +218,7 @@ const STEP5_HELPER_NARRATION = Object.freeze({
   'Booking friction':                    'Based on your 12-minute quiz results and what you just confirmed today, it\'s too hard for leads to book, so interested prospects drop off. So our first move is:',
   'Show rate':                           'Based on your 12-minute quiz results and what you just confirmed today, bookings are not turning into shows, so time is wasted and revenue becomes unstable. So our first move is:',
   'Quote follow-up / decision drop-off': 'Based on your 12-minute quiz results and what you just confirmed today, quotes are not being followed up with a simple decision path, so deals stall or die. So our first move is:',
-  'Other (manual):Conversion':           'Based on your 12-minute quiz results and what you just confirmed today, the conversion issue is mixed or unclear, so we\'ll pick one practical focus for the next 30 days. So our first move is:',
+  'Stage clarity + follow-up consistency gap': 'Based on your 12-minute quiz results and what you just confirmed today, leads are leaking between stages because follow-up isn\'t consistent and there\'s no simple way to see where they get stuck. So our first move is:',
   // Retention
   'Rebook/recall gap':                   'Based on your 12-minute quiz results and what you just confirmed today, customers are not coming back on a predictable schedule. So our first move is:',
   'Review rhythm gap':                   'Based on your 12-minute quiz results and what you just confirmed today, reviews are not being asked for and collected in a steady rhythm. So our first move is:',
@@ -416,25 +418,25 @@ const PREDETERMINED_ACTIONS = Object.freeze({
       owner: 'Owner/GM', dueDay: 45 },
   ],
 
-  // ── C5: Other (manual):Conversion ──────────────────────────────────────
-  'Other (manual):Conversion': [
-    { description: 'Assign one owner for follow-up consistency and run a weekly review.',
-      helperNarration: 'First, we keep deals moving with a simple follow-up habit. The action is:',
+  // ── C5: Stage clarity + follow-up consistency gap ──────────────────────
+  'Stage clarity + follow-up consistency gap': [
+    { description: 'Define 4 stages and use them for every lead: New → Contacted → Next step booked → Won/Lost.',
+      helperNarration: 'First, we make the pipeline simple. Four stages so we can see where leads get stuck.',
       owner: 'Owner/GM', dueDay: 7 },
-    { description: 'Define follow-up expectations by stage (response, booking, reminders, quote follow-up).',
-      helperNarration: 'Next, we respond faster so you don\'t lose the job. The action is:',
+    { description: 'Set the response rule: every new lead gets a same-day reply during business hours.',
+      helperNarration: 'Next, we remove the biggest hidden leak - slow response. Same day is the rule.',
       owner: 'Owner/GM', dueDay: 7 },
-    { description: 'Use simple scripts/pre-written messages for "next step" at each stage.',
-      helperNarration: 'Then, we standardize the words so the team is consistent. The action is:',
+    { description: 'Use one standard reply message that confirms receipt and sets the next step (book a call / next step).',
+      helperNarration: 'Then we keep it clear for the customer. They know you got it and what happens next.',
       owner: 'Admin/CSR', dueDay: 21 },
-    { description: 'Track one weekly metric per stage and flag the weakest stage.',
-      helperNarration: 'After that, we review weekly and fix the biggest bottleneck. The action is:',
+    { description: 'Use a simple 3-touch follow-up pattern if no reply: Day 0 / Day 2 / Day 5 (same wording style).',
+      helperNarration: 'After that, we stop leads from going cold. Three touches, spaced out, no guesswork.',
       owner: 'Owner/GM', dueDay: 21 },
-    { description: 'Fix one recurring conversion bottleneck identified in the weekly review.',
-      helperNarration: 'Now, we review weekly and fix the biggest bottleneck. The action is:',
+    { description: 'Track one weekly number: % of new leads that reach "Next step booked."',
+      helperNarration: 'Now we pick one score. It tells us if follow-up is working.',
       owner: 'Owner/GM', dueDay: 45 },
-    { description: 'Run a weekly conversion review and keep one improvement per cycle.',
-      helperNarration: 'Finally, we review weekly and fix the biggest bottleneck. The action is:',
+    { description: 'Run a weekly 10-minute review and fix one leak (message, timing, or ownership) for the next week.',
+      helperNarration: 'Finally, we improve week by week. One fix at a time so results compound.',
       owner: 'Owner/GM', dueDay: 45 },
   ],
 
@@ -563,6 +565,7 @@ const METRIC_TO_BASELINE = Object.freeze({
   'Lead to booked %':           'conv_lead_to_booked',
   'Show rate %':                'conv_booked_to_show',
   'Quote sent within 48h %':    'conv_quote_sent_timeline',
+  'Quote to close %':           'conv_quote_to_close',
 
   // Acquisition metrics
   'Leads/week':                 'acq_inbound_leads',

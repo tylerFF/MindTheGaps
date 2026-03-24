@@ -131,7 +131,7 @@ const JOTFORM_SCAN_FIELD_MAP = {
     'Booking friction':                    ['q224_ownerBF1','q225_ownerBF2','q226_ownerBF3','q227_ownerBF4','q228_ownerBF5','q229_ownerBF6'],
     'Show rate':                           ['q230_ownerSR1','q231_ownerSR2','q232_ownerSR3','q233_ownerSR4','q234_ownerSR5','q235_ownerSR6'],
     'Quote follow-up / decision drop-off': ['q236_ownerQFU1','q237_ownerQFU2','q238_ownerQFU3','q239_ownerQFU4','q240_ownerQFU5','q241_ownerQFU6'],
-    'Other (manual):Conversion':           ['q242_ownerOMC1','q243_ownerOMC2','q244_ownerOMC3','q245_ownerOMC4','q246_ownerOMC5','q247_ownerOMC6'],
+    'Stage clarity + follow-up consistency gap': ['q242_ownerOMC1','q243_ownerOMC2','q244_ownerOMC3','q245_ownerOMC4','q246_ownerOMC5','q247_ownerOMC6'],
     'Rebook/recall gap':                   ['q248_ownerRRG1','q249_ownerRRG2','q250_ownerRRG3','q251_ownerRRG4','q252_ownerRRG5','q253_ownerRRG6'],
     'Review rhythm gap':                   ['q254_ownerRVG1','q255_ownerRVG2','q256_ownerRVG3','q257_ownerRVG4','q258_ownerRVG5','q259_ownerRVG6'],
     'Referral ask gap':                    ['q260_ownerRAG1','q261_ownerRAG2','q262_ownerRAG3','q263_ownerRAG4','q264_ownerRAG5','q265_ownerRAG6'],
