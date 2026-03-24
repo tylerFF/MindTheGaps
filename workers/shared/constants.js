@@ -243,7 +243,7 @@ const SUB_PATHS = Object.freeze({
     'Channel concentration risk',
     'Demand capture / local visibility',
     'Lead capture friction',
-    'Other (manual)',
+    'Lead tracking + ownership gap',
   ]),
   [PILLARS.RETENTION]: Object.freeze([
     'Rebook/recall gap',

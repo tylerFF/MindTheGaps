@@ -37,7 +37,7 @@ const STANDARD_SUB_PATHS = [
 ];
 
 const OTHER_MANUAL_SUB_PATHS = [
-  'Other (manual):Acquisition',
+  'Lead tracking + ownership gap',
   'Other (manual):Conversion',
   'Value review / renewal alignment gap',
 ];
@@ -267,14 +267,14 @@ describe('generatePlan() with predetermined actions', () => {
     });
   });
 
-  it('resolves "Other (manual)" sub-path with pillar suffix', () => {
+  it('resolves "Lead tracking + ownership gap" for Acquisition pillar', () => {
     const scanData = buildScanData({
-      subPath: 'Other (manual)',
+      subPath: 'Lead tracking + ownership gap',
       primaryGap: 'Acquisition',
     });
     const plan = generatePlan(scanData, highConfidence());
-    assert.equal(plan.sectionA.opener, STEP5_WHAT_WE_FIX['Other (manual):Acquisition']);
-    const expected = PREDETERMINED_ACTIONS['Other (manual):Acquisition'];
+    assert.equal(plan.sectionA.opener, STEP5_WHAT_WE_FIX['Lead tracking + ownership gap']);
+    const expected = PREDETERMINED_ACTIONS['Lead tracking + ownership gap'];
     plan.sectionD.actions.forEach((a, i) => {
       assert.equal(a.description, expected[i].description);
     });

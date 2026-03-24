@@ -318,7 +318,7 @@ mtg_plan_generation_mode    dropdown: Auto / Stopped
 - Call handling + response ownership + SLA (speed-to-lead for inbound)
 - Qualification gate (2-3 questions) to improve fit
 - Review generation rhythm (simple ask + timing)
-- Other (manual)
+- Lead tracking + ownership gap
 
 **Retention levers:**
 - Rebook/recall system (prompt + script + schedule)

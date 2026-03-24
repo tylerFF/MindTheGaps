@@ -126,7 +126,7 @@ const JOTFORM_SCAN_FIELD_MAP = {
     'Channel concentration risk':          ['q194_ownerCCR1','q195_ownerCCR2','q196_ownerCCR3','q197_ownerCCR4','q198_ownerCCR5','q199_ownerCCR6'],
     'Lead capture friction':               ['q200_ownerLCF1','q201_ownerLCF2','q202_ownerLCF3','q203_ownerLCF4','q204_ownerLCF5','q205_ownerLCF6'],
     'Demand capture / local visibility':   ['q206_ownerDCV1','q207_ownerDCV2','q208_ownerDCV3','q209_ownerDCV4','q210_ownerDCV5','q211_ownerDCV6'],
-    'Other (manual):Acquisition':          ['q212_ownerOMA1','q213_ownerOMA2','q214_ownerOMA3','q215_ownerOMA4','q216_ownerOMA5','q217_ownerOMA6'],
+    'Lead tracking + ownership gap':       ['q212_ownerOMA1','q213_ownerOMA2','q214_ownerOMA3','q215_ownerOMA4','q216_ownerOMA5','q217_ownerOMA6'],
     'Speed-to-lead':                       ['q218_ownerSTL1','q219_ownerSTL2','q220_ownerSTL3','q221_ownerSTL4','q222_ownerSTL5','q223_ownerSTL6'],
     'Booking friction':                    ['q224_ownerBF1','q225_ownerBF2','q226_ownerBF3','q227_ownerBF4','q228_ownerBF5','q229_ownerBF6'],
     'Show rate':                           ['q230_ownerSR1','q231_ownerSR2','q232_ownerSR3','q233_ownerSR4','q234_ownerSR5','q235_ownerSR6'],

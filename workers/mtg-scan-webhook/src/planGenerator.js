@@ -128,6 +128,7 @@ const MOST_LIKELY_LEAK = Object.freeze({
   'Demand capture / local visibility':        'Inbound demand is not steady enough to hit targets.',
   'Lead capture friction':                    'Leads are being lost at the capture/response step.',
   'Channel concentration risk':               'Lead flow is concentrated in one source, which raises risk.',
+  'Lead tracking + ownership gap':            'Leads are not being captured or tracked, so growth depends on memory instead of a system.',
   // Conversion sub-paths
   'Speed-to-lead':                            'Speed-to-lead is too slow, which reduces bookings.',
   'Booking friction':                         'Booking is too slow or too hard, which reduces conversion.',
@@ -152,6 +153,7 @@ const WHAT_CHANGES = Object.freeze({
   'Demand capture / local visibility':        'More leads become booked work.',
   'Lead capture friction':                    'More leads become booked work.',
   'Channel concentration risk':               'More leads become booked work.',
+  'Lead tracking + ownership gap':            'More leads become booked work.',
   // Conversion sub-paths → specific to the sub-path
   'Speed-to-lead':                            'More leads become booked work.',
   'Booking friction':                         'More booked jobs actually show up.',
@@ -184,7 +186,7 @@ const STEP5_WHAT_WE_FIX = Object.freeze({
   'Channel concentration risk':          'Reduce channel risk: add one secondary warm channel and run a weekly routine so leads don\'t rely on one source.',
   'Lead capture friction':               'Stop lead leakage: pick one capture route, assign ownership, and meet a same-day response rule.',
   'Demand capture / local visibility':   'Increase inbound demand: run a weekly visibility routine and add one warm channel that consistently drives local leads.',
-  'Other (manual):Acquisition':          'Improve acquisition consistency: pick one channel and run a simple weekly routine so lead flow becomes predictable.',
+  'Lead tracking + ownership gap':       'Make leads visible and owned: capture every lead in one simple way, tag the source, and run a weekly check so growth stops being guesswork.',
   // Conversion
   'Speed-to-lead':                       'Speed up first response: assign one owner, meet a same-day response rule, and run a simple follow-up sequence.',
   'Booking friction':                    'Make booking easy: use one booking path, confirm fast, and reduce no-shows with reminders.',
@@ -208,7 +210,7 @@ const STEP5_HELPER_NARRATION = Object.freeze({
   'Channel concentration risk':          'Based on your 12-minute quiz results and what you just confirmed today, leads rely too much on one source, which makes growth fragile. So our first move is:',
   'Lead capture friction':               'Based on your 12-minute quiz results and what you just confirmed today, leads are slipping through because capture and response aren\'t consistent. So our first move is:',
   'Demand capture / local visibility':   'Based on your 12-minute quiz results and what you just confirmed today, inbound demand is too light because local visibility and capture aren\'t strong enough. So our first move is:',
-  'Other (manual):Acquisition':          'Based on your 12-minute quiz results and what you just confirmed today, the acquisition issue is mixed or unclear, so we\'ll pick one practical focus for the next 30 days. So our first move is:',
+  'Lead tracking + ownership gap':       'Based on your 12-minute quiz results and what you just confirmed today, leads aren\'t being captured or tracked in one place, so growth depends on memory instead of a system. So our first move is:',
   // Conversion
   'Speed-to-lead':                       'Based on your 12-minute quiz results and what you just confirmed today, leads are not being contacted fast enough, so you lose jobs before you even respond. So our first move is:',
   'Booking friction':                    'Based on your 12-minute quiz results and what you just confirmed today, it\'s too hard for leads to book, so interested prospects drop off. So our first move is:',
@@ -304,25 +306,25 @@ const PREDETERMINED_ACTIONS = Object.freeze({
       owner: 'Admin/CSR', dueDay: 45 },
   ],
 
-  // ── A4: Other (manual):Acquisition ──────────────────────────────────────
-  'Other (manual):Acquisition': [
-    { description: 'Pick ONE acquisition lever and define a weekly activity target.',
-      helperNarration: 'First, we do a quick weekly check so the plan stays real. The action is:',
+  // ── A4: Lead tracking + ownership gap ──────────────────────────────────
+  'Lead tracking + ownership gap': [
+    { description: 'List your top 5 lead sources and pick one place to record every new lead (one list).',
+      helperNarration: 'First, we stop guessing. We write down where leads come from and record every new lead in one place.',
       owner: 'Owner/GM', dueDay: 7 },
-    { description: 'Write one simple message and one clear call-to-action to use in the weekly routine.',
-      helperNarration: 'Next, we do a quick weekly check so the plan stays real. The action is:',
+    { description: 'Add one required question to every inquiry: "How did you hear about us?" (same options every time).',
+      helperNarration: 'Next, we capture the source at the moment it comes in. That\'s how we learn what\'s working.',
       owner: 'Marketing/Admin', dueDay: 7 },
-    { description: 'Build a weekly list/work queue.',
-      helperNarration: 'Then, we do a quick weekly check so the plan stays real. The action is:',
+    { description: 'Assign one owner for new leads and set a same-day response rule for business hours.',
+      helperNarration: 'Then we make sure nothing sits. One owner, and a clear same-day response rule.',
       owner: 'Owner/GM', dueDay: 21 },
-    { description: 'Run that weekly routine for 2 weeks and note what worked.',
-      helperNarration: 'After that, we do a quick weekly check so the plan stays real. The action is:',
+    { description: 'Create a simple \'new lead\' checklist (3 steps) and use it every time.',
+      helperNarration: 'After that, we make follow-through automatic. Same three steps every time.',
       owner: 'Owner/GM', dueDay: 21 },
-    { description: 'Track leads/week weekly; adjust one thing.',
-      helperNarration: 'Now, we do a quick weekly check so the plan stays real. The action is:',
+    { description: 'Do a weekly 15-minute review: leads received, top source %, and what to adjust this week (one change).',
+      helperNarration: 'Now we keep it real. A short weekly review tells us what to keep and what to tweak.',
       owner: 'Owner/GM', dueDay: 45 },
-    { description: 'Write down the weekly routine (who does what and when) so it stays consistent.',
-      helperNarration: 'Finally, we do a quick weekly check so the plan stays real. The action is:',
+    { description: 'Set one small weekly target (leads/week or inquiries/week) and track it for 4 weeks.',
+      helperNarration: 'Finally, we put a simple target in place so we can measure progress week to week.',
       owner: 'Owner/GM', dueDay: 45 },
   ],
 

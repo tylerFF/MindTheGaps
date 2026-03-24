@@ -468,7 +468,7 @@ Embedded Calendly inline widget for Marc's 45-Minute Growth Gap Scan.
 | q194-q199 | Channel concentration risk (A1) |
 | q200-q205 | Lead capture friction (A2) |
 | q206-q211 | Demand capture / local visibility (A3) |
-| q212-q217 | Other (manual):Acquisition (A4) |
+| q212-q217 | Lead tracking + ownership gap (A4) |
 | q218-q223 | Speed-to-lead (C1) |
 | q224-q229 | Booking friction (C2) |
 | q230-q235 | Show rate (C3) |
@@ -486,7 +486,7 @@ Embedded Calendly inline widget for Marc's 45-Minute Growth Gap Scan.
 | q95-q100 | A1 (Channel concentration risk) | 6 action descriptions |
 | q101-q106 | A2 (Lead capture friction) | 6 action descriptions |
 | q107-q112 | A3 (Demand capture / local visibility) | 6 action descriptions |
-| q113-q118 | A4 (Other manual:Acquisition) | 6 action descriptions |
+| q113-q118 | A4 (Lead tracking + ownership gap) | 6 action descriptions |
 | q119-q124 | C1 (Speed-to-lead) | 6 action descriptions |
 | q125-q130 | C2 (Booking friction) | 6 action descriptions |
 | q131-q136 | C3 (Show rate) | 6 action descriptions |
@@ -559,7 +559,7 @@ q179-q192 (one per sub-path, same order as above)
 | 2 | Gap changed without reason | q9 ≠ q7 AND gapChangeReason is empty | Full stop |
 | 3 | Missing required fields | Any of: no primary gap, no sub-path, no one lever, <5 non-"Not sure" baseline answers, <6 actions, <2 metrics | Full stop |
 
-Note: Rule 1b ("Other" sub-path = full stop) was **removed Mar 20, 2026**. "Other (manual)" sub-paths (A4/C5) and "Value review / renewal alignment gap" (R5) now generate plans normally using predetermined lookup tables.
+Note: Rule 1b ("Other" sub-path = full stop) was **removed Mar 20, 2026**. "Lead tracking + ownership gap" (A4), "Other (manual):Conversion" (C5), and "Value review / renewal alignment gap" (R5) now generate plans normally using predetermined lookup tables.
 
 ### Output
 
@@ -642,7 +642,7 @@ Maps each sub-path to exactly 6 actions with default owners and due dates. The s
 - Referral ask gap (6 actions)
 - Post-service follow-up gap (6 actions)
 
-2 "Other (manual)" sub-paths (A4/C5) and "Value review / renewal alignment gap" (R5) also have predetermined actions in the lookup table and generate plans normally.
+"Lead tracking + ownership gap" (A4), "Other (manual):Conversion" (C5), and "Value review / renewal alignment gap" (R5) also have predetermined actions in the lookup table and generate plans normally.
 
 ### Lookup Table 2: STEP5_WHAT_WE_FIX
 
@@ -951,7 +951,7 @@ Full E2E test scripts are in `docs/MindtheGaps_QA_Test_Scripts_Complete_v3.md` c
 - A1: Channel concentration risk (Acquisition)
 - C1: Speed-to-lead (Conversion with pillar switch)
 - R1: Rebook/recall gap (Retention with pillar switch)
-- M1: Other (manual):Acquisition — plan generated
+- M1: Lead tracking + ownership gap (Acquisition) — plan generated
 - M2: Other (manual):Conversion — plan generated
 - Plus additional scripts for other sub-paths
 
@@ -967,7 +967,7 @@ Full E2E test scripts are in `docs/MindtheGaps_QA_Test_Scripts_Complete_v3.md` c
 | **Human-in-the-loop** | Plans are NEVER auto-sent to clients. Marc reviews within 24 hours. |
 | **Deterministic plans** | No AI/LLM in plan generation. Lookup tables only. |
 | **Stop rules halt generation** | Any of 4 rules → no plan, Marc notified. |
-| **"Other (manual)" generates plans** | A4/C5 sub-paths + R5 ("Value review / renewal alignment gap") flow through to plan generation using predetermined lookup tables. |
+| **Renamed sub-paths generate plans** | A4 ("Lead tracking + ownership gap"), C5 ("Other manual:Conversion"), R5 ("Value review / renewal alignment gap") flow through to plan generation using predetermined lookup tables. |
 | **Baseline formula locked** | `ROUND(100 × (gap_total / max_possible), 0)` — do not change. |
 | **Predetermined actions** | For non-manual sub-paths, descriptions come from lookup table (not editable from form). |
 | **Owner override** | Per-sub-path owner fields (q194-q277) take precedence over shared owner fields. |
