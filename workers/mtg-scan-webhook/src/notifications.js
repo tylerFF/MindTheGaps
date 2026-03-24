@@ -172,7 +172,7 @@ function buildDegradedPlanEmail({ email, businessName, planUrl, confidence, scan
             <tr><td style="padding:6px 12px;color:#666;">Plan Link</td><td style="padding:6px 12px;"><a href="${planUrl}" style="color:#2563eb;">${esc(planUrl)}</a></td></tr>
           </table>
           <p style="background:#fee2e2;padding:10px 14px;border-radius:6px;font-size:14px;margin:0 0 16px;color:#991b1b;">
-            <strong>Sub-path was "Other (manual)".</strong> This plan uses generic phrasing and must be reviewed and customized before delivery.
+            <strong>Sub-path flagged for manual review.</strong> This plan must be reviewed and customized before delivery.
           </p>
           <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;">
           ${scanSummary}

@@ -233,7 +233,7 @@ describe('scanWebhook — buildHubSpotProperties', () => {
   });
 
   it('builds stopped properties', () => {
-    const scanData = { primaryGap: 'Conversion', subPath: 'Other (manual)', oneLever: '' };
+    const scanData = { primaryGap: 'Conversion', subPath: 'Not sure', oneLever: '' };
     const stopResult = { stopped: true, reasons: ['Sub-path requires manual plan'] };
     const props = buildHubSpotProperties(scanData, null, null, stopResult);
 
@@ -293,7 +293,7 @@ describe('scanWebhook — handler HTTP behavior', () => {
     const request = makeRequest({
       q2_contactEmail: 'test@example.com',
       q9_primaryGap: 'Conversion',
-      q11_subPathConversion: 'Other (manual)',
+      q11_subPathConversion: 'Not sure',
     });
     const response = await handleScanWebhook(request, {}, null);
 
@@ -424,7 +424,7 @@ describe('scanWebhook — extractScanData contradiction note (3.4)', () => {
 
 describe('scanWebhook — buildHubSpotProperties degraded (3.5)', () => {
   it('sets Manual Required + Degraded mode for degraded plans', () => {
-    const scanData = { primaryGap: 'Conversion', subPath: 'Other (manual)', oneLever: 'Fix' };
+    const scanData = { primaryGap: 'Conversion', subPath: 'Stage clarity + follow-up consistency gap', oneLever: 'Fix' };
     const props = buildHubSpotProperties(scanData, highConfidence(), 'https://r2.example.com/plan.docx', null, true);
 
     assert.equal(props.mtg_plan_review_status, 'Manual Required');
@@ -453,16 +453,16 @@ describe('scanWebhook — buildHubSpotProperties degraded (3.5)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Phase 5 — handler: "Other (manual)" now generates plans
+// Phase 5 — handler: named sub-paths (A4/C5/R5) generate plans
 // ---------------------------------------------------------------------------
 
-describe('scanWebhook — handler "Other (manual)" generates plan', () => {
-  it('generates plan for "Other (manual)" with all fields present', async () => {
+describe('scanWebhook — handler named sub-paths generate plan', () => {
+  it('generates plan for C5 with all fields present', async () => {
     const payload = {
       q2_contactEmail: 'test@example.com',
       q9_primaryGap: 'Conversion',
       q7_quizPrimaryGap: 'Conversion',
-      q11_subPathConversion: 'Other (manual)',
+      q11_subPathConversion: 'Stage clarity + follow-up consistency gap',
       q36_oneLeverConversion: 'Response ownership + SLA + follow-up sequence',
       // 7 baseline fields (all answered)
       q15_convInboundLeads: '11-25',
@@ -556,10 +556,10 @@ describe('scanWebhook — extractScanData Field 2 (2.2)', () => {
     assert.equal(scan.field2Label, '');
   });
 
-  it('defaults field2Answer to empty when sub-path is Other (manual)', () => {
+  it('defaults field2Answer to empty when sub-path has no Field 2 mapping', () => {
     const payload = {
       q9_primaryGap: 'Conversion',
-      q11_subPathConversion: 'Other (manual)',
+      q11_subPathConversion: 'Stage clarity + follow-up consistency gap',
     };
     const scan = extractScanData(payload);
     assert.equal(scan.field2Answer, '');

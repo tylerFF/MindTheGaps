@@ -204,14 +204,10 @@ describe('Rule 1: Sub-path stop rule', () => {
     assert.equal(result.rule, 'subpath_not_sure');
   });
 
-  it('passes for sub-path "Other (manual)" — no longer a stop rule', () => {
-    const result = checkSubPath({ subPath: 'Other (manual)' });
-    assert.equal(result, null);
-  });
-
-  it('passes for sub-path "Other (forces manual plan)" — no longer a stop rule', () => {
-    const result = checkSubPath({ subPath: 'Other (forces manual plan)' });
-    assert.equal(result, null);
+  it('passes for named sub-paths (A4/C5/R5)', () => {
+    assert.equal(checkSubPath({ subPath: 'Lead tracking + ownership gap' }), null);
+    assert.equal(checkSubPath({ subPath: 'Stage clarity + follow-up consistency gap' }), null);
+    assert.equal(checkSubPath({ subPath: 'Value review / renewal alignment gap' }), null);
   });
 
   it('passes for a valid sub-path', () => {
@@ -479,8 +475,8 @@ describe('checkStopRules — integration', () => {
     assert.ok(result.details.some(d => d.rule === 'subpath_not_sure'));
   });
 
-  it('passes for sub-path "Other (manual)" — no longer a stop rule', () => {
-    const data = buildScanData({ subPath: 'Other (manual)' });
+  it('passes for named sub-paths A4/C5/R5', () => {
+    const data = buildScanData({ subPath: 'Lead tracking + ownership gap' });
     const result = checkStopRules(data);
     assert.equal(result.stopped, false);
     assert.equal(result.degraded, false);
@@ -629,16 +625,23 @@ describe('checkStopRules — edge cases', () => {
 // Phase 5: degraded flag behavior
 // ===========================================================================
 
-describe('checkStopRules — "Other (manual)" no longer stops', () => {
-  it('passes for "Other (manual)" with all other fields valid', () => {
-    const data = buildScanData({ subPath: 'Other (manual)' });
+describe('checkStopRules — named sub-paths (A4/C5/R5) pass normally', () => {
+  it('passes for "Lead tracking + ownership gap" (A4)', () => {
+    const data = buildScanData({ subPath: 'Lead tracking + ownership gap' });
     const result = checkStopRules(data);
     assert.equal(result.stopped, false);
     assert.equal(result.degraded, false);
   });
 
-  it('passes for "Other (forces manual plan)"', () => {
-    const data = buildScanData({ subPath: 'Other (forces manual plan)' });
+  it('passes for "Stage clarity + follow-up consistency gap" (C5)', () => {
+    const data = buildScanData({ subPath: 'Stage clarity + follow-up consistency gap' });
+    const result = checkStopRules(data);
+    assert.equal(result.stopped, false);
+    assert.equal(result.degraded, false);
+  });
+
+  it('passes for "Value review / renewal alignment gap" (R5)', () => {
+    const data = buildScanData({ subPath: 'Value review / renewal alignment gap' });
     const result = checkStopRules(data);
     assert.equal(result.stopped, false);
     assert.equal(result.degraded, false);
@@ -658,10 +661,10 @@ describe('checkStopRules — "Other (manual)" no longer stops', () => {
     assert.equal(result.degraded, false);
   });
 
-  it('"Other" + missing fields = stopped only for missing fields', () => {
+  it('A4 + missing fields = stopped only for missing fields', () => {
     const data = buildScanData({
-      subPath: 'Other (manual)',
-      oneLever: '', // missing field → triggers missing_fields rule
+      subPath: 'Lead tracking + ownership gap',
+      oneLever: '',
     });
     const result = checkStopRules(data);
     assert.equal(result.stopped, true);
@@ -670,9 +673,9 @@ describe('checkStopRules — "Other (manual)" no longer stops', () => {
     assert.ok(result.details.some(d => d.rule === 'missing_fields'));
   });
 
-  it('"Other" + gap changed without reason = stopped only for gap change', () => {
+  it('C5 + gap changed without reason = stopped only for gap change', () => {
     const data = buildScanData({
-      subPath: 'Other (manual)',
+      subPath: 'Stage clarity + follow-up consistency gap',
       primaryGap: PILLARS.ACQUISITION,
       quizPrimaryGap: PILLARS.CONVERSION,
       gapChangeReason: '',
@@ -684,10 +687,11 @@ describe('checkStopRules — "Other (manual)" no longer stops', () => {
     assert.ok(result.details.some(d => d.rule === 'gap_changed_no_reason'));
   });
 
-  it('checkSubPath returns null for "Other" variants (no longer a stop)', () => {
+  it('checkSubPath returns null for named sub-paths', () => {
     const { checkSubPath } = _internal;
-    const result = checkSubPath({ subPath: 'Other (manual)' });
-    assert.equal(result, null);
+    assert.equal(checkSubPath({ subPath: 'Lead tracking + ownership gap' }), null);
+    assert.equal(checkSubPath({ subPath: 'Stage clarity + follow-up consistency gap' }), null);
+    assert.equal(checkSubPath({ subPath: 'Value review / renewal alignment gap' }), null);
   });
 
   it('checkSubPath still stops for "Not sure"', () => {

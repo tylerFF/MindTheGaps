@@ -67,8 +67,8 @@ function isNotSure(value) {
 }
 
 /**
- * Check if a value starts with "Other" (catches "Other (manual)",
- * "Other (forces manual plan)", etc.).
+ * Check if a value starts with "Other" (legacy check, kept for
+ * backward compatibility with any old submissions).
  */
 function isOtherManual(value) {
   return typeof value === 'string' && value.trim().toLowerCase().startsWith(OTHER_LOWER);
@@ -120,7 +120,7 @@ function countFilledMetrics(metrics) {
 
 /**
  * Rule 1: Sub-path = "not sure"
- * Note: "Other (manual)" sub-paths (A4/C5/R5) now flow through to plan
+ * Note: A4/C5/R5 now have named sub-paths and flow through to plan
  * generation normally — stop rule 1b was removed per Marc's request.
  */
 function checkSubPath(scanData) {
@@ -138,8 +138,8 @@ function checkSubPath(scanData) {
 
 /**
  * Rule 1c: Field 2 follow-up = "not sure" → full stop
- * Per Marc: "If the facilitator picks not sure, please route that to
- * Other (manual) and do not auto-generate the plan."
+ * Per Marc: "If the facilitator picks not sure, do not auto-generate
+ * the plan."
  */
 function checkField2NotSure(scanData) {
   const { field2Answer } = scanData;

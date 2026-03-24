@@ -858,7 +858,7 @@ function generatePlan(scanData, contactInfo, confidenceResult) {
   const field2Answer = (scanData.field2Answer || '').trim();
   const field2Label = (scanData.field2Label || '').trim();
 
-  // Phase 5 (3.5): Flag when sub-path is "Other (manual)"
+  // Phase 5 (3.5): Flag when sub-path starts with "Other" (legacy check)
   const isOtherSubPath = scanData.subPath
     && typeof scanData.subPath === 'string'
     && scanData.subPath.trim().toLowerCase().startsWith('other');
