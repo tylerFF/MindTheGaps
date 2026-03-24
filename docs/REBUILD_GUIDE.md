@@ -1,6 +1,6 @@
 # MindtheGaps MVP — Complete Rebuild Guide
 
-**Last updated:** March 18, 2026
+**Last updated:** March 23, 2026
 
 This document contains everything needed to rebuild the MindtheGaps system from scratch. It covers every service, every field, every business rule, every integration, and every configuration detail. Hand this to any developer and they can reconstruct the entire system.
 
@@ -26,7 +26,7 @@ This document contains everything needed to rebuild the MindtheGaps system from 
 16. [Plan Generator — Lookup Tables](#16-plan-generator--lookup-tables)
 17. [DOCX Builder — One-Page Plan](#17-docx-builder--one-page-plan)
 18. [Email Notifications — Resend](#18-email-notifications--resend)
-19. [HubSpot — All 72 Properties](#19-hubspot--all-72-properties)
+19. [HubSpot — All 74 Properties](#19-hubspot--all-74-properties)
 20. [R2 Storage — Plan Drafts](#20-r2-storage--plan-drafts)
 21. [Cloudflare Workers — Deployment](#21-cloudflare-workers--deployment)
 22. [JotForm Conditional Logic (42 Rules)](#22-jotform-conditional-logic-42-rules)
@@ -418,7 +418,8 @@ Embedded Calendly inline widget for Marc's 45-Minute Growth Gap Scan.
 | q38 | oneLeverRetention |
 | q39 | oneLeverSentence (hidden, pre-populated) |
 
-**Baseline Fields (Tier-1):**
+**Baseline Fields (Tier-1, all required in JotForm):**
+All 20 baseline fields (7 Conv + 7 Acq + 6 Ret) are set to `required=Yes` in JotForm. Each includes a "Not sure" option so required never blocks progress. This prevents incomplete baseline data from triggering stop rule 3.
 
 *Conversion (7 fields):*
 | QID | Internal Key | Label |
@@ -508,6 +509,11 @@ q179-q192 (one per sub-path, same order as above)
 | q61 | Acquisition metrics: Leads/week, % leads from top source, Calls answered live %, Median response time, Reviews/week, Referral intros/week, Leads to booked % |
 | q62 | Retention metrics: Rebook rate (or count), Reviews/week, Referral intros/week, Days to follow-up after service, Repeat revenue band |
 
+**ICP-Specific Note (optional, shown on all sub-paths):**
+| QID | Field | Purpose |
+|-----|-------|---------|
+| q278 | icpNote | Optional facilitator note (1-2 lines) included in One-Page Plan DOCX as "Facilitator Note" |
+
 **Constraints:**
 | QID | Field |
 |-----|-------|
@@ -536,7 +542,7 @@ q179-q192 (one per sub-path, same order as above)
 8. **Generate plan** — deterministic lookup tables (see section 16)
 9. **Build DOCX** — One-Page Plan document (see section 17)
 10. **Upload to R2** — store at `plans/{email}/{timestamp}.docx`
-11. **Write to HubSpot** — all 73 properties including action data
+11. **Write to HubSpot** — all 74 properties including action data + optional ICP note
 12. **Email Marc** — via Resend (plan ready, degraded, or stop notification)
 13. **Return JSON** — success response with plan URL
 
@@ -695,9 +701,10 @@ Per-sub-path owner fields (q194-q277) override shared owner fields (q42, q45, et
 | F) Risks & Constraints | Conditional on confidence. Med/Low: ≥1 constraint. Low: also "Data gaps to measure" | sectionF |
 
 ### Special Features
-- Contradiction note (Section A) — yellow highlight, red text, if present
-- Manual plan flag (Section A) — bold warning for degraded plans
-- Confidence badge — shown in header area
+- Contradiction note (Section A) -- yellow highlight, red text, if present
+- Manual plan flag (Section A) -- bold warning for degraded plans
+- Confidence badge -- shown in header area
+- ICP-specific note (Section D) -- "Facilitator Note: {text}" rendered in italics after the 6 actions, only if non-empty (q278)
 
 ---
 
@@ -735,7 +742,7 @@ All emails include a styled HTML scan summary:
 
 ---
 
-## 19. HubSpot — All 73 Properties
+## 19. HubSpot — All 74 Properties
 
 All properties use the `mtg_` prefix, live in the "mindthegaps" property group, and are on Contact records only. No Deals pipeline.
 
@@ -783,7 +790,7 @@ All properties use the `mtg_` prefix, live in the "mindthegaps" property group, 
 | mtg_scan_scheduled_for | datetime | Calendly webhook |
 | mtg_calendly_event_id | text | Calendly webhook |
 
-### Scan Output (10)
+### Scan Output (11)
 | Property | Type | Written By |
 |----------|------|------------|
 | mtg_scan_completed | checkbox | Scan webhook |
@@ -796,6 +803,7 @@ All properties use the `mtg_` prefix, live in the "mindthegaps" property group, 
 | mtg_confidence_not_sure_count | number | Scan webhook |
 | mtg_scan_stop_reason | text | Scan webhook |
 | mtg_scan_field2_answer | text | Scan webhook |
+| mtg_icp_note | textarea | Scan webhook (optional facilitator note for One-Page Plan) |
 | mtg_scan_prefill_url | text (URL) | Quiz webhook |
 
 ### Plan Fields (7)
