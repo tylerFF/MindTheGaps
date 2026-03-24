@@ -46,6 +46,7 @@ const JOTFORM_SCAN_FIELD_MAP = {
     q10_gapChangeReason: 'gapChangeReason',
     // Phase 5 (3.4): Contradiction note — QID 79 confirmed in JotForm scan worksheet
     q79_contradictionNote: 'contradictionNote',
+    q278_icpNote: 'icpNote',
   },
   // Sub-path: one per pillar, extracted based on primaryGap
   subPathByPillar: {
@@ -438,6 +439,11 @@ function buildHubSpotProperties(scanData, confidenceResult, planUrl, stopResult,
   if (confidenceResult) {
     props.mtg_scan_confidence = confidenceResult.level;
     props.mtg_confidence_not_sure_count = String(confidenceResult.notSureCount);
+  }
+
+  // ICP-specific note (optional)
+  if (scanData.icpNote) {
+    props.mtg_icp_note = scanData.icpNote;
   }
 
   // Plan

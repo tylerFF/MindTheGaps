@@ -380,7 +380,7 @@ function buildSectionC(planContent) {
 // Section D: Action Plan (6 actions)
 // ---------------------------------------------------------------------------
 
-function buildSectionD(planContent) {
+function buildSectionD(planContent, scanData) {
   const d = planContent.sectionD || {};
   const actions = d.actions || [];
 
@@ -416,6 +416,20 @@ function buildSectionD(planContent) {
       rows: [headerRow, ...dataRows],
     }),
   );
+
+  // ICP-specific note (optional) — only renders if filled
+  const icpNote = scanData && scanData.icpNote;
+  if (icpNote) {
+    children.push(
+      new Paragraph({
+        spacing: { before: 200 },
+        children: [
+          new TextRun({ text: 'Facilitator Note: ', bold: true, size: 20, font: 'Calibri' }),
+          new TextRun({ text: icpNote, size: 20, font: 'Calibri', italics: true }),
+        ],
+      }),
+    );
+  }
 
   return children;
 }
@@ -649,7 +663,7 @@ async function buildDocx(planContent, scanData, contactInfo, confidenceResult) {
     ...buildSectionA(planContent),
     ...buildSectionB(planContent),
     ...buildSectionC(planContent),
-    ...buildSectionD(planContent),
+    ...buildSectionD(planContent, scanData),
     ...buildSectionE(planContent),
     ...buildSectionF(planContent, confidenceResult),
   ];
