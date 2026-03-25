@@ -46,38 +46,6 @@ describe('isNotSure', () => {
   });
 });
 
-describe('isOtherManual', () => {
-  const { isOtherManual } = _internal;
-
-  it('matches "Other (manual)"', () => {
-    assert.equal(isOtherManual('Other (manual)'), true);
-  });
-
-  it('matches "Other (forces manual plan)"', () => {
-    assert.equal(isOtherManual('Other (forces manual plan)'), true);
-  });
-
-  it('matches case-insensitively', () => {
-    assert.equal(isOtherManual('other (manual)'), true);
-    assert.equal(isOtherManual('OTHER (MANUAL)'), true);
-  });
-
-  it('matches any "Other..." variant', () => {
-    assert.equal(isOtherManual('Other'), true);
-    assert.equal(isOtherManual('Other reason here'), true);
-  });
-
-  it('rejects non-"Other" strings', () => {
-    assert.equal(isOtherManual('Speed-to-lead'), false);
-    assert.equal(isOtherManual(''), false);
-    assert.equal(isOtherManual('Another option'), false);
-  });
-
-  it('rejects non-strings', () => {
-    assert.equal(isOtherManual(null), false);
-    assert.equal(isOtherManual(undefined), false);
-  });
-});
 
 // ===========================================================================
 // Helper: baseline counting

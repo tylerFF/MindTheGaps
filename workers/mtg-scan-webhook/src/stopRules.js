@@ -57,21 +57,12 @@ const {
 // ---------------------------------------------------------------------------
 
 const NOT_SURE_LOWER = 'not sure';
-const OTHER_LOWER = 'other';
 
 /**
  * Check if a value is "Not sure" (case-insensitive, trimmed).
  */
 function isNotSure(value) {
   return typeof value === 'string' && value.trim().toLowerCase() === NOT_SURE_LOWER;
-}
-
-/**
- * Check if a value starts with "Other" (legacy check, kept for
- * backward compatibility with any old submissions).
- */
-function isOtherManual(value) {
-  return typeof value === 'string' && value.trim().toLowerCase().startsWith(OTHER_LOWER);
 }
 
 /**
@@ -281,7 +272,6 @@ module.exports = {
   checkStopRules,
   _internal: {
     isNotSure,
-    isOtherManual,
     countNonNotSureBaseline,
     countFilledActions,
     countFilledMetrics,

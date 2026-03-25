@@ -52,17 +52,17 @@ const SUB_PATH_PILLAR = {
   'Channel concentration risk': 'Acquisition',
   'Lead capture friction': 'Acquisition',
   'Demand capture / local visibility': 'Acquisition',
-  'Other (manual):Acquisition': 'Acquisition',
+  'Lead tracking + ownership gap': 'Acquisition',
   'Speed-to-lead': 'Conversion',
   'Booking friction': 'Conversion',
   'Show rate': 'Conversion',
   'Quote follow-up / decision drop-off': 'Conversion',
-  'Other (manual):Conversion': 'Conversion',
+  'Stage clarity + follow-up consistency gap': 'Conversion',
   'Rebook/recall gap': 'Retention',
   'Review rhythm gap': 'Retention',
   'Referral ask gap': 'Retention',
   'Post-service follow-up gap': 'Retention',
-  'Other (manual):Retention': 'Retention',
+  'Value review / renewal alignment gap': 'Retention',
 };
 
 // Short code for field naming
@@ -70,22 +70,21 @@ const SUB_PATH_SHORT = {
   'Channel concentration risk': 'A1',
   'Lead capture friction': 'A2',
   'Demand capture / local visibility': 'A3',
-  'Other (manual):Acquisition': 'A4',
+  'Lead tracking + ownership gap': 'A4',
   'Speed-to-lead': 'C1',
   'Booking friction': 'C2',
   'Show rate': 'C3',
   'Quote follow-up / decision drop-off': 'C4',
-  'Other (manual):Conversion': 'C5',
+  'Stage clarity + follow-up consistency gap': 'C5',
   'Rebook/recall gap': 'R1',
   'Review rhythm gap': 'R2',
   'Referral ask gap': 'R3',
   'Post-service follow-up gap': 'R4',
-  'Other (manual):Retention': 'R5',
+  'Value review / renewal alignment gap': 'R5',
 };
 
-// Sub-path value as it appears in the JotForm dropdown (no pillar suffix for "Other")
+// Sub-path value as it appears in the JotForm dropdown
 function jotformSubPathValue(key) {
-  if (key.startsWith('Other (manual):')) return 'Other (manual)';
   return key;
 }
 

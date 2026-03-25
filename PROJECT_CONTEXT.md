@@ -286,22 +286,20 @@ mtg_plan_generation_mode    dropdown: Auto / Stopped
 - Booking friction (hard to book / long delays)
 - Show rate (no-shows / reschedules)
 - Quote follow-up / decision drop-off (ghosting after quote)
-- Other (forces manual plan)
+- Stage clarity + follow-up consistency gap
 
 **Acquisition sub-paths:**
 - Channel concentration risk (too dependent on one lead source)
 - Demand capture / local visibility (not enough inbound demand)
 - Lead capture friction (site/form/call handling leaks)
-- Fit mismatch (wrong leads; low qualification)
-- Referral / partner flow is not intentional
-- Other (forces manual plan)
+- Lead tracking + ownership gap
 
 **Retention sub-paths:**
 - Rebook/recall gap (next step not scheduled)
 - Review rhythm gap (happy clients not asked at the right time)
 - Referral ask gap (referrals happen by luck)
 - Post-service follow-up gap (no check-ins/reminders)
-- Other (forces manual plan)
+- Value review / renewal alignment gap
 
 ### One Lever Options (by Primary Gap)
 
@@ -367,8 +365,8 @@ mtg_plan_generation_mode    dropdown: Auto / Stopped
 
 Plan generation is HALTED (and Marc notified) if ANY of these are true:
 
-1. **Sub-path = "not sure"** → Set sub-path to "Other (manual)", DO NOT auto-generate
-2. **Sub-path = "Other (manual)"** at any point → DO NOT auto-generate
+1. **Sub-path = "not sure"** → full stop, DO NOT auto-generate
+2. **Field 2 follow-up = "not sure"** → full stop
 3. **Primary gap changed** from quiz without an update reason provided
 4. **Missing required fields:** Must have ALL of: primary gap + sub-path + one lever + ≥5 Tier-1 baseline fields (non-"Not sure") + all 6 action slots + ≥2 metrics
 5. **Contradiction** between gap confirmation fields and the stated primary gap (without acknowledged update)
