@@ -85,21 +85,21 @@ const conditions = [
   {type:"field",link:"Any",terms:[{field:"12",operator:"equals",value:"Channel concentration risk"}],action:[{visibility:"HideMultiple",fields:ACQ_LADDERS}]},
   {type:"field",link:"Any",terms:[{field:"12",operator:"equals",value:"Fit mismatch"}],action:[{visibility:"HideMultiple",fields:[...ACQ_LADDERS,...ALL_ACQ_PRED]}]},
   {type:"field",link:"Any",terms:[{field:"12",operator:"equals",value:"Referral / partner flow is not intentional"}],action:[{visibility:"HideMultiple",fields:[...ACQ_LADDERS,...ALL_ACQ_PRED]}]},
-  {type:"field",link:"Any",terms:[{field:"12",operator:"equals",value:"Other (manual)"}],action:[{visibility:"HideMultiple",fields:ACQ_LADDERS}]},
+  {type:"field",link:"Any",terms:[{field:"12",operator:"equals",value:"Lead tracking + ownership gap"}],action:[{visibility:"HideMultiple",fields:ACQ_LADDERS}]},
 
   // 19-23: Conversion sub-path — LADDER CARDS NOW ALWAYS HIDDEN
   {type:"field",link:"Any",terms:[{field:"11",operator:"equals",value:"Speed-to-lead"}],action:[{visibility:"HideMultiple",fields:CONV_LADDERS}]},
   {type:"field",link:"Any",terms:[{field:"11",operator:"equals",value:"Booking friction"}],action:[{visibility:"HideMultiple",fields:CONV_LADDERS}]},
   {type:"field",link:"Any",terms:[{field:"11",operator:"equals",value:"Show rate"}],action:[{visibility:"HideMultiple",fields:CONV_LADDERS}]},
   {type:"field",link:"Any",terms:[{field:"11",operator:"equals",value:"Quote follow-up / decision drop-off"}],action:[{visibility:"HideMultiple",fields:CONV_LADDERS}]},
-  {type:"field",link:"Any",terms:[{field:"11",operator:"equals",value:"Other (manual)"}],action:[{visibility:"HideMultiple",fields:CONV_LADDERS}]},
+  {type:"field",link:"Any",terms:[{field:"11",operator:"equals",value:"Stage clarity + follow-up consistency gap"}],action:[{visibility:"HideMultiple",fields:CONV_LADDERS}]},
 
   // 24-28: Retention sub-path — LADDER CARDS NOW ALWAYS HIDDEN
   {type:"field",link:"Any",terms:[{field:"13",operator:"equals",value:"Post-service follow-up gap"}],action:[{visibility:"HideMultiple",fields:RET_LADDERS}]},
   {type:"field",link:"Any",terms:[{field:"13",operator:"equals",value:"Review rhythm gap"}],action:[{visibility:"HideMultiple",fields:RET_LADDERS}]},
   {type:"field",link:"Any",terms:[{field:"13",operator:"equals",value:"Referral ask gap"}],action:[{visibility:"HideMultiple",fields:RET_LADDERS}]},
   {type:"field",link:"Any",terms:[{field:"13",operator:"equals",value:"Rebook/recall gap"}],action:[{visibility:"HideMultiple",fields:RET_LADDERS}]},
-  {type:"field",link:"Any",terms:[{field:"13",operator:"equals",value:"Other (manual)"}],action:[{visibility:"HideMultiple",fields:RET_LADDERS}]},
+  {type:"field",link:"Any",terms:[{field:"13",operator:"equals",value:"Value review / renewal alignment gap"}],action:[{visibility:"HideMultiple",fields:RET_LADDERS}]},
 
   // ===== 14 PREDETERMINED CONDITIONS =====
 
@@ -114,7 +114,7 @@ const conditions = [
    terms:[{field:"12",operator:"equals",value:"Demand capture / local visibility"}],
    action:[{visibility:"ShowMultiple",fields:[...A3_FIELDS,'86']},{visibility:"HideMultiple",fields:[...excludeFrom(ALL_ACQ_PRED, A3_FIELDS),'84','85']}]},
   {type:"field",link:"Any",
-   terms:[{field:"12",operator:"equals",value:"Other (manual)"}],
+   terms:[{field:"12",operator:"equals",value:"Lead tracking + ownership gap"}],
    action:[{visibility:"ShowMultiple",fields:A4_FIELDS},{visibility:"HideMultiple",fields:[...excludeFrom(ALL_ACQ_PRED, A4_FIELDS),...ACQ_FIELD2]}]},
 
   // Conversion predetermined (field 11) + Field 2 show/hide
@@ -131,7 +131,7 @@ const conditions = [
    terms:[{field:"11",operator:"equals",value:"Quote follow-up / decision drop-off"}],
    action:[{visibility:"ShowMultiple",fields:[...C4_FIELDS,'83']},{visibility:"HideMultiple",fields:[...excludeFrom(ALL_CONV_PRED, C4_FIELDS),'80','81','82']}]},
   {type:"field",link:"Any",
-   terms:[{field:"11",operator:"equals",value:"Other (manual)"}],
+   terms:[{field:"11",operator:"equals",value:"Stage clarity + follow-up consistency gap"}],
    action:[{visibility:"ShowMultiple",fields:C5_FIELDS},{visibility:"HideMultiple",fields:[...excludeFrom(ALL_CONV_PRED, C5_FIELDS),...CONV_FIELD2]}]},
 
   // Retention predetermined (field 13) + Field 2 show/hide
@@ -148,7 +148,7 @@ const conditions = [
    terms:[{field:"13",operator:"equals",value:"Post-service follow-up gap"}],
    action:[{visibility:"ShowMultiple",fields:[...R4_FIELDS,'89']},{visibility:"HideMultiple",fields:[...excludeFrom(ALL_RET_PRED, R4_FIELDS),'87','88']}]},
   {type:"field",link:"Any",
-   terms:[{field:"13",operator:"equals",value:"Other (manual)"}],
+   terms:[{field:"13",operator:"equals",value:"Value review / renewal alignment gap"}],
    action:[{visibility:"ShowMultiple",fields:R5_FIELDS},{visibility:"HideMultiple",fields:[...excludeFrom(ALL_RET_PRED, R5_FIELDS),...RET_FIELD2]}]},
 ];
 

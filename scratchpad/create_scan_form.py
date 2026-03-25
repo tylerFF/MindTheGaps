@@ -38,11 +38,11 @@ add('control_textarea', 'Reason for Gap Change (if different from quiz)', 'gapCh
 
 # Sub-paths per pillar (show/hide with conditional logic in JotForm UI)
 add('control_dropdown', 'Sub-Path (Conversion)', 'subPathConversion', required='No',
-    options='Speed-to-lead|Booking friction|Show rate|Quote follow-up / decision drop-off|Other (manual)')
+    options='Speed-to-lead|Booking friction|Show rate|Quote follow-up / decision drop-off|Stage clarity + follow-up consistency gap')
 add('control_dropdown', 'Sub-Path (Acquisition)', 'subPathAcquisition', required='No',
-    options='Channel concentration risk|Demand capture / local visibility|Lead capture friction|Fit mismatch|Referral / partner flow is not intentional|Other (manual)')
+    options='Channel concentration risk|Demand capture / local visibility|Lead capture friction|Fit mismatch|Referral / partner flow is not intentional|Lead tracking + ownership gap')
 add('control_dropdown', 'Sub-Path (Retention)', 'subPathRetention', required='No',
-    options='Rebook/recall gap|Review rhythm gap|Referral ask gap|Post-service follow-up gap|Other (manual)')
+    options='Rebook/recall gap|Review rhythm gap|Referral ask gap|Post-service follow-up gap|Value review / renewal alignment gap')
 
 # ---- SECTION 3: Tier-1 Baseline Metrics ----
 add('control_head', 'Section 3: Tier-1 Baseline Metrics', 'sec3Header', required='No',
@@ -99,11 +99,11 @@ add('control_head', 'Section 4: One Lever to Fix First', 'sec4Header', required=
     subHeader='Choose the primary lever for the client plan')
 
 add('control_dropdown', 'One Lever (Conversion)', 'oneLeverConversion', required='No',
-    options='Response ownership + SLA + follow-up sequence|Booking standardization (one path) + confirmations/reminders|Show-rate lift package (what to expect + reminders + prep)|Quote turnaround + after-quote follow-up package|Other (manual)')
+    options='Response ownership + SLA + follow-up sequence|Booking standardization (one path) + confirmations/reminders|Show-rate lift package (what to expect + reminders + prep)|Quote turnaround + after-quote follow-up package|Stage clarity + follow-up consistency gap')
 add('control_dropdown', 'One Lever (Acquisition)', 'oneLeverAcquisition', required='No',
-    options='Add a secondary warm channel + weekly cadence|Fix lead capture path (one page, one CTA, one follow-up path)|Call handling + response ownership + SLA|Qualification gate (2-3 questions) to improve fit|Review generation rhythm (simple ask + timing)|Other (manual)')
+    options='Add a secondary warm channel + weekly cadence|Fix lead capture path (one page, one CTA, one follow-up path)|Call handling + response ownership + SLA|Qualification gate (2-3 questions) to improve fit|Review generation rhythm (simple ask + timing)|Lead tracking + ownership gap')
 add('control_dropdown', 'One Lever (Retention)', 'oneLeverRetention', required='No',
-    options='Rebook/recall system (prompt + script + schedule)|Review + referral moment (timing + script + 2-step ask)|Post-service check-in (30-day touch + simple template)|Win-back for dormant clients (light touch sequence)|Other (manual)')
+    options='Rebook/recall system (prompt + script + schedule)|Review + referral moment (timing + script + 2-step ask)|Post-service check-in (30-day touch + simple template)|Win-back for dormant clients (light touch sequence)|Value review / renewal alignment gap')
 
 add('control_textarea', 'What we fix first (one sentence, max 160 chars)', 'oneLeverSentence')
 

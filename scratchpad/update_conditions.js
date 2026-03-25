@@ -67,7 +67,7 @@ const conditions = [
    terms:JSON.stringify([{field:"12",operator:"equals",value:"Referral / partner flow is not intentional"}]),
    action:JSON.stringify([{visibility:"HideMultiple",fields:["69","70","71"]}])},
   {type:"field",link:"Any",
-   terms:JSON.stringify([{field:"12",operator:"equals",value:"Other (manual)"}]),
+   terms:JSON.stringify([{field:"12",operator:"equals",value:"Lead tracking + ownership gap"}]),
    action:JSON.stringify([{visibility:"HideMultiple",fields:["69","70","71"]}])},
 
   // Conversion sub-paths (field 11 -> ladders 72,73,74,75)
@@ -84,7 +84,7 @@ const conditions = [
    terms:JSON.stringify([{field:"11",operator:"equals",value:"Quote follow-up / decision drop-off"}]),
    action:JSON.stringify([{visibility:"Show",field:"75"},{visibility:"HideMultiple",fields:["72","73","74"]}])},
   {type:"field",link:"Any",
-   terms:JSON.stringify([{field:"11",operator:"equals",value:"Other (manual)"}]),
+   terms:JSON.stringify([{field:"11",operator:"equals",value:"Stage clarity + follow-up consistency gap"}]),
    action:JSON.stringify([{visibility:"HideMultiple",fields:["72","73","74","75"]}])},
 
   // Retention sub-paths (field 13 -> ladders 76,77,78)
@@ -101,7 +101,7 @@ const conditions = [
    terms:JSON.stringify([{field:"13",operator:"equals",value:"Rebook/recall gap"}]),
    action:JSON.stringify([{visibility:"Show",field:"78"},{visibility:"HideMultiple",fields:["76","77"]}])},
   {type:"field",link:"Any",
-   terms:JSON.stringify([{field:"13",operator:"equals",value:"Other (manual)"}]),
+   terms:JSON.stringify([{field:"13",operator:"equals",value:"Value review / renewal alignment gap"}]),
    action:JSON.stringify([{visibility:"HideMultiple",fields:["76","77","78"]}])},
 ];
 
