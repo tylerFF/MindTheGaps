@@ -1128,3 +1128,63 @@ describe('buildDocx — personalization details', () => {
     assert.ok(buffer.length > 100);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Per-action facilitator notes in Section D
+// ---------------------------------------------------------------------------
+
+describe('docxBuilder — Section D per-action notes', () => {
+  it('generates valid DOCX with per-action note filled', async () => {
+    const plan = buildPlanContent({
+      sectionD: {
+        actions: [
+          { description: 'Action 1 text', note: 'Client wants manual CRM', owner: 'Marc', dueDate: 'Day 7' },
+          { description: 'Action 2 text', note: '', owner: 'Marc', dueDate: 'Day 7' },
+          { description: 'Action 3 text', note: '', owner: '', dueDate: '' },
+          { description: 'Action 4 text', note: '', owner: '', dueDate: '' },
+          { description: 'Action 5 text', note: '', owner: '', dueDate: '' },
+          { description: 'Action 6 text', note: '', owner: '', dueDate: '' },
+        ],
+      },
+    });
+    const buffer = await buildDocx(plan, {}, DEFAULT_CONTACT, highConfidence());
+    assert.ok(Buffer.isBuffer(buffer));
+    assert.ok(buffer.length > 100);
+  });
+
+  it('generates valid DOCX with all notes blank', async () => {
+    const plan = buildPlanContent({
+      sectionD: {
+        actions: [
+          { description: 'Action 1 text', note: '', owner: 'Marc', dueDate: 'Day 7' },
+          { description: 'Action 2 text', note: '', owner: '', dueDate: '' },
+          { description: 'Action 3 text', note: '', owner: '', dueDate: '' },
+          { description: 'Action 4 text', note: '', owner: '', dueDate: '' },
+          { description: 'Action 5 text', note: '', owner: '', dueDate: '' },
+          { description: 'Action 6 text', note: '', owner: '', dueDate: '' },
+        ],
+      },
+    });
+    const buffer = await buildDocx(plan, {}, DEFAULT_CONTACT, highConfidence());
+    assert.ok(Buffer.isBuffer(buffer));
+    assert.ok(buffer.length > 100);
+  });
+
+  it('buildSectionD returns array with note-bearing actions', () => {
+    const plan = buildPlanContent({
+      sectionD: {
+        actions: [
+          { description: 'Action 1', note: 'Important note', owner: 'Marc', dueDate: 'Day 7' },
+          { description: 'Action 2', note: '', owner: '', dueDate: '' },
+          { description: 'Action 3', note: '', owner: '', dueDate: '' },
+          { description: 'Action 4', note: '', owner: '', dueDate: '' },
+          { description: 'Action 5', note: '', owner: '', dueDate: '' },
+          { description: 'Action 6', note: '', owner: '', dueDate: '' },
+        ],
+      },
+    });
+    const result = buildSectionD(plan);
+    assert.ok(Array.isArray(result));
+    assert.ok(result.length >= 2); // header + table
+  });
+});

@@ -46,7 +46,15 @@ const JOTFORM_SCAN_FIELD_MAP = {
     q10_gapChangeReason: 'gapChangeReason',
     // Phase 5 (3.4): Contradiction note — QID 79 confirmed in JotForm scan worksheet
     q79_contradictionNote: 'contradictionNote',
-    q278_icpNote: 'icpNote',
+  },
+  // Per-action facilitator notes (6 shared fields, one per action slot)
+  actionNotes: {
+    1: 'q279_actionNote1',
+    2: 'q280_actionNote2',
+    3: 'q281_actionNote3',
+    4: 'q282_actionNote4',
+    5: 'q283_actionNote5',
+    6: 'q284_actionNote6',
   },
   // Sub-path: one per pillar, extracted based on primaryGap
   subPathByPillar: {
@@ -357,8 +365,13 @@ function extractScanData(payload) {
     if (!owner) {
       owner = String(payload[actionMap.owner] || '').trim();
     }
+    // Per-action facilitator note (shared field, one per action slot)
+    const noteField = JOTFORM_SCAN_FIELD_MAP.actionNotes[i];
+    const note = noteField ? String(payload[noteField] || '').trim() : '';
+
     scan.actions.push({
       description: String(payload[actionMap.desc] || '').trim(),
+      note,
       owner,
       dueDate,
     });
@@ -441,10 +454,7 @@ function buildHubSpotProperties(scanData, confidenceResult, planUrl, stopResult,
     props.mtg_confidence_not_sure_count = String(confidenceResult.notSureCount);
   }
 
-  // ICP-specific note (optional)
-  if (scanData.icpNote) {
-    props.mtg_icp_note = scanData.icpNote;
-  }
+  // Per-action facilitator notes (optional)
 
   // Plan
   if (planUrl) {
@@ -470,6 +480,7 @@ function buildHubSpotProperties(scanData, confidenceResult, planUrl, stopResult,
       if (a.description) props[`mtg_scan_action${i + 1}_desc`] = a.description;
       if (a.owner) props[`mtg_scan_action${i + 1}_owner`] = a.owner;
       if (a.dueDate) props[`mtg_scan_action${i + 1}_due`] = a.dueDate;
+      if (a.note) props[`mtg_scan_action${i + 1}_note`] = a.note;
     }
   }
 

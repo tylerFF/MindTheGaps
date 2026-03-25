@@ -914,11 +914,13 @@ function generatePlan(scanData, contactInfo, confidenceResult) {
     actions: predeterminedActions
       ? predeterminedActions.map((pa, i) => ({
           description: pa.description,
+          note: (scanData.actions && scanData.actions[i]?.note) || '',
           owner: (scanData.actions && scanData.actions[i]?.owner) || pa.owner,
           dueDate: (scanData.actions && scanData.actions[i]?.dueDate) || `Day ${pa.dueDay}`,
         }))
       : (scanData.actions || []).map((a) => ({
           description: a.description || '',
+          note: a.note || '',
           owner: a.owner || '',
           dueDate: a.dueDate || '',
         })),
@@ -926,7 +928,7 @@ function generatePlan(scanData, contactInfo, confidenceResult) {
 
   // Pad to 6 actions if fewer
   while (sectionD.actions.length < 6) {
-    sectionD.actions.push({ description: '', owner: '', dueDate: '' });
+    sectionD.actions.push({ description: '', note: '', owner: '', dueDate: '' });
   }
 
   // Section E: Weekly Scorecard

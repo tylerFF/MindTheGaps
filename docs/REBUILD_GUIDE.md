@@ -26,7 +26,7 @@ This document contains everything needed to rebuild the MindtheGaps system from 
 16. [Plan Generator — Lookup Tables](#16-plan-generator--lookup-tables)
 17. [DOCX Builder — One-Page Plan](#17-docx-builder--one-page-plan)
 18. [Email Notifications — Resend](#18-email-notifications--resend)
-19. [HubSpot — All 74 Properties](#19-hubspot--all-74-properties)
+19. [HubSpot — All 79 Properties](#19-hubspot--all-79-properties)
 20. [R2 Storage — Plan Drafts](#20-r2-storage--plan-drafts)
 21. [Cloudflare Workers — Deployment](#21-cloudflare-workers--deployment)
 22. [JotForm Conditional Logic (42 Rules)](#22-jotform-conditional-logic-42-rules)
@@ -509,10 +509,18 @@ q179-q192 (one per sub-path, same order as above)
 | q61 | Acquisition metrics: Leads/week, % leads from top source, Calls answered live %, Median response time, Reviews/week, Referral intros/week, Leads to booked % |
 | q62 | Retention metrics: Rebook rate (or count), Reviews/week, Referral intros/week, Days to follow-up after service, Repeat revenue band |
 
-**ICP-Specific Note (optional, shown on all sub-paths):**
-| QID | Field | Purpose |
-|-----|-------|---------|
-| q278 | icpNote | Optional facilitator note (1-2 lines) included in One-Page Plan DOCX as "Facilitator Note" |
+**Per-Action Facilitator Notes (optional, 6 shared fields shown on all sub-paths):**
+| QID | Field | Order | Purpose |
+|-----|-------|-------|---------|
+| q279 | actionNote1 | 314.5 | Optional note for Action 1, renders inline in DOCX as "Facilitator note: {text}" |
+| q280 | actionNote2 | 345.5 | Optional note for Action 2 |
+| q281 | actionNote3 | 376.5 | Optional note for Action 3 |
+| q282 | actionNote4 | 407.5 | Optional note for Action 4 |
+| q283 | actionNote5 | 438.5 | Optional note for Action 5 |
+| q284 | actionNote6 | 469.5 | Optional note for Action 6 |
+
+Helper text: "Use only if the client says something specific we want reflected in the plan."
+q278 (old single ICP note) is hidden but preserved for historical data.
 
 **Constraints:**
 | QID | Field |
@@ -542,7 +550,7 @@ q179-q192 (one per sub-path, same order as above)
 8. **Generate plan** — deterministic lookup tables (see section 16)
 9. **Build DOCX** — One-Page Plan document (see section 17)
 10. **Upload to R2** — store at `plans/{email}/{timestamp}.docx`
-11. **Write to HubSpot** — all 74 properties including action data + optional ICP note
+11. **Write to HubSpot** — all 79 properties including action data + per-action notes
 12. **Email Marc** — via Resend (plan ready, degraded, or stop notification)
 13. **Return JSON** — success response with plan URL
 
@@ -704,7 +712,7 @@ Per-sub-path owner fields (q194-q277) override shared owner fields (q42, q45, et
 - Contradiction note (Section A) -- yellow highlight, red text, if present
 - Manual plan flag (Section A) -- bold warning for degraded plans
 - Confidence badge -- shown in header area
-- ICP-specific note (Section D) -- "Facilitator Note: {text}" rendered in italics after the 6 actions, only if non-empty (q278)
+- Per-action facilitator notes (Section D) -- "Facilitator note: {text}" rendered in italics under each action row, only if non-empty (q279-q284)
 
 ---
 
@@ -742,7 +750,7 @@ All emails include a styled HTML scan summary:
 
 ---
 
-## 19. HubSpot — All 74 Properties
+## 19. HubSpot — All 79 Properties
 
 All properties use the `mtg_` prefix, live in the "mindthegaps" property group, and are on Contact records only. No Deals pipeline.
 
@@ -790,7 +798,7 @@ All properties use the `mtg_` prefix, live in the "mindthegaps" property group, 
 | mtg_scan_scheduled_for | datetime | Calendly webhook |
 | mtg_calendly_event_id | text | Calendly webhook |
 
-### Scan Output (11)
+### Scan Output (16)
 | Property | Type | Written By |
 |----------|------|------------|
 | mtg_scan_completed | checkbox | Scan webhook |
@@ -803,7 +811,12 @@ All properties use the `mtg_` prefix, live in the "mindthegaps" property group, 
 | mtg_confidence_not_sure_count | number | Scan webhook |
 | mtg_scan_stop_reason | text | Scan webhook |
 | mtg_scan_field2_answer | text | Scan webhook |
-| mtg_icp_note | textarea | Scan webhook (optional facilitator note for One-Page Plan) |
+| mtg_scan_action1_note | textarea | Scan webhook (optional facilitator note for action 1) |
+| mtg_scan_action2_note | textarea | Scan webhook (optional facilitator note for action 2) |
+| mtg_scan_action3_note | textarea | Scan webhook (optional facilitator note for action 3) |
+| mtg_scan_action4_note | textarea | Scan webhook (optional facilitator note for action 4) |
+| mtg_scan_action5_note | textarea | Scan webhook (optional facilitator note for action 5) |
+| mtg_scan_action6_note | textarea | Scan webhook (optional facilitator note for action 6) |
 | mtg_scan_prefill_url | text (URL) | Quiz webhook |
 
 ### Plan Fields (7)

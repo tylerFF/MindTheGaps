@@ -747,3 +747,64 @@ describe('scanWebhook — buildHubSpotProperties Field 2 (2.2)', () => {
     assert.equal(props.mtg_scan_field2_answer, undefined);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Per-action facilitator notes
+// ---------------------------------------------------------------------------
+
+describe('scanWebhook — extractScanData per-action notes', () => {
+  it('extracts action notes from shared note fields', () => {
+    const payload = {
+      q9_primaryGap: 'Acquisition',
+      q12_subPathAcquisition: 'Channel concentration risk',
+      q279_actionNote1: 'Client switching CRMs in Q2',
+      q280_actionNote2: '',
+      q281_actionNote3: 'Wants to focus on Google Ads',
+    };
+    const scan = extractScanData(payload);
+    assert.equal(scan.actions[0].note, 'Client switching CRMs in Q2');
+    assert.equal(scan.actions[1].note, '');
+    assert.equal(scan.actions[2].note, 'Wants to focus on Google Ads');
+    assert.equal(scan.actions[3].note, '');
+    assert.equal(scan.actions[4].note, '');
+    assert.equal(scan.actions[5].note, '');
+  });
+
+  it('returns empty note when note fields are missing', () => {
+    const payload = {
+      q9_primaryGap: 'Conversion',
+      q11_subPathConversion: 'Speed-to-lead',
+    };
+    const scan = extractScanData(payload);
+    for (let i = 0; i < 6; i++) {
+      assert.equal(scan.actions[i].note, '');
+    }
+  });
+});
+
+describe('scanWebhook — buildHubSpotProperties per-action notes', () => {
+  it('writes action notes to HubSpot when present in plan content', () => {
+    const scanData = {
+      primaryGap: 'Acquisition',
+      subPath: 'Channel concentration risk',
+      oneLever: 'Focus on best channel',
+    };
+    const planContent = {
+      sectionD: {
+        actions: [
+          { description: 'Action 1', note: 'Important note', owner: 'Marc', dueDate: 'Day 7' },
+          { description: 'Action 2', note: '', owner: 'Marc', dueDate: 'Day 7' },
+          { description: 'Action 3', note: 'Another note', owner: 'Marc', dueDate: 'Day 21' },
+          { description: 'Action 4', note: '', owner: '', dueDate: '' },
+          { description: 'Action 5', note: '', owner: '', dueDate: '' },
+          { description: 'Action 6', note: '', owner: '', dueDate: '' },
+        ],
+      },
+    };
+    const props = buildHubSpotProperties(scanData, highConfidence(), 'https://r2.example.com/plan.docx', null, false, planContent);
+    assert.equal(props.mtg_scan_action1_note, 'Important note');
+    assert.equal(props.mtg_scan_action2_note, undefined);
+    assert.equal(props.mtg_scan_action3_note, 'Another note');
+    assert.equal(props.mtg_scan_action4_note, undefined);
+  });
+});
