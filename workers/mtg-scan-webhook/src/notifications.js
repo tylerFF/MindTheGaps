@@ -91,14 +91,23 @@ function buildScanSummaryHtml(scanData, contactInfo, planContent) {
   if (planContent && planContent.sectionD && planContent.sectionD.actions) {
     const actionRows = planContent.sectionD.actions
       .filter(a => a.description)
-      .map((a, i) => `
+      .map((a, i) => {
+        let row = `
         <tr>
           <td style="padding:6px 12px;font-size:13px;vertical-align:top;color:#666;width:30px;">${i + 1}.</td>
           <td style="padding:6px 12px;font-size:13px;">${esc(a.description)}</td>
           <td style="padding:6px 12px;font-size:13px;white-space:nowrap;">${esc(a.owner)}</td>
           <td style="padding:6px 12px;font-size:13px;white-space:nowrap;">${esc(a.dueDate)}</td>
-        </tr>
-      `)
+        </tr>`;
+        if (a.note) {
+          row += `
+        <tr>
+          <td style="padding:2px 12px;"></td>
+          <td colspan="3" style="padding:2px 12px 6px;font-size:12px;font-style:italic;color:#666;"><strong>Facilitator note:</strong> ${esc(a.note)}</td>
+        </tr>`;
+        }
+        return row;
+      })
       .join('');
 
     sections.push(`
