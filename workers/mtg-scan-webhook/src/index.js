@@ -194,6 +194,11 @@ for (const fields of Object.values(JOTFORM_SCAN_FIELD_MAP.ownerPerSubPath)) {
     if (match) QID_TO_FIELD[match[1]] = fieldName;
   }
 }
+// Register per-action note field names (q279-q284)
+for (const fieldName of Object.values(JOTFORM_SCAN_FIELD_MAP.actionNotes)) {
+  const match = fieldName.match(/^q(\d+)_/);
+  if (match) QID_TO_FIELD[match[1]] = fieldName;
+}
 
 /**
  * Normalize payload keys: JotForm rawRequest uses numeric QIDs ("2", "9", etc.)
