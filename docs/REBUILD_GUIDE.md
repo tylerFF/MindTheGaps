@@ -89,7 +89,7 @@ MindtheGaps (MTG) is a consulting automation system for a consultant named Marc.
 | Plan Generation | Deterministic | Lookup tables in `planGenerator.js` — zero AI |
 | Plan Files | DOCX (never PDF) | Built with `docx` npm package |
 | File Storage | Cloudflare R2 | Bucket: `mtg-plan-drafts` |
-| Payments | Stripe | $295 CAD one-time. Currently TEST mode. |
+| Payments | Stripe | $295 CAD one-time. LIVE mode. Payment link: `plink_1T6fMPJuBZDzKCsm6D9fPp0h` |
 | Booking | Calendly | Marc's calendar: `calendly.com/marc-tribeon/45-minute-growth-gap-scan` |
 | Email | Resend | From: `notifications@mindthegaps.biz`. Domain verified. |
 | Hosting | Cloudflare Pages | Project: `mtg-pages`. Static HTML/JS/CSS. |
@@ -104,7 +104,7 @@ MindtheGaps (MTG) is a consulting automation system for a consultant named Marc.
 | Cloudflare | `marc@mindthegaps.biz` | Account ID: `29b45c8200ab5ef930e08946b9fad67a` |
 | HubSpot | Marc's account | Private app token stored as Worker secret |
 | JotForm | EU endpoint | API key provided per session, never hardcoded |
-| Stripe | Marc's account | TEST mode payment link. Live switch is last go-live step. |
+| Stripe | Marc's account | LIVE mode. Payment link redirects to Calendly booking page after checkout. |
 | Calendly | `marc-tribeon` | Webhook subscription for `invitee.created` |
 | Resend | `mindthegaps` | Domain `mindthegaps.biz` verified. API key: `re_5HDk...` |
 | GitHub | `tylerFF/MindTheGaps` | Main branch: `main` |
@@ -338,11 +338,11 @@ Static HTML/JS page. Reads base64-encoded results from the URL hash (`#`), decod
 - `HUBSPOT_API_KEY` — HubSpot private app token
 - `STRIPE_WEBHOOK_SECRET` — Stripe signing secret
 
-### Go-Live Checklist
-- Replace test payment link with live Stripe payment link in `pages/results/index.html`
-- Create new webhook endpoint in Stripe for live mode
-- Update `STRIPE_WEBHOOK_SECRET` with new signing secret
-- Set Stripe success URL to `https://mtg-pages-3yo.pages.dev/booking/`
+### Live Configuration (completed Mar 25, 2026)
+- Results page uses live payment link: `https://buy.stripe.com/cNi3cwaRtgRMd9laYg1sQ00`
+- After checkout, Stripe redirects to: `https://mtg-pages-3yo.pages.dev/booking/`
+- Booking page embeds Marc's Calendly: `calendly.com/marc-tribeon/45-minute-growth-gap-scan`
+- Test link preserved as comment in `pages/results/index.html` for future testing
 
 ---
 
