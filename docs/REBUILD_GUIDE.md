@@ -26,7 +26,7 @@ This document contains everything needed to rebuild the MindtheGaps system from 
 16. [Plan Generator — Lookup Tables](#16-plan-generator--lookup-tables)
 17. [DOCX Builder — One-Page Plan](#17-docx-builder--one-page-plan)
 18. [Email Notifications — Resend](#18-email-notifications--resend)
-19. [HubSpot — All 79 Properties](#19-hubspot--all-79-properties)
+19. [HubSpot — All 80 Properties](#19-hubspot--all-79-properties)
 20. [R2 Storage — Plan Drafts](#20-r2-storage--plan-drafts)
 21. [Cloudflare Workers — Deployment](#21-cloudflare-workers--deployment)
 22. [JotForm Conditional Logic (42 Rules)](#22-jotform-conditional-logic-42-rules)
@@ -750,7 +750,7 @@ All emails include a styled HTML scan summary:
 
 ---
 
-## 19. HubSpot — All 79 Properties
+## 19. HubSpot — All 80 Properties
 
 All properties use the `mtg_` prefix, live in the "mindthegaps" property group, and are on Contact records only. No Deals pipeline.
 
@@ -819,7 +819,7 @@ All properties use the `mtg_` prefix, live in the "mindthegaps" property group, 
 | mtg_scan_action6_note | textarea | Scan webhook (optional facilitator note for action 6) |
 | mtg_scan_prefill_url | text (URL) | Quiz webhook |
 
-### Plan Fields (7)
+### Plan Fields (8)
 | Property | Type | Written By |
 |----------|------|------------|
 | mtg_plan_draft_link | text (URL) | Scan webhook |
@@ -829,6 +829,7 @@ All properties use the `mtg_` prefix, live in the "mindthegaps" property group, 
 | mtg_plan_reviewer_notes | text | Manual |
 | mtg_plan_sent_at | datetime | Manual |
 | mtg_plan_generation_mode | dropdown (Auto/Stopped/Degraded) | Scan webhook |
+| mtg_final_plan | text (URL) | Manual (Google Drive link to final reviewed One-Page Plan) |
 
 ### Action Fields (18)
 | Property | Type | Written By |
