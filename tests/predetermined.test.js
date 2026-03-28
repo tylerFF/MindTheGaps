@@ -37,9 +37,9 @@ const STANDARD_SUB_PATHS = [
 ];
 
 const OTHER_MANUAL_SUB_PATHS = [
-  'Other (manual):Acquisition',
-  'Other (manual):Conversion',
-  'Other (manual):Retention',
+  'Lead tracking + ownership gap',
+  'Stage clarity + follow-up consistency gap',
+  'Value review / renewal alignment gap',
 ];
 
 const ALL_SUB_PATHS = [...STANDARD_SUB_PATHS, ...OTHER_MANUAL_SUB_PATHS];
@@ -267,35 +267,35 @@ describe('generatePlan() with predetermined actions', () => {
     });
   });
 
-  it('resolves "Other (manual)" sub-path with pillar suffix', () => {
+  it('resolves "Lead tracking + ownership gap" for Acquisition pillar', () => {
     const scanData = buildScanData({
-      subPath: 'Other (manual)',
+      subPath: 'Lead tracking + ownership gap',
       primaryGap: 'Acquisition',
     });
     const plan = generatePlan(scanData, highConfidence());
-    assert.equal(plan.sectionA.opener, STEP5_WHAT_WE_FIX['Other (manual):Acquisition']);
-    const expected = PREDETERMINED_ACTIONS['Other (manual):Acquisition'];
+    assert.equal(plan.sectionA.opener, STEP5_WHAT_WE_FIX['Lead tracking + ownership gap']);
+    const expected = PREDETERMINED_ACTIONS['Lead tracking + ownership gap'];
     plan.sectionD.actions.forEach((a, i) => {
       assert.equal(a.description, expected[i].description);
     });
   });
 
-  it('resolves "Other (manual)" for Conversion pillar', () => {
+  it('resolves "Stage clarity + follow-up consistency gap" for Conversion pillar', () => {
     const scanData = buildScanData({
-      subPath: 'Other (manual)',
+      subPath: 'Stage clarity + follow-up consistency gap',
       primaryGap: 'Conversion',
     });
     const plan = generatePlan(scanData, highConfidence());
-    assert.equal(plan.sectionA.opener, STEP5_WHAT_WE_FIX['Other (manual):Conversion']);
+    assert.equal(plan.sectionA.opener, STEP5_WHAT_WE_FIX['Stage clarity + follow-up consistency gap']);
   });
 
-  it('resolves "Other (manual)" for Retention pillar', () => {
+  it('resolves "Value review / renewal alignment gap" for Retention pillar', () => {
     const scanData = buildScanData({
-      subPath: 'Other (manual)',
+      subPath: 'Value review / renewal alignment gap',
       primaryGap: 'Retention',
     });
     const plan = generatePlan(scanData, highConfidence());
-    assert.equal(plan.sectionA.opener, STEP5_WHAT_WE_FIX['Other (manual):Retention']);
+    assert.equal(plan.sectionA.opener, STEP5_WHAT_WE_FIX['Value review / renewal alignment gap']);
   });
 
   it('action descriptions always come from lookup, never from form', () => {

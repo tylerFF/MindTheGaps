@@ -1,6 +1,6 @@
 # MindtheGaps MVP — Complete Rebuild Guide
 
-**Last updated:** March 18, 2026
+**Last updated:** March 23, 2026
 
 This document contains everything needed to rebuild the MindtheGaps system from scratch. It covers every service, every field, every business rule, every integration, and every configuration detail. Hand this to any developer and they can reconstruct the entire system.
 
@@ -26,7 +26,7 @@ This document contains everything needed to rebuild the MindtheGaps system from 
 16. [Plan Generator — Lookup Tables](#16-plan-generator--lookup-tables)
 17. [DOCX Builder — One-Page Plan](#17-docx-builder--one-page-plan)
 18. [Email Notifications — Resend](#18-email-notifications--resend)
-19. [HubSpot — All 72 Properties](#19-hubspot--all-72-properties)
+19. [HubSpot — All 80 Properties](#19-hubspot--all-79-properties)
 20. [R2 Storage — Plan Drafts](#20-r2-storage--plan-drafts)
 21. [Cloudflare Workers — Deployment](#21-cloudflare-workers--deployment)
 22. [JotForm Conditional Logic (42 Rules)](#22-jotform-conditional-logic-42-rules)
@@ -89,11 +89,11 @@ MindtheGaps (MTG) is a consulting automation system for a consultant named Marc.
 | Plan Generation | Deterministic | Lookup tables in `planGenerator.js` — zero AI |
 | Plan Files | DOCX (never PDF) | Built with `docx` npm package |
 | File Storage | Cloudflare R2 | Bucket: `mtg-plan-drafts` |
-| Payments | Stripe | $295 CAD one-time. Currently TEST mode. |
+| Payments | Stripe | $295 CAD one-time. LIVE mode. Payment link: `plink_1T6fMPJuBZDzKCsm6D9fPp0h` |
 | Booking | Calendly | Marc's calendar: `calendly.com/marc-tribeon/45-minute-growth-gap-scan` |
 | Email | Resend | From: `notifications@mindthegaps.biz`. Domain verified. |
 | Hosting | Cloudflare Pages | Project: `mtg-pages`. Static HTML/JS/CSS. |
-| Tests | Node.js built-in | `node:test` runner. 575 tests. Only dependency: `docx`. |
+| Tests | Node.js built-in | `node:test` runner. 578 tests. Only dependency: `docx`. |
 
 ---
 
@@ -104,7 +104,7 @@ MindtheGaps (MTG) is a consulting automation system for a consultant named Marc.
 | Cloudflare | `marc@mindthegaps.biz` | Account ID: `29b45c8200ab5ef930e08946b9fad67a` |
 | HubSpot | Marc's account | Private app token stored as Worker secret |
 | JotForm | EU endpoint | API key provided per session, never hardcoded |
-| Stripe | Marc's account | TEST mode payment link. Live switch is last go-live step. |
+| Stripe | Marc's account | LIVE mode. Payment link redirects to Calendly booking page after checkout. |
 | Calendly | `marc-tribeon` | Webhook subscription for `invitee.created` |
 | Resend | `mindthegaps` | Domain `mindthegaps.biz` verified. API key: `re_5HDk...` |
 | GitHub | `tylerFF/MindTheGaps` | Main branch: `main` |
@@ -203,7 +203,8 @@ Pick the one with highest contributing score. On tie, use the order above (deman
 | Ownership leak | C1 = "No consistent owner" |
 | Booking friction | C2 ∈ ["8-14 days", "15+ days"] |
 | Attendance leak | V4 ∈ ["Under 40%", "40-59%"] |
-| Follow-up leak | C3 ∈ ["Can't reach...", "ghost after quote"] |
+| Follow-up leak | C3 = "Can't reach them / slow follow-up" |
+| Quote follow-up leak | C3 = "They ghost after the quote" (override: always wins over Attendance leak) |
 
 **If Retention:**
 | Sub-Diagnosis | Trigger |
@@ -337,11 +338,11 @@ Static HTML/JS page. Reads base64-encoded results from the URL hash (`#`), decod
 - `HUBSPOT_API_KEY` — HubSpot private app token
 - `STRIPE_WEBHOOK_SECRET` — Stripe signing secret
 
-### Go-Live Checklist
-- Replace test payment link with live Stripe payment link in `pages/results/index.html`
-- Create new webhook endpoint in Stripe for live mode
-- Update `STRIPE_WEBHOOK_SECRET` with new signing secret
-- Set Stripe success URL to `https://mtg-pages-3yo.pages.dev/booking/`
+### Live Configuration (completed Mar 25, 2026)
+- Results page uses live payment link: `https://buy.stripe.com/cNi3cwaRtgRMd9laYg1sQ00`
+- After checkout, Stripe redirects to: `https://mtg-pages-3yo.pages.dev/booking/`
+- Booking page embeds Marc's Calendly: `calendly.com/marc-tribeon/45-minute-growth-gap-scan`
+- Test link preserved as comment in `pages/results/index.html` for future testing
 
 ---
 
@@ -417,7 +418,8 @@ Embedded Calendly inline widget for Marc's 45-Minute Growth Gap Scan.
 | q38 | oneLeverRetention |
 | q39 | oneLeverSentence (hidden, pre-populated) |
 
-**Baseline Fields (Tier-1):**
+**Baseline Fields (Tier-1, all required in JotForm):**
+All 20 baseline fields (7 Conv + 7 Acq + 6 Ret) are set to `required=Yes` in JotForm. Each includes a "Not sure" option so required never blocks progress. This prevents incomplete baseline data from triggering stop rule 3.
 
 *Conversion (7 fields):*
 | QID | Internal Key | Label |
@@ -467,17 +469,17 @@ Embedded Calendly inline widget for Marc's 45-Minute Growth Gap Scan.
 | q194-q199 | Channel concentration risk (A1) |
 | q200-q205 | Lead capture friction (A2) |
 | q206-q211 | Demand capture / local visibility (A3) |
-| q212-q217 | Other (manual):Acquisition (A4) |
+| q212-q217 | Lead tracking + ownership gap (A4) |
 | q218-q223 | Speed-to-lead (C1) |
 | q224-q229 | Booking friction (C2) |
 | q230-q235 | Show rate (C3) |
 | q236-q241 | Quote follow-up / decision drop-off (C4) |
-| q242-q247 | Other (manual):Conversion (C5) |
+| q242-q247 | Stage clarity + follow-up consistency gap (C5) |
 | q248-q253 | Rebook/recall gap (R1) |
 | q254-q259 | Review rhythm gap (R2) |
 | q260-q265 | Referral ask gap (R3) |
 | q266-q271 | Post-service follow-up gap (R4) |
-| q272-q277 | Other (manual):Retention (R5) |
+| q272-q277 | Value review / renewal alignment gap (R5) |
 
 **Predetermined Action Description Fields (locked dropdowns):**
 | QID Range | Sub-Path | Fields |
@@ -485,17 +487,17 @@ Embedded Calendly inline widget for Marc's 45-Minute Growth Gap Scan.
 | q95-q100 | A1 (Channel concentration risk) | 6 action descriptions |
 | q101-q106 | A2 (Lead capture friction) | 6 action descriptions |
 | q107-q112 | A3 (Demand capture / local visibility) | 6 action descriptions |
-| q113-q118 | A4 (Other manual:Acquisition) | 6 action descriptions |
+| q113-q118 | A4 (Lead tracking + ownership gap) | 6 action descriptions |
 | q119-q124 | C1 (Speed-to-lead) | 6 action descriptions |
 | q125-q130 | C2 (Booking friction) | 6 action descriptions |
 | q131-q136 | C3 (Show rate) | 6 action descriptions |
 | q137-q142 | C4 (Quote follow-up) | 6 action descriptions |
-| q143-q148 | C5 (Other manual:Conversion) | 6 action descriptions |
+| q143-q148 | C5 (Stage clarity + follow-up consistency gap) | 6 action descriptions |
 | q149-q154 | R1 (Rebook/recall gap) | 6 action descriptions |
 | q155-q160 | R2 (Review rhythm gap) | 6 action descriptions |
 | q161-q166 | R3 (Referral ask gap) | 6 action descriptions |
 | q167-q172 | R4 (Post-service follow-up gap) | 6 action descriptions |
-| q173-q178 | R5 (Other manual:Retention) | 6 action descriptions |
+| q173-q178 | R5 (Value review / renewal alignment gap) | 6 action descriptions |
 
 **"What We Fix" Fields (one per sub-path):**
 q179-q192 (one per sub-path, same order as above)
@@ -506,6 +508,19 @@ q179-q192 (one per sub-path, same order as above)
 | q60 | Conversion metrics: Median response time, Lead to booked %, Show rate %, Quote sent within 48h % |
 | q61 | Acquisition metrics: Leads/week, % leads from top source, Calls answered live %, Median response time, Reviews/week, Referral intros/week, Leads to booked % |
 | q62 | Retention metrics: Rebook rate (or count), Reviews/week, Referral intros/week, Days to follow-up after service, Repeat revenue band |
+
+**Per-Action Facilitator Notes (optional, 6 shared fields shown on all sub-paths):**
+| QID | Field | Order | Purpose |
+|-----|-------|-------|---------|
+| q279 | actionNote1 | 314.5 | Optional note for Action 1, renders inline in DOCX as "Facilitator note: {text}" |
+| q280 | actionNote2 | 345.5 | Optional note for Action 2 |
+| q281 | actionNote3 | 376.5 | Optional note for Action 3 |
+| q282 | actionNote4 | 407.5 | Optional note for Action 4 |
+| q283 | actionNote5 | 438.5 | Optional note for Action 5 |
+| q284 | actionNote6 | 469.5 | Optional note for Action 6 |
+
+Helper text: "Use only if the client says something specific we want reflected in the plan."
+q278 (old single ICP note) is hidden but preserved for historical data.
 
 **Constraints:**
 | QID | Field |
@@ -535,7 +550,7 @@ q179-q192 (one per sub-path, same order as above)
 8. **Generate plan** — deterministic lookup tables (see section 16)
 9. **Build DOCX** — One-Page Plan document (see section 17)
 10. **Upload to R2** — store at `plans/{email}/{timestamp}.docx`
-11. **Write to HubSpot** — all 73 properties including action data
+11. **Write to HubSpot** — all 79 properties including action data + per-action notes
 12. **Email Marc** — via Resend (plan ready, degraded, or stop notification)
 13. **Return JSON** — success response with plan URL
 
@@ -558,7 +573,7 @@ q179-q192 (one per sub-path, same order as above)
 | 2 | Gap changed without reason | q9 ≠ q7 AND gapChangeReason is empty | Full stop |
 | 3 | Missing required fields | Any of: no primary gap, no sub-path, no one lever, <5 non-"Not sure" baseline answers, <6 actions, <2 metrics | Full stop |
 
-Note: Rule 1b ("Other" sub-path = full stop) was **removed Mar 20, 2026**. "Other (manual)" sub-paths (A4/C5/R5) now generate plans normally using predetermined lookup tables.
+Note: Rule 1b ("Other" sub-path = full stop) was **removed Mar 20, 2026**. "Lead tracking + ownership gap" (A4), "Stage clarity + follow-up consistency gap" (C5), and "Value review / renewal alignment gap" (R5) now generate plans normally using predetermined lookup tables.
 
 ### Output
 
@@ -641,7 +656,7 @@ Maps each sub-path to exactly 6 actions with default owners and due dates. The s
 - Referral ask gap (6 actions)
 - Post-service follow-up gap (6 actions)
 
-3 "Other (manual)" sub-paths (A4/C5/R5) also have predetermined actions in the lookup table and generate plans normally.
+"Lead tracking + ownership gap" (A4), "Stage clarity + follow-up consistency gap" (C5), and "Value review / renewal alignment gap" (R5) also have predetermined actions in the lookup table and generate plans normally.
 
 ### Lookup Table 2: STEP5_WHAT_WE_FIX
 
@@ -694,9 +709,10 @@ Per-sub-path owner fields (q194-q277) override shared owner fields (q42, q45, et
 | F) Risks & Constraints | Conditional on confidence. Med/Low: ≥1 constraint. Low: also "Data gaps to measure" | sectionF |
 
 ### Special Features
-- Contradiction note (Section A) — yellow highlight, red text, if present
-- Manual plan flag (Section A) — bold warning for degraded plans
-- Confidence badge — shown in header area
+- Contradiction note (Section A) -- yellow highlight, red text, if present
+- Manual plan flag (Section A) -- bold warning for degraded plans
+- Confidence badge -- shown in header area
+- Per-action facilitator notes (Section D) -- "Facilitator note: {text}" rendered in italics under each action row, only if non-empty (q279-q284)
 
 ---
 
@@ -734,7 +750,7 @@ All emails include a styled HTML scan summary:
 
 ---
 
-## 19. HubSpot — All 73 Properties
+## 19. HubSpot — All 80 Properties
 
 All properties use the `mtg_` prefix, live in the "mindthegaps" property group, and are on Contact records only. No Deals pipeline.
 
@@ -782,7 +798,7 @@ All properties use the `mtg_` prefix, live in the "mindthegaps" property group, 
 | mtg_scan_scheduled_for | datetime | Calendly webhook |
 | mtg_calendly_event_id | text | Calendly webhook |
 
-### Scan Output (10)
+### Scan Output (16)
 | Property | Type | Written By |
 |----------|------|------------|
 | mtg_scan_completed | checkbox | Scan webhook |
@@ -795,9 +811,15 @@ All properties use the `mtg_` prefix, live in the "mindthegaps" property group, 
 | mtg_confidence_not_sure_count | number | Scan webhook |
 | mtg_scan_stop_reason | text | Scan webhook |
 | mtg_scan_field2_answer | text | Scan webhook |
+| mtg_scan_action1_note | textarea | Scan webhook (optional facilitator note for action 1) |
+| mtg_scan_action2_note | textarea | Scan webhook (optional facilitator note for action 2) |
+| mtg_scan_action3_note | textarea | Scan webhook (optional facilitator note for action 3) |
+| mtg_scan_action4_note | textarea | Scan webhook (optional facilitator note for action 4) |
+| mtg_scan_action5_note | textarea | Scan webhook (optional facilitator note for action 5) |
+| mtg_scan_action6_note | textarea | Scan webhook (optional facilitator note for action 6) |
 | mtg_scan_prefill_url | text (URL) | Quiz webhook |
 
-### Plan Fields (7)
+### Plan Fields (8)
 | Property | Type | Written By |
 |----------|------|------------|
 | mtg_plan_draft_link | text (URL) | Scan webhook |
@@ -807,6 +829,7 @@ All properties use the `mtg_` prefix, live in the "mindthegaps" property group, 
 | mtg_plan_reviewer_notes | text | Manual |
 | mtg_plan_sent_at | datetime | Manual |
 | mtg_plan_generation_mode | dropdown (Auto/Stopped/Degraded) | Scan webhook |
+| mtg_final_plan | text (URL) | Manual (Google Drive link to final reviewed One-Page Plan) |
 
 ### Action Fields (18)
 | Property | Type | Written By |
@@ -928,7 +951,7 @@ Conditional fields default to `hidden: "No"`. Preview mode ignores this but live
 ### 575 Tests — All Passing
 
 ```bash
-npm test                     # Run all 575 tests
+npm test                     # Run all 578 tests
 npm run test:scoring         # Scoring engine (51)
 npm run test:results         # Results generator (29)
 npm run test:eligibility     # Eligibility check (31)
@@ -950,8 +973,8 @@ Full E2E test scripts are in `docs/MindtheGaps_QA_Test_Scripts_Complete_v3.md` c
 - A1: Channel concentration risk (Acquisition)
 - C1: Speed-to-lead (Conversion with pillar switch)
 - R1: Rebook/recall gap (Retention with pillar switch)
-- M1: Other (manual):Acquisition — plan generated
-- M2: Other (manual):Conversion — plan generated
+- M1: Lead tracking + ownership gap (Acquisition) — plan generated
+- M2: Stage clarity + follow-up consistency gap (Conversion) — plan generated
 - Plus additional scripts for other sub-paths
 
 ---
@@ -966,7 +989,7 @@ Full E2E test scripts are in `docs/MindtheGaps_QA_Test_Scripts_Complete_v3.md` c
 | **Human-in-the-loop** | Plans are NEVER auto-sent to clients. Marc reviews within 24 hours. |
 | **Deterministic plans** | No AI/LLM in plan generation. Lookup tables only. |
 | **Stop rules halt generation** | Any of 4 rules → no plan, Marc notified. |
-| **"Other (manual)" generates plans** | A4/C5/R5 sub-paths flow through to plan generation using predetermined lookup tables. |
+| **Renamed sub-paths generate plans** | A4 ("Lead tracking + ownership gap"), C5 ("Stage clarity + follow-up consistency gap"), R5 ("Value review / renewal alignment gap") flow through to plan generation using predetermined lookup tables. |
 | **Baseline formula locked** | `ROUND(100 × (gap_total / max_possible), 0)` — do not change. |
 | **Predetermined actions** | For non-manual sub-paths, descriptions come from lookup table (not editable from form). |
 | **Owner override** | Per-sub-path owner fields (q194-q277) take precedence over shared owner fields. |
@@ -1029,7 +1052,7 @@ MindTheGaps/
 │   ├── setup-hubspot-properties.js
 │   └── setup-calendly-webhook.js
 │
-├── tests/                       # 575 tests (node:test runner)
+├── tests/                       # 578 tests (node:test runner)
 │
 └── docs/
     ├── REBUILD_GUIDE.md         # THIS FILE

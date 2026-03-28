@@ -91,14 +91,23 @@ function buildScanSummaryHtml(scanData, contactInfo, planContent) {
   if (planContent && planContent.sectionD && planContent.sectionD.actions) {
     const actionRows = planContent.sectionD.actions
       .filter(a => a.description)
-      .map((a, i) => `
+      .map((a, i) => {
+        let row = `
         <tr>
           <td style="padding:6px 12px;font-size:13px;vertical-align:top;color:#666;width:30px;">${i + 1}.</td>
           <td style="padding:6px 12px;font-size:13px;">${esc(a.description)}</td>
           <td style="padding:6px 12px;font-size:13px;white-space:nowrap;">${esc(a.owner)}</td>
           <td style="padding:6px 12px;font-size:13px;white-space:nowrap;">${esc(a.dueDate)}</td>
-        </tr>
-      `)
+        </tr>`;
+        if (a.note) {
+          row += `
+        <tr>
+          <td style="padding:2px 12px;"></td>
+          <td colspan="3" style="padding:2px 12px 6px;font-size:12px;font-style:italic;color:#666;"><strong>Facilitator note:</strong> ${esc(a.note)}</td>
+        </tr>`;
+        }
+        return row;
+      })
       .join('');
 
     sections.push(`
@@ -172,7 +181,7 @@ function buildDegradedPlanEmail({ email, businessName, planUrl, confidence, scan
             <tr><td style="padding:6px 12px;color:#666;">Plan Link</td><td style="padding:6px 12px;"><a href="${planUrl}" style="color:#2563eb;">${esc(planUrl)}</a></td></tr>
           </table>
           <p style="background:#fee2e2;padding:10px 14px;border-radius:6px;font-size:14px;margin:0 0 16px;color:#991b1b;">
-            <strong>Sub-path was "Other (manual)".</strong> This plan uses generic phrasing and must be reviewed and customized before delivery.
+            <strong>Sub-path flagged for manual review.</strong> This plan must be reviewed and customized before delivery.
           </p>
           <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;">
           ${scanSummary}

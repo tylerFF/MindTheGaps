@@ -51,21 +51,21 @@ const conditions = [
   {type:"field",link:"Any",terms:[{field:"12",operator:"equals",value:"Channel concentration risk"}],action:[{visibility:"Show",field:"71"},{visibility:"HideMultiple",fields:["69","70"]}]},
   {type:"field",link:"Any",terms:[{field:"12",operator:"equals",value:"Fit mismatch"}],action:[{visibility:"HideMultiple",fields:["69","70","71"]}]},
   {type:"field",link:"Any",terms:[{field:"12",operator:"equals",value:"Referral / partner flow is not intentional"}],action:[{visibility:"HideMultiple",fields:["69","70","71"]}]},
-  {type:"field",link:"Any",terms:[{field:"12",operator:"equals",value:"Other (manual)"}],action:[{visibility:"HideMultiple",fields:["69","70","71"]}]},
+  {type:"field",link:"Any",terms:[{field:"12",operator:"equals",value:"Lead tracking + ownership gap"}],action:[{visibility:"HideMultiple",fields:["69","70","71"]}]},
 
   // 19-23: Conversion sub-path ladders
   {type:"field",link:"Any",terms:[{field:"11",operator:"equals",value:"Speed-to-lead"}],action:[{visibility:"Show",field:"72"},{visibility:"HideMultiple",fields:["73","74","75"]}]},
   {type:"field",link:"Any",terms:[{field:"11",operator:"equals",value:"Booking friction"}],action:[{visibility:"Show",field:"73"},{visibility:"HideMultiple",fields:["72","74","75"]}]},
   {type:"field",link:"Any",terms:[{field:"11",operator:"equals",value:"Show rate"}],action:[{visibility:"Show",field:"74"},{visibility:"HideMultiple",fields:["72","73","75"]}]},
   {type:"field",link:"Any",terms:[{field:"11",operator:"equals",value:"Quote follow-up / decision drop-off"}],action:[{visibility:"Show",field:"75"},{visibility:"HideMultiple",fields:["72","73","74"]}]},
-  {type:"field",link:"Any",terms:[{field:"11",operator:"equals",value:"Other (manual)"}],action:[{visibility:"HideMultiple",fields:["72","73","74","75"]}]},
+  {type:"field",link:"Any",terms:[{field:"11",operator:"equals",value:"Stage clarity + follow-up consistency gap"}],action:[{visibility:"HideMultiple",fields:["72","73","74","75"]}]},
 
   // 24-28: Retention sub-path ladders
   {type:"field",link:"Any",terms:[{field:"13",operator:"equals",value:"Post-service follow-up gap"}],action:[{visibility:"Show",field:"76"},{visibility:"HideMultiple",fields:["77","78"]}]},
   {type:"field",link:"Any",terms:[{field:"13",operator:"equals",value:"Review rhythm gap"}],action:[{visibility:"Show",field:"77"},{visibility:"HideMultiple",fields:["76","78"]}]},
   {type:"field",link:"Any",terms:[{field:"13",operator:"equals",value:"Referral ask gap"}],action:[{visibility:"Show",field:"77"},{visibility:"HideMultiple",fields:["76","78"]}]},
   {type:"field",link:"Any",terms:[{field:"13",operator:"equals",value:"Rebook/recall gap"}],action:[{visibility:"Show",field:"78"},{visibility:"HideMultiple",fields:["76","77"]}]},
-  {type:"field",link:"Any",terms:[{field:"13",operator:"equals",value:"Other (manual)"}],action:[{visibility:"HideMultiple",fields:["76","77","78"]}]},
+  {type:"field",link:"Any",terms:[{field:"13",operator:"equals",value:"Value review / renewal alignment gap"}],action:[{visibility:"HideMultiple",fields:["76","77","78"]}]},
 ];
 
 // Build form-encoded body with indexed array format

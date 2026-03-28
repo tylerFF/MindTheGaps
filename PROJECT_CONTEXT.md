@@ -91,9 +91,11 @@ Priority: if multiple match, pick the one with the highest contributing score. I
 | Ownership leak | C1 = "No consistent owner" |
 | Booking friction leak | C2 = "8-14 days" or "15+ days" |
 | Attendance leak | V4 = "Under 40%" or "40-59%" |
-| Follow-up leak | C3 = "Can't reach them / slow follow-up" or "They ghost after the quote" |
+| Follow-up leak | C3 = "Can't reach them / slow follow-up" |
+| Quote follow-up leak | C3 = "They ghost after the quote" (**always wins** over Attendance leak) |
 
 Priority: pick the sub-diagnosis whose triggering answer contributed the most points. If tied, use the order above.
+Override: C3 = "They ghost after the quote" always forces Quote follow-up leak, regardless of V4 points.
 
 **If Primary Gap = Retention:**
 | Sub-diagnosis | Condition |
@@ -284,22 +286,20 @@ mtg_plan_generation_mode    dropdown: Auto / Stopped
 - Booking friction (hard to book / long delays)
 - Show rate (no-shows / reschedules)
 - Quote follow-up / decision drop-off (ghosting after quote)
-- Other (forces manual plan)
+- Stage clarity + follow-up consistency gap
 
 **Acquisition sub-paths:**
 - Channel concentration risk (too dependent on one lead source)
 - Demand capture / local visibility (not enough inbound demand)
 - Lead capture friction (site/form/call handling leaks)
-- Fit mismatch (wrong leads; low qualification)
-- Referral / partner flow is not intentional
-- Other (forces manual plan)
+- Lead tracking + ownership gap
 
 **Retention sub-paths:**
 - Rebook/recall gap (next step not scheduled)
 - Review rhythm gap (happy clients not asked at the right time)
 - Referral ask gap (referrals happen by luck)
 - Post-service follow-up gap (no check-ins/reminders)
-- Other (forces manual plan)
+- Value review / renewal alignment gap
 
 ### One Lever Options (by Primary Gap)
 
@@ -308,7 +308,7 @@ mtg_plan_generation_mode    dropdown: Auto / Stopped
 - Booking standardization (one path) + confirmations/reminders
 - Show-rate lift package (what to expect + reminders + prep)
 - Quote turnaround + after-quote follow-up package
-- Other (manual)
+- Stage clarity + follow-up consistency gap
 
 **Acquisition levers:**
 - Add a secondary warm channel + weekly cadence (reduce single-source risk)
@@ -316,14 +316,14 @@ mtg_plan_generation_mode    dropdown: Auto / Stopped
 - Call handling + response ownership + SLA (speed-to-lead for inbound)
 - Qualification gate (2-3 questions) to improve fit
 - Review generation rhythm (simple ask + timing)
-- Other (manual)
+- Lead tracking + ownership gap
 
 **Retention levers:**
 - Rebook/recall system (prompt + script + schedule)
 - Review + referral moment (timing + script + 2-step ask)
 - Post-service check-in (30-day touch + simple template)
 - Win-back for dormant clients (light touch sequence)
-- Other (manual)
+- Value review / renewal alignment gap
 
 ### Tier-1 Baseline Fields (by Primary Gap)
 
@@ -365,8 +365,8 @@ mtg_plan_generation_mode    dropdown: Auto / Stopped
 
 Plan generation is HALTED (and Marc notified) if ANY of these are true:
 
-1. **Sub-path = "not sure"** → Set sub-path to "Other (manual)", DO NOT auto-generate
-2. **Sub-path = "Other (manual)"** at any point → DO NOT auto-generate
+1. **Sub-path = "not sure"** → full stop, DO NOT auto-generate
+2. **Field 2 follow-up = "not sure"** → full stop
 3. **Primary gap changed** from quiz without an update reason provided
 4. **Missing required fields:** Must have ALL of: primary gap + sub-path + one lever + ≥5 Tier-1 baseline fields (non-"Not sure") + all 6 action slots + ≥2 metrics
 5. **Contradiction** between gap confirmation fields and the stated primary gap (without acknowledged update)

@@ -237,20 +237,20 @@ const SUB_PATHS = Object.freeze({
     'Booking friction',
     'Show rate',
     'Quote follow-up / decision drop-off',
-    'Other (manual)',
+    'Stage clarity + follow-up consistency gap',
   ]),
   [PILLARS.ACQUISITION]: Object.freeze([
     'Channel concentration risk',
     'Demand capture / local visibility',
     'Lead capture friction',
-    'Other (manual)',
+    'Lead tracking + ownership gap',
   ]),
   [PILLARS.RETENTION]: Object.freeze([
     'Rebook/recall gap',
     'Review rhythm gap',
     'Referral ask gap',
     'Post-service follow-up gap',
-    'Other (manual)',
+    'Value review / renewal alignment gap',
   ]),
 });
 

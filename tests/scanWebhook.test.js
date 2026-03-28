@@ -233,7 +233,7 @@ describe('scanWebhook — buildHubSpotProperties', () => {
   });
 
   it('builds stopped properties', () => {
-    const scanData = { primaryGap: 'Conversion', subPath: 'Other (manual)', oneLever: '' };
+    const scanData = { primaryGap: 'Conversion', subPath: 'Not sure', oneLever: '' };
     const stopResult = { stopped: true, reasons: ['Sub-path requires manual plan'] };
     const props = buildHubSpotProperties(scanData, null, null, stopResult);
 
@@ -293,7 +293,7 @@ describe('scanWebhook — handler HTTP behavior', () => {
     const request = makeRequest({
       q2_contactEmail: 'test@example.com',
       q9_primaryGap: 'Conversion',
-      q11_subPathConversion: 'Other (manual)',
+      q11_subPathConversion: 'Not sure',
     });
     const response = await handleScanWebhook(request, {}, null);
 
@@ -424,7 +424,7 @@ describe('scanWebhook — extractScanData contradiction note (3.4)', () => {
 
 describe('scanWebhook — buildHubSpotProperties degraded (3.5)', () => {
   it('sets Manual Required + Degraded mode for degraded plans', () => {
-    const scanData = { primaryGap: 'Conversion', subPath: 'Other (manual)', oneLever: 'Fix' };
+    const scanData = { primaryGap: 'Conversion', subPath: 'Stage clarity + follow-up consistency gap', oneLever: 'Fix' };
     const props = buildHubSpotProperties(scanData, highConfidence(), 'https://r2.example.com/plan.docx', null, true);
 
     assert.equal(props.mtg_plan_review_status, 'Manual Required');
@@ -453,16 +453,16 @@ describe('scanWebhook — buildHubSpotProperties degraded (3.5)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Phase 5 — handler: "Other (manual)" now generates plans
+// Phase 5 — handler: named sub-paths (A4/C5/R5) generate plans
 // ---------------------------------------------------------------------------
 
-describe('scanWebhook — handler "Other (manual)" generates plan', () => {
-  it('generates plan for "Other (manual)" with all fields present', async () => {
+describe('scanWebhook — handler named sub-paths generate plan', () => {
+  it('generates plan for C5 with all fields present', async () => {
     const payload = {
       q2_contactEmail: 'test@example.com',
       q9_primaryGap: 'Conversion',
       q7_quizPrimaryGap: 'Conversion',
-      q11_subPathConversion: 'Other (manual)',
+      q11_subPathConversion: 'Stage clarity + follow-up consistency gap',
       q36_oneLeverConversion: 'Response ownership + SLA + follow-up sequence',
       // 7 baseline fields (all answered)
       q15_convInboundLeads: '11-25',
@@ -556,10 +556,10 @@ describe('scanWebhook — extractScanData Field 2 (2.2)', () => {
     assert.equal(scan.field2Label, '');
   });
 
-  it('defaults field2Answer to empty when sub-path is Other (manual)', () => {
+  it('defaults field2Answer to empty when sub-path has no Field 2 mapping', () => {
     const payload = {
       q9_primaryGap: 'Conversion',
-      q11_subPathConversion: 'Other (manual)',
+      q11_subPathConversion: 'Stage clarity + follow-up consistency gap',
     };
     const scan = extractScanData(payload);
     assert.equal(scan.field2Answer, '');
@@ -745,5 +745,66 @@ describe('scanWebhook — buildHubSpotProperties Field 2 (2.2)', () => {
     };
     const props = buildHubSpotProperties(scanData, highConfidence(), 'https://r2.example.com/plan.docx', null, false);
     assert.equal(props.mtg_scan_field2_answer, undefined);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Per-action facilitator notes
+// ---------------------------------------------------------------------------
+
+describe('scanWebhook — extractScanData per-action notes', () => {
+  it('extracts action notes from shared note fields', () => {
+    const payload = {
+      q9_primaryGap: 'Acquisition',
+      q12_subPathAcquisition: 'Channel concentration risk',
+      q279_actionNote1: 'Client switching CRMs in Q2',
+      q280_actionNote2: '',
+      q281_actionNote3: 'Wants to focus on Google Ads',
+    };
+    const scan = extractScanData(payload);
+    assert.equal(scan.actions[0].note, 'Client switching CRMs in Q2');
+    assert.equal(scan.actions[1].note, '');
+    assert.equal(scan.actions[2].note, 'Wants to focus on Google Ads');
+    assert.equal(scan.actions[3].note, '');
+    assert.equal(scan.actions[4].note, '');
+    assert.equal(scan.actions[5].note, '');
+  });
+
+  it('returns empty note when note fields are missing', () => {
+    const payload = {
+      q9_primaryGap: 'Conversion',
+      q11_subPathConversion: 'Speed-to-lead',
+    };
+    const scan = extractScanData(payload);
+    for (let i = 0; i < 6; i++) {
+      assert.equal(scan.actions[i].note, '');
+    }
+  });
+});
+
+describe('scanWebhook — buildHubSpotProperties per-action notes', () => {
+  it('writes action notes to HubSpot when present in plan content', () => {
+    const scanData = {
+      primaryGap: 'Acquisition',
+      subPath: 'Channel concentration risk',
+      oneLever: 'Focus on best channel',
+    };
+    const planContent = {
+      sectionD: {
+        actions: [
+          { description: 'Action 1', note: 'Important note', owner: 'Marc', dueDate: 'Day 7' },
+          { description: 'Action 2', note: '', owner: 'Marc', dueDate: 'Day 7' },
+          { description: 'Action 3', note: 'Another note', owner: 'Marc', dueDate: 'Day 21' },
+          { description: 'Action 4', note: '', owner: '', dueDate: '' },
+          { description: 'Action 5', note: '', owner: '', dueDate: '' },
+          { description: 'Action 6', note: '', owner: '', dueDate: '' },
+        ],
+      },
+    };
+    const props = buildHubSpotProperties(scanData, highConfidence(), 'https://r2.example.com/plan.docx', null, false, planContent);
+    assert.equal(props.mtg_scan_action1_note, 'Important note');
+    assert.equal(props.mtg_scan_action2_note, undefined);
+    assert.equal(props.mtg_scan_action3_note, 'Another note');
+    assert.equal(props.mtg_scan_action4_note, undefined);
   });
 });

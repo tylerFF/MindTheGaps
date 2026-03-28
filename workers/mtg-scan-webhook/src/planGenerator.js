@@ -128,16 +128,19 @@ const MOST_LIKELY_LEAK = Object.freeze({
   'Demand capture / local visibility':        'Inbound demand is not steady enough to hit targets.',
   'Lead capture friction':                    'Leads are being lost at the capture/response step.',
   'Channel concentration risk':               'Lead flow is concentrated in one source, which raises risk.',
+  'Lead tracking + ownership gap':            'Leads are not being captured or tracked, so growth depends on memory instead of a system.',
   // Conversion sub-paths
   'Speed-to-lead':                            'Speed-to-lead is too slow, which reduces bookings.',
   'Booking friction':                         'Booking is too slow or too hard, which reduces conversion.',
   'Show rate':                                'No-shows are reducing completed appointments.',
   'Quote follow-up / decision drop-off':      'Follow-up after quoting is not consistent, reducing close rate.',
+  'Stage clarity + follow-up consistency gap': 'Leads leak between stages because follow-up isn\'t consistent and there\'s no way to see where they get stuck.',
   // Retention sub-paths
   'Post-service follow-up gap':               'There is no consistent post-service follow-up to drive repeat work.',
   'Review rhythm gap':                        'The ask is not happening at the best moment, so referrals/reviews stay low.',
   'Referral ask gap':                         'The ask is not happening at the best moment, so referrals/reviews stay low.',
   'Rebook/recall gap':                        'There is no reliable recall system to bring customers back.',
+  'Value review / renewal alignment gap':     'Value is not being made visible to clients, so renewals depend on luck.',
 });
 
 // ---------------------------------------------------------------------------
@@ -151,16 +154,19 @@ const WHAT_CHANGES = Object.freeze({
   'Demand capture / local visibility':        'More leads become booked work.',
   'Lead capture friction':                    'More leads become booked work.',
   'Channel concentration risk':               'More leads become booked work.',
+  'Lead tracking + ownership gap':            'More leads become booked work.',
   // Conversion sub-paths → specific to the sub-path
   'Speed-to-lead':                            'More leads become booked work.',
   'Booking friction':                         'More booked jobs actually show up.',
   'Show rate':                                'More booked jobs actually show up.',
   'Quote follow-up / decision drop-off':      'More quotes turn into signed work.',
+  'Stage clarity + follow-up consistency gap': 'More leads become booked work.',
   // Retention sub-paths
   'Post-service follow-up gap':               'More customers come back without new ad spend.',
   'Review rhythm gap':                        'More happy customers leave reviews and refer others.',
   'Referral ask gap':                         'More happy customers leave reviews and refer others.',
   'Rebook/recall gap':                        'More customers come back without new ad spend.',
+  'Value review / renewal alignment gap':     'Renewals become predictable because clients see their value clearly.',
 });
 
 // Gap-level fallbacks for WHAT_CHANGES (when sub-path doesn't match)
@@ -182,19 +188,19 @@ const STEP5_WHAT_WE_FIX = Object.freeze({
   'Channel concentration risk':          'Reduce channel risk: add one secondary warm channel and run a weekly routine so leads don\'t rely on one source.',
   'Lead capture friction':               'Stop lead leakage: pick one capture route, assign ownership, and meet a same-day response rule.',
   'Demand capture / local visibility':   'Increase inbound demand: run a weekly visibility routine and add one warm channel that consistently drives local leads.',
-  'Other (manual):Acquisition':          'Improve acquisition consistency: pick one channel and run a simple weekly routine so lead flow becomes predictable.',
+  'Lead tracking + ownership gap':       'Make leads visible and owned: capture every lead in one simple way, tag the source, and run a weekly check so growth stops being guesswork.',
   // Conversion
   'Speed-to-lead':                       'Speed up first response: assign one owner, meet a same-day response rule, and run a simple follow-up sequence.',
   'Booking friction':                    'Make booking easy: use one booking path, confirm fast, and reduce no-shows with reminders.',
   'Show rate':                           'Lift show rate: set expectations, confirm twice, and make rescheduling simple.',
   'Quote follow-up / decision drop-off': 'Stop quote ghosting: commit to a quote same-day response rule and follow up on a clear schedule.',
-  'Other (manual):Conversion':           'Improve conversion consistency: tighten follow-up and tracking across stages so the biggest leak becomes clear and improves.',
+  'Stage clarity + follow-up consistency gap': 'Make conversion visible: define simple stages, set one follow-up rule, and track one weekly number so the biggest leak becomes clear and improves.',
   // Retention
   'Rebook/recall gap':                   'Build recall: set a recall schedule and make "next appointment" a standard step at job end.',
   'Review rhythm gap':                   'Increase reviews: choose the best moment to ask and run a simple weekly follow-up habit.',
   'Referral ask gap':                    'Increase referrals: install a simple ask and a weekly follow-up habit so intros become consistent.',
   'Post-service follow-up gap':          'Install follow-up: add a simple check-in + next-step prompt so clients don\'t go silent after service.',
-  'Other (manual):Retention':            'Improve retention consistency: pick one follow-up habit and one metric so retention improves without a big rebuild.',
+  'Value review / renewal alignment gap': 'Make value visible: Run a simple monthly/quarterly "value review" with one owner, one scoreboard, and one next-step plan to protect renewals.',
 });
 
 // ---------------------------------------------------------------------------
@@ -206,19 +212,19 @@ const STEP5_HELPER_NARRATION = Object.freeze({
   'Channel concentration risk':          'Based on your 12-minute quiz results and what you just confirmed today, leads rely too much on one source, which makes growth fragile. So our first move is:',
   'Lead capture friction':               'Based on your 12-minute quiz results and what you just confirmed today, leads are slipping through because capture and response aren\'t consistent. So our first move is:',
   'Demand capture / local visibility':   'Based on your 12-minute quiz results and what you just confirmed today, inbound demand is too light because local visibility and capture aren\'t strong enough. So our first move is:',
-  'Other (manual):Acquisition':          'Based on your 12-minute quiz results and what you just confirmed today, the acquisition issue is mixed or unclear, so we\'ll pick one practical focus for the next 30 days. So our first move is:',
+  'Lead tracking + ownership gap':       'Based on your 12-minute quiz results and what you just confirmed today, leads aren\'t being captured or tracked in one place, so growth depends on memory instead of a system. So our first move is:',
   // Conversion
   'Speed-to-lead':                       'Based on your 12-minute quiz results and what you just confirmed today, leads are not being contacted fast enough, so you lose jobs before you even respond. So our first move is:',
   'Booking friction':                    'Based on your 12-minute quiz results and what you just confirmed today, it\'s too hard for leads to book, so interested prospects drop off. So our first move is:',
   'Show rate':                           'Based on your 12-minute quiz results and what you just confirmed today, bookings are not turning into shows, so time is wasted and revenue becomes unstable. So our first move is:',
   'Quote follow-up / decision drop-off': 'Based on your 12-minute quiz results and what you just confirmed today, quotes are not being followed up with a simple decision path, so deals stall or die. So our first move is:',
-  'Other (manual):Conversion':           'Based on your 12-minute quiz results and what you just confirmed today, the conversion issue is mixed or unclear, so we\'ll pick one practical focus for the next 30 days. So our first move is:',
+  'Stage clarity + follow-up consistency gap': 'Based on your 12-minute quiz results and what you just confirmed today, leads are leaking between stages because follow-up isn\'t consistent and there\'s no simple way to see where they get stuck. So our first move is:',
   // Retention
   'Rebook/recall gap':                   'Based on your 12-minute quiz results and what you just confirmed today, customers are not coming back on a predictable schedule. So our first move is:',
   'Review rhythm gap':                   'Based on your 12-minute quiz results and what you just confirmed today, reviews are not being asked for and collected in a steady rhythm. So our first move is:',
   'Referral ask gap':                    'Based on your 12-minute quiz results and what you just confirmed today, referrals are not being asked for in a consistent, low-pressure way. So our first move is:',
   'Post-service follow-up gap':          'Based on your 12-minute quiz results and what you just confirmed today, post-service follow-up is not happening, so repeat and referral opportunities are missed. So our first move is:',
-  'Other (manual):Retention':            'Based on your 12-minute quiz results and what you just confirmed today, the retention issue is mixed or unclear, so we\'ll pick one practical focus for the next 30 days. So our first move is:',
+  'Value review / renewal alignment gap': 'Based on your 12-minute quiz results and what you just confirmed today, the value you deliver isn\'t being reviewed in a simple, consistent way, so renewals are at risk. So our first move is:',
 });
 
 // ---------------------------------------------------------------------------
@@ -302,25 +308,25 @@ const PREDETERMINED_ACTIONS = Object.freeze({
       owner: 'Admin/CSR', dueDay: 45 },
   ],
 
-  // ── A4: Other (manual):Acquisition ──────────────────────────────────────
-  'Other (manual):Acquisition': [
-    { description: 'Pick ONE acquisition lever and define a weekly activity target.',
-      helperNarration: 'First, we do a quick weekly check so the plan stays real. The action is:',
+  // ── A4: Lead tracking + ownership gap ──────────────────────────────────
+  'Lead tracking + ownership gap': [
+    { description: 'List your top 5 lead sources and pick one place to record every new lead (one list).',
+      helperNarration: 'First, we stop guessing. We write down where leads come from and record every new lead in one place.',
       owner: 'Owner/GM', dueDay: 7 },
-    { description: 'Write one simple message and one clear call-to-action to use in the weekly routine.',
-      helperNarration: 'Next, we do a quick weekly check so the plan stays real. The action is:',
+    { description: 'Add one required question to every inquiry: "How did you hear about us?" (same options every time).',
+      helperNarration: 'Next, we capture the source at the moment it comes in. That\'s how we learn what\'s working.',
       owner: 'Marketing/Admin', dueDay: 7 },
-    { description: 'Build a weekly list/work queue.',
-      helperNarration: 'Then, we do a quick weekly check so the plan stays real. The action is:',
+    { description: 'Assign one owner for new leads and set a same-day response rule for business hours.',
+      helperNarration: 'Then we make sure nothing sits. One owner, and a clear same-day response rule.',
       owner: 'Owner/GM', dueDay: 21 },
-    { description: 'Run that weekly routine for 2 weeks and note what worked.',
-      helperNarration: 'After that, we do a quick weekly check so the plan stays real. The action is:',
+    { description: 'Create a simple \'new lead\' checklist (3 steps) and use it every time.',
+      helperNarration: 'After that, we make follow-through automatic. Same three steps every time.',
       owner: 'Owner/GM', dueDay: 21 },
-    { description: 'Track leads/week weekly; adjust one thing.',
-      helperNarration: 'Now, we do a quick weekly check so the plan stays real. The action is:',
+    { description: 'Do a weekly 15-minute review: leads received, top source %, and what to adjust this week (one change).',
+      helperNarration: 'Now we keep it real. A short weekly review tells us what to keep and what to tweak.',
       owner: 'Owner/GM', dueDay: 45 },
-    { description: 'Write down the weekly routine (who does what and when) so it stays consistent.',
-      helperNarration: 'Finally, we do a quick weekly check so the plan stays real. The action is:',
+    { description: 'Set one small weekly target (leads/week or inquiries/week) and track it for 4 weeks.',
+      helperNarration: 'Finally, we put a simple target in place so we can measure progress week to week.',
       owner: 'Owner/GM', dueDay: 45 },
   ],
 
@@ -412,25 +418,25 @@ const PREDETERMINED_ACTIONS = Object.freeze({
       owner: 'Owner/GM', dueDay: 45 },
   ],
 
-  // ── C5: Other (manual):Conversion ──────────────────────────────────────
-  'Other (manual):Conversion': [
-    { description: 'Assign one owner for follow-up consistency and run a weekly review.',
-      helperNarration: 'First, we keep deals moving with a simple follow-up habit. The action is:',
+  // ── C5: Stage clarity + follow-up consistency gap ──────────────────────
+  'Stage clarity + follow-up consistency gap': [
+    { description: 'Define 4 stages and use them for every lead: New → Contacted → Next step booked → Won/Lost.',
+      helperNarration: 'First, we make the pipeline simple. Four stages so we can see where leads get stuck.',
       owner: 'Owner/GM', dueDay: 7 },
-    { description: 'Define follow-up expectations by stage (response, booking, reminders, quote follow-up).',
-      helperNarration: 'Next, we respond faster so you don\'t lose the job. The action is:',
+    { description: 'Set the response rule: every new lead gets a same-day reply during business hours.',
+      helperNarration: 'Next, we remove the biggest hidden leak - slow response. Same day is the rule.',
       owner: 'Owner/GM', dueDay: 7 },
-    { description: 'Use simple scripts/pre-written messages for "next step" at each stage.',
-      helperNarration: 'Then, we standardize the words so the team is consistent. The action is:',
+    { description: 'Use one standard reply message that confirms receipt and sets the next step (book a call / next step).',
+      helperNarration: 'Then we keep it clear for the customer. They know you got it and what happens next.',
       owner: 'Admin/CSR', dueDay: 21 },
-    { description: 'Track one weekly metric per stage and flag the weakest stage.',
-      helperNarration: 'After that, we review weekly and fix the biggest bottleneck. The action is:',
+    { description: 'Use a simple 3-touch follow-up pattern if no reply: Day 0 / Day 2 / Day 5 (same wording style).',
+      helperNarration: 'After that, we stop leads from going cold. Three touches, spaced out, no guesswork.',
       owner: 'Owner/GM', dueDay: 21 },
-    { description: 'Fix one recurring conversion bottleneck identified in the weekly review.',
-      helperNarration: 'Now, we review weekly and fix the biggest bottleneck. The action is:',
+    { description: 'Track one weekly number: % of new leads that reach "Next step booked."',
+      helperNarration: 'Now we pick one score. It tells us if follow-up is working.',
       owner: 'Owner/GM', dueDay: 45 },
-    { description: 'Run a weekly conversion review and keep one improvement per cycle.',
-      helperNarration: 'Finally, we review weekly and fix the biggest bottleneck. The action is:',
+    { description: 'Run a weekly 10-minute review and fix one leak (message, timing, or ownership) for the next week.',
+      helperNarration: 'Finally, we improve week by week. One fix at a time so results compound.',
       owner: 'Owner/GM', dueDay: 45 },
   ],
 
@@ -458,45 +464,45 @@ const PREDETERMINED_ACTIONS = Object.freeze({
 
   // ── R2: Review rhythm gap ──────────────────────────────────────────────
   'Review rhythm gap': [
-    { description: 'Pick best moment to ask (end of service/after issue resolved).',
-      helperNarration: 'First, we set the foundation so this can happen every time. The action is:',
+    { description: 'Pick the review moment: ask right after a "happy moment" (job well done, compliment, or issue resolved).',
+      helperNarration: 'First, we tie the review ask to the moment they\'re happiest with you. That\'s when it feels natural.',
       owner: 'Owner/GM', dueDay: 7 },
-    { description: 'Create 2-step ask: review then introduction.',
-      helperNarration: 'Next, now that the foundation is in place, we make the next step easy for the customer. The action is:',
+    { description: 'Use one short Google review ask message that includes your Google review link (text/email).',
+      helperNarration: 'Next, we make it easy. One short message, and we include the Google review link so they can tap once and leave it.',
       owner: 'Admin/CSR', dueDay: 7 },
-    { description: 'Train team on script (10 minutes).',
-      helperNarration: 'Then, we remove friction so more people actually follow through. The action is:',
+    { description: 'Add a simple send rule: send the review ask within 24 hours of the job being completed.',
+      helperNarration: 'Then we lock in timing. Asking within a day gets the best response.',
       owner: 'Owner/GM', dueDay: 21 },
-    { description: 'Weekly follow-up for \'yes\' who didn\'t post.',
-      helperNarration: 'After that, we add a simple nudge so people don\'t forget or drift. The action is:',
+    { description: 'Set a weekly review routine: once a week, check asks sent and new Google reviews received.',
+      helperNarration: 'After that, we add a small weekly check so this stays consistent.',
       owner: 'Admin/CSR', dueDay: 21 },
-    { description: 'Track reviews/week + referral intros/week; adjust timing/script.',
-      helperNarration: 'Now, we make it consistent so the team can run it without thinking. The action is:',
+    { description: 'Track two numbers weekly: review asks sent and new Google reviews received.',
+      helperNarration: 'Now we track the simple scoreboard. If asks go out, reviews show up.',
       owner: 'Ops lead', dueDay: 45 },
-    { description: 'Create one \'thank you\' response pre-written message for referrals.',
-      helperNarration: 'Finally, we add a quick check so we know it\'s working and can tighten it. The action is:',
+    { description: 'Reply to every new Google review with a short thank-you response (same day).',
+      helperNarration: 'Finally, we close the loop. Quick replies build trust and encourage more reviews.',
       owner: 'Admin/CSR', dueDay: 45 },
   ],
 
-  // ── R3: Referral ask gap (same actions as R2, different Step 5) ────────
+  // ── R3: Referral ask gap ────────────────────────────────────────────────
   'Referral ask gap': [
-    { description: 'Pick best moment to ask (end of service/after issue resolved).',
-      helperNarration: 'First, we set the foundation so this can happen every time. The action is:',
+    { description: 'Pick the referral moment: ask right after a "happy moment" (job well done, compliment, or renewal).',
+      helperNarration: 'First, we tie the referral ask to the moments when they\'re happiest with you. That\'s when it feels natural.',
       owner: 'Owner/GM', dueDay: 7 },
-    { description: 'Create 2-step ask: review then introduction.',
-      helperNarration: 'Next, now that the foundation is in place, we make the next step easy for the customer. The action is:',
+    { description: 'Write one referral ask message that names the moment + what to forward (copy/paste).',
+      helperNarration: 'Next, we write one message that\'s easy to send right after a good moment. It tells them exactly what to do: forward one short intro.',
       owner: 'Admin/CSR', dueDay: 7 },
-    { description: 'Train team on script (10 minutes).',
-      helperNarration: 'Then, we remove friction so more people actually follow through. The action is:',
+    { description: 'Create one forwardable intro note the client can reuse anytime (email + text version).',
+      helperNarration: 'Then we make it effortless. They don\'t need to \'sell\' you. They just forward the intro note when someone mentions a need.',
       owner: 'Owner/GM', dueDay: 21 },
-    { description: 'Weekly follow-up for \'yes\' who didn\'t post.',
-      helperNarration: 'After that, we add a simple nudge so people don\'t forget or drift. The action is:',
+    { description: 'Add a simple habit: when you get a compliment or renewal, send the referral ask + forwardable intro note.',
+      helperNarration: 'After that, we tie the ask to the right moments. When they\'re happiest, we send the ask and include the forwardable intro.',
       owner: 'Admin/CSR', dueDay: 21 },
-    { description: 'Track reviews/week + referral intros/week; adjust timing/script.',
-      helperNarration: 'Now, we make it consistent so the team can run it without thinking. The action is:',
+    { description: 'Track two numbers weekly: referral asks sent (at good moments) and referral introductions received.',
+      helperNarration: 'Now we keep a simple scoreboard. If the habit happens at the right moments, introductions start showing up.',
       owner: 'Ops lead', dueDay: 45 },
-    { description: 'Create one \'thank you\' response pre-written message for referrals.',
-      helperNarration: 'Finally, we add a quick check so we know it\'s working and can tighten it. The action is:',
+    { description: 'Use a short thank-you message for every intro and report back when it turns into work.',
+      helperNarration: 'Finally, we reinforce the behavior. People refer more when they feel appreciated and kept in the loop.',
       owner: 'Admin/CSR', dueDay: 45 },
   ],
 
@@ -522,25 +528,25 @@ const PREDETERMINED_ACTIONS = Object.freeze({
       owner: 'Ops lead', dueDay: 45 },
   ],
 
-  // ── R5: Other (manual):Retention ───────────────────────────────────────
-  'Other (manual):Retention': [
-    { description: 'Confirm the biggest retention leak using one weekly metric and one owner.',
-      helperNarration: 'First, we set the foundation so this can happen every time. The action is:',
+  // ── R5: Value review / renewal alignment gap ─────────────────────────
+  'Value review / renewal alignment gap': [
+    { description: 'Define what "retained" means and pick one review cadence (monthly or quarterly).',
+      helperNarration: 'First, we get clear on what \'retained\' looks like for you, and we pick a simple schedule we can stick to.',
       owner: 'Owner/GM', dueDay: 7 },
-    { description: 'Choose one retention lever for the next 30 days and define the next-step process.',
-      helperNarration: 'Next, now that the foundation is in place, we make the next step easy for the customer. The action is:',
+    { description: 'Choose one owner for the review and one backup (so it never gets skipped).',
+      helperNarration: 'Next, we assign clear ownership. This only works if one person owns it end-to-end.',
       owner: 'Owner/GM', dueDay: 7 },
-    { description: 'Use a simple script/pre-written message for the selected follow-up step.',
-      helperNarration: 'Then, we remove friction so more people actually follow through. The action is:',
+    { description: 'Create a one-page review agenda: wins, issues, next 30-60 days (3 sections).',
+      helperNarration: 'Then, we make the review simple and repeatable. Same three sections every time.',
       owner: 'Admin/CSR', dueDay: 21 },
-    { description: 'Track the chosen retention metric weekly and note the main blocker.',
-      helperNarration: 'After that, we add a simple nudge so people don\'t forget or drift. The action is:',
+    { description: 'Build the "value proof" list: 3-5 specific results from the last period (plain language).',
+      helperNarration: 'After that, we write down the proof. This prevents renewals from turning into \'what do we even get?\'',
       owner: 'Owner/GM', dueDay: 21 },
-    { description: 'Fix one retention bottleneck (timing, wording, follow-up, or no owner).',
-      helperNarration: 'Now, we make it consistent so the team can run it without thinking. The action is:',
+    { description: 'Run the first value review and end it with one agreed next step (one priority only).',
+      helperNarration: 'Now we run the first one. We finish with one clear priority so the client feels direction.',
       owner: 'Admin/CSR', dueDay: 45 },
-    { description: 'Run a weekly retention review and make one improvement each cycle.',
-      helperNarration: 'Finally, we add a quick check so we know it\'s working and can tighten it. The action is:',
+    { description: 'Set the recurring schedule for the next 2 reviews and send a short recap after each.',
+      helperNarration: 'Finally, we lock the habit in place. Two reviews booked ahead, and a short recap keeps everyone aligned.',
       owner: 'Admin/CSR', dueDay: 45 },
   ],
 });
@@ -559,6 +565,7 @@ const METRIC_TO_BASELINE = Object.freeze({
   'Lead to booked %':           'conv_lead_to_booked',
   'Show rate %':                'conv_booked_to_show',
   'Quote sent within 48h %':    'conv_quote_sent_timeline',
+  'Quote to close %':           'conv_quote_to_close',
 
   // Acquisition metrics
   'Leads/week':                 'acq_inbound_leads',
@@ -851,7 +858,7 @@ function generatePlan(scanData, contactInfo, confidenceResult) {
   const field2Answer = (scanData.field2Answer || '').trim();
   const field2Label = (scanData.field2Label || '').trim();
 
-  // Phase 5 (3.5): Flag when sub-path is "Other (manual)"
+  // Phase 5 (3.5): Flag when sub-path starts with "Other" (legacy check)
   const isOtherSubPath = scanData.subPath
     && typeof scanData.subPath === 'string'
     && scanData.subPath.trim().toLowerCase().startsWith('other');
@@ -907,11 +914,13 @@ function generatePlan(scanData, contactInfo, confidenceResult) {
     actions: predeterminedActions
       ? predeterminedActions.map((pa, i) => ({
           description: pa.description,
+          note: (scanData.actions && scanData.actions[i]?.note) || '',
           owner: (scanData.actions && scanData.actions[i]?.owner) || pa.owner,
           dueDate: (scanData.actions && scanData.actions[i]?.dueDate) || `Day ${pa.dueDay}`,
         }))
       : (scanData.actions || []).map((a) => ({
           description: a.description || '',
+          note: a.note || '',
           owner: a.owner || '',
           dueDate: a.dueDate || '',
         })),
@@ -919,7 +928,7 @@ function generatePlan(scanData, contactInfo, confidenceResult) {
 
   // Pad to 6 actions if fewer
   while (sectionD.actions.length < 6) {
-    sectionD.actions.push({ description: '', owner: '', dueDate: '' });
+    sectionD.actions.push({ description: '', note: '', owner: '', dueDate: '' });
   }
 
   // Section E: Weekly Scorecard

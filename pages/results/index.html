@@ -407,7 +407,7 @@
           container.innerHTML =
             '<h1 style="font-size:1.5rem;font-weight:700;color:#16213e;margin-bottom:0.5rem;">Ready for Your Personalized Plan?</h1>' +
             '<h2 style="font-size:1.15rem;font-weight:700;color:#1a1a2e;margin-bottom:0.25rem;">MindtheGaps 45-Minute Growth Scan</h2>' +
-            '<h3 style="font-size:1.05rem;font-weight:700;color:#1a1a2e;margin-bottom:0.75rem;">CA$295.00</h3>' +
+            '<h3 style="font-size:1.05rem;font-weight:700;color:#1a1a2e;margin-bottom:0.75rem;">CAD $295</h3>' +
             '<hr style="border:none;border-top:1px solid #e2e6ea;margin-bottom:1.25rem;">' +
             '<p style="margin-bottom: 0.75rem; color: #555;">A facilitated 45-minute working session to confirm your biggest growth gap, choose the one lever to fix first, and map the next 60 days with confidence. Within 24 hours after human review, you\u2019ll receive a personalized 1-page action plan you can use right away.</p>' +
             '<ul style="list-style:none;padding:0;margin:0 0 1rem 0;display:inline-block;text-align:left;">' +
@@ -419,9 +419,9 @@
             '<p style="font-size:0.85rem;color:#16213e;font-weight:600;margin-bottom:1.25rem;">Best for Owner/GM, or a lead who owns growth and can act on the plan.</p>' +
             '<a id="checkout-link" href="#" class="cta-button ' + gapClass + '">Book the 45-Minute Growth Gap Scan &mdash; CAD $295</a>';
 
-          // Stripe payment link — swap comments to go live
-          // var STRIPE_CHECKOUT_URL = 'https://buy.stripe.com/cNi3cwaRtgRMd9laYg1sQ00'; // LIVE
-          var STRIPE_CHECKOUT_URL = 'https://book.stripe.com/test_bJebJ28Jl30W3yL8Q81sQ01'; // TEST
+          // Stripe payment link
+          var STRIPE_CHECKOUT_URL = 'https://buy.stripe.com/cNi3cwaRtgRMd9laYg1sQ00'; // LIVE
+          // var STRIPE_CHECKOUT_URL = 'https://book.stripe.com/test_bJebJ28Jl30W3yL8Q81sQ01'; // TEST
           var checkoutLink = document.getElementById('checkout-link');
           checkoutLink.href = STRIPE_CHECKOUT_URL;
         } else if (eligibility) {

@@ -47,6 +47,15 @@ const JOTFORM_SCAN_FIELD_MAP = {
     // Phase 5 (3.4): Contradiction note — QID 79 confirmed in JotForm scan worksheet
     q79_contradictionNote: 'contradictionNote',
   },
+  // Per-action facilitator notes (6 shared fields, one per action slot)
+  actionNotes: {
+    1: 'q279_actionNote1',
+    2: 'q280_actionNote2',
+    3: 'q281_actionNote3',
+    4: 'q282_actionNote4',
+    5: 'q283_actionNote5',
+    6: 'q284_actionNote6',
+  },
   // Sub-path: one per pillar, extracted based on primaryGap
   subPathByPillar: {
     Conversion: 'q11_subPathConversion',
@@ -126,17 +135,17 @@ const JOTFORM_SCAN_FIELD_MAP = {
     'Channel concentration risk':          ['q194_ownerCCR1','q195_ownerCCR2','q196_ownerCCR3','q197_ownerCCR4','q198_ownerCCR5','q199_ownerCCR6'],
     'Lead capture friction':               ['q200_ownerLCF1','q201_ownerLCF2','q202_ownerLCF3','q203_ownerLCF4','q204_ownerLCF5','q205_ownerLCF6'],
     'Demand capture / local visibility':   ['q206_ownerDCV1','q207_ownerDCV2','q208_ownerDCV3','q209_ownerDCV4','q210_ownerDCV5','q211_ownerDCV6'],
-    'Other (manual):Acquisition':          ['q212_ownerOMA1','q213_ownerOMA2','q214_ownerOMA3','q215_ownerOMA4','q216_ownerOMA5','q217_ownerOMA6'],
+    'Lead tracking + ownership gap':       ['q212_ownerOMA1','q213_ownerOMA2','q214_ownerOMA3','q215_ownerOMA4','q216_ownerOMA5','q217_ownerOMA6'],
     'Speed-to-lead':                       ['q218_ownerSTL1','q219_ownerSTL2','q220_ownerSTL3','q221_ownerSTL4','q222_ownerSTL5','q223_ownerSTL6'],
     'Booking friction':                    ['q224_ownerBF1','q225_ownerBF2','q226_ownerBF3','q227_ownerBF4','q228_ownerBF5','q229_ownerBF6'],
     'Show rate':                           ['q230_ownerSR1','q231_ownerSR2','q232_ownerSR3','q233_ownerSR4','q234_ownerSR5','q235_ownerSR6'],
     'Quote follow-up / decision drop-off': ['q236_ownerQFU1','q237_ownerQFU2','q238_ownerQFU3','q239_ownerQFU4','q240_ownerQFU5','q241_ownerQFU6'],
-    'Other (manual):Conversion':           ['q242_ownerOMC1','q243_ownerOMC2','q244_ownerOMC3','q245_ownerOMC4','q246_ownerOMC5','q247_ownerOMC6'],
+    'Stage clarity + follow-up consistency gap': ['q242_ownerOMC1','q243_ownerOMC2','q244_ownerOMC3','q245_ownerOMC4','q246_ownerOMC5','q247_ownerOMC6'],
     'Rebook/recall gap':                   ['q248_ownerRRG1','q249_ownerRRG2','q250_ownerRRG3','q251_ownerRRG4','q252_ownerRRG5','q253_ownerRRG6'],
     'Review rhythm gap':                   ['q254_ownerRVG1','q255_ownerRVG2','q256_ownerRVG3','q257_ownerRVG4','q258_ownerRVG5','q259_ownerRVG6'],
     'Referral ask gap':                    ['q260_ownerRAG1','q261_ownerRAG2','q262_ownerRAG3','q263_ownerRAG4','q264_ownerRAG5','q265_ownerRAG6'],
     'Post-service follow-up gap':          ['q266_ownerPSF1','q267_ownerPSF2','q268_ownerPSF3','q269_ownerPSF4','q270_ownerPSF5','q271_ownerPSF6'],
-    'Other (manual):Retention':            ['q272_ownerOMR1','q273_ownerOMR2','q274_ownerOMR3','q275_ownerOMR4','q276_ownerOMR5','q277_ownerOMR6'],
+    'Value review / renewal alignment gap': ['q272_ownerOMR1','q273_ownerOMR2','q274_ownerOMR3','q275_ownerOMR4','q276_ownerOMR5','q277_ownerOMR6'],
   },
 };
 
@@ -184,6 +193,11 @@ for (const fields of Object.values(JOTFORM_SCAN_FIELD_MAP.ownerPerSubPath)) {
     const match = fieldName.match(/^q(\d+)_/);
     if (match) QID_TO_FIELD[match[1]] = fieldName;
   }
+}
+// Register per-action note field names (q279-q284)
+for (const fieldName of Object.values(JOTFORM_SCAN_FIELD_MAP.actionNotes)) {
+  const match = fieldName.match(/^q(\d+)_/);
+  if (match) QID_TO_FIELD[match[1]] = fieldName;
 }
 
 /**
@@ -356,8 +370,13 @@ function extractScanData(payload) {
     if (!owner) {
       owner = String(payload[actionMap.owner] || '').trim();
     }
+    // Per-action facilitator note (shared field, one per action slot)
+    const noteField = JOTFORM_SCAN_FIELD_MAP.actionNotes[i];
+    const note = noteField ? String(payload[noteField] || '').trim() : '';
+
     scan.actions.push({
       description: String(payload[actionMap.desc] || '').trim(),
+      note,
       owner,
       dueDate,
     });
@@ -440,6 +459,8 @@ function buildHubSpotProperties(scanData, confidenceResult, planUrl, stopResult,
     props.mtg_confidence_not_sure_count = String(confidenceResult.notSureCount);
   }
 
+  // Per-action facilitator notes (optional)
+
   // Plan
   if (planUrl) {
     props.mtg_plan_draft_link = planUrl;
@@ -464,6 +485,7 @@ function buildHubSpotProperties(scanData, confidenceResult, planUrl, stopResult,
       if (a.description) props[`mtg_scan_action${i + 1}_desc`] = a.description;
       if (a.owner) props[`mtg_scan_action${i + 1}_owner`] = a.owner;
       if (a.dueDate) props[`mtg_scan_action${i + 1}_due`] = a.dueDate;
+      if (a.note) props[`mtg_scan_action${i + 1}_note`] = a.note;
     }
   }
 

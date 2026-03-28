@@ -380,7 +380,7 @@ function buildSectionC(planContent) {
 // Section D: Action Plan (6 actions)
 // ---------------------------------------------------------------------------
 
-function buildSectionD(planContent) {
+function buildSectionD(planContent, scanData) {
   const d = planContent.sectionD || {};
   const actions = d.actions || [];
 
@@ -402,10 +402,34 @@ function buildSectionD(planContent) {
     if (action.dueDate) {
       actionLine += ` Due: ${action.dueDate}.`;
     }
+
+    // Build action cell: action line + optional facilitator note
+    const cellChildren = [
+      new Paragraph({
+        children: [text(actionLine.trim())],
+      }),
+    ];
+
+    // Per-action facilitator note (only if non-empty)
+    if (action.note) {
+      cellChildren.push(
+        new Paragraph({
+          spacing: { before: 40 },
+          children: [
+            new TextRun({ text: 'Facilitator note: ', bold: true, size: 20, font: 'Calibri', italics: true }),
+            new TextRun({ text: action.note, size: 20, font: 'Calibri', italics: true }),
+          ],
+        }),
+      );
+    }
+
     dataRows.push(
       row([
         cell(String(i + 1), { width: 5 }),
-        cell(actionLine.trim(), { width: 95 }),
+        new TableCell({
+          width: { size: 95, type: WidthType.PERCENTAGE },
+          children: cellChildren,
+        }),
       ]),
     );
   }
@@ -649,7 +673,7 @@ async function buildDocx(planContent, scanData, contactInfo, confidenceResult) {
     ...buildSectionA(planContent),
     ...buildSectionB(planContent),
     ...buildSectionC(planContent),
-    ...buildSectionD(planContent),
+    ...buildSectionD(planContent, scanData),
     ...buildSectionE(planContent),
     ...buildSectionF(planContent, confidenceResult),
   ];

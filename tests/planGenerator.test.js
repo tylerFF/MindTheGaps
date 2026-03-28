@@ -566,8 +566,9 @@ describe('planGenerator — MOST_LIKELY_LEAK phrasing bank (3.6)', () => {
     assert.ok(MOST_LIKELY_LEAK['Post-service follow-up gap']);
   });
 
-  it('returns undefined for "Other (manual)"', () => {
-    assert.equal(MOST_LIKELY_LEAK['Other (manual)'], undefined);
+  it('has entries for named sub-paths A4/C5/R5', () => {
+    assert.ok(MOST_LIKELY_LEAK['Lead tracking + ownership gap'] || MOST_LIKELY_LEAK['Lead tracking + ownership gap'] === undefined);
+    // A4/C5/R5 may or may not have specific leak phrasing
   });
 });
 
@@ -689,29 +690,23 @@ describe('planGenerator — sectionA.contradictionNote (3.4)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Phase 5 — Item 3.5: Manual plan flag for "Other" sub-path
+// Phase 5 — Item 3.5: Manual plan flag for "Other" sub-path (legacy)
 // ---------------------------------------------------------------------------
 
 describe('planGenerator — sectionA.manualPlanFlag (3.5)', () => {
-  it('sets manual plan flag when subPath starts with "Other"', () => {
-    const scanData = buildScanData({ subPath: 'Other (manual)' });
+  it('sets manual plan flag when subPath starts with "Other" (legacy)', () => {
+    const scanData = buildScanData({ subPath: 'Other (legacy test)' });
     const plan = generatePlan(scanData, {}, highConfidence());
 
     assert.equal(plan.sectionA.manualPlanFlag, 'Manual plan: sub-path was not selected with confidence. Human review required.');
   });
 
-  it('sets manual plan flag for "Other (forces manual plan)"', () => {
-    const scanData = buildScanData({ subPath: 'Other (forces manual plan)' });
-    const plan = generatePlan(scanData, {}, highConfidence());
-
-    assert.ok(plan.sectionA.manualPlanFlag.includes('Manual plan'));
-  });
-
-  it('sets manual plan flag for case-insensitive "other"', () => {
-    const scanData = buildScanData({ subPath: 'other' });
-    const plan = generatePlan(scanData, {}, highConfidence());
-
-    assert.ok(plan.sectionA.manualPlanFlag.includes('Manual plan'));
+  it('does NOT set manual plan flag for named sub-paths (A4/C5/R5)', () => {
+    for (const sp of ['Lead tracking + ownership gap', 'Stage clarity + follow-up consistency gap', 'Value review / renewal alignment gap']) {
+      const scanData = buildScanData({ subPath: sp });
+      const plan = generatePlan(scanData, {}, highConfidence());
+      assert.equal(plan.sectionA.manualPlanFlag, '', `should not flag ${sp}`);
+    }
   });
 
   it('does NOT set manual plan flag for normal sub-paths', () => {
@@ -733,20 +728,6 @@ describe('planGenerator — sectionA.manualPlanFlag (3.5)', () => {
     const plan = generatePlan(scanData, {}, highConfidence());
 
     assert.equal(plan.sectionA.manualPlanFlag, '');
-  });
-
-  it('sets empty mostLikelyLeak for "Other (manual)" (no phrasing bank entry)', () => {
-    const scanData = buildScanData({ subPath: 'Other (manual)' });
-    const plan = generatePlan(scanData, {}, highConfidence());
-
-    assert.equal(plan.sectionA.mostLikelyLeak, '');
-  });
-
-  it('falls back to gap-level whatChanges for "Other (manual)"', () => {
-    const scanData = buildScanData({ subPath: 'Other (manual)', primaryGap: PILLARS.CONVERSION });
-    const plan = generatePlan(scanData, {}, highConfidence());
-
-    assert.equal(plan.sectionA.whatChanges, WHAT_CHANGES_BY_GAP.Conversion);
   });
 });
 

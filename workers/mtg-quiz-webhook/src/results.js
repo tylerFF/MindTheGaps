@@ -84,10 +84,13 @@ const SUB_DIAGNOSES = {
     {
       name: 'Follow-up leak',
       display: 'Follow-up is the leak: too many leads disappear after initial interest.',
-      condition: (a) => [
-        "Can't reach them / slow follow-up",
-        'They ghost after the quote',
-      ].includes(a.C3),
+      condition: (a) => a.C3 === "Can't reach them / slow follow-up",
+      scoreKey: 'C3',
+    },
+    {
+      name: 'Quote follow-up leak',
+      display: 'Quote follow-up is the leak: too many leads go quiet after the quote.',
+      condition: (a) => a.C3 === 'They ghost after the quote',
       scoreKey: 'C3',
     },
   ],
@@ -186,6 +189,10 @@ const FASTEST_NEXT_STEPS = {
     'Build a simple 3-touch follow-up sequence after every quote or proposal.',
     'Assign one owner to follow up on every open quote until it\'s won or closed.',
   ],
+  'Quote follow-up leak': [
+    'Use a simple quote follow-up rhythm (Day 0 / 2 / 5) with one clear next step.',
+    'Confirm the decision owner and agree on a decision date (so "yes/no" is easy).',
+  ],
 
   // Retention
   'No retention cadence': [
@@ -261,6 +268,13 @@ function getPointsForAnswer(questionId, answer) {
 function selectSubDiagnosis(primaryGap, answers) {
   const candidates = SUB_DIAGNOSES[primaryGap];
   if (!candidates) return null;
+
+  // Override: "ghost after quote" always forces Quote follow-up leak (C4),
+  // even when Attendance leak ties on points
+  if (primaryGap === PILLARS.CONVERSION && answers.C3 === 'They ghost after the quote') {
+    const forced = candidates.find((s) => s.name === 'Quote follow-up leak');
+    if (forced) return { ...forced, contributedPoints: getPointsForAnswer(forced.scoreKey, answers[forced.scoreKey]) };
+  }
 
   const matches = candidates
     .filter((sub) => sub.condition(answers))
