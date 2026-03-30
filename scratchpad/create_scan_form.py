@@ -1,9 +1,10 @@
 """Create the MindtheGaps Scan Worksheet form in JotForm via API."""
 import sys
+import os
 sys.path.insert(0, r'c:\Users\vwill\Documents\Tyler Project\Project 1\MindTheGapsCodebase\jotform-mcp-server')
 from jotform import JotformAPIClient
 
-client = JotformAPIClient(apiKey='a215bd6c660dd268df26062518e54abe')
+client = JotformAPIClient(apiKey=os.environ['JOTFORM_API_KEY'])
 
 q = {}
 order_num = 1

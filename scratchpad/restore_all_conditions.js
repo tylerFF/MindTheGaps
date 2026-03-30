@@ -1,6 +1,6 @@
 const https = require('https');
 
-const API_KEY = 'a215bd6c660dd268df26062518e54abe';
+const API_KEY = process.env.JOTFORM_API_KEY;
 const FORM_ID = '260435948553162';
 
 // Ladder QIDs (existing — old visual summary cards, always hidden)
