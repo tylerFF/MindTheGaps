@@ -185,7 +185,7 @@ const WHAT_CHANGES_BY_GAP = Object.freeze({
 
 const STEP5_WHAT_WE_FIX = Object.freeze({
   // Acquisition
-  'Channel concentration risk':          'Reduce channel risk: add one secondary warm channel and run a weekly routine so leads don\'t rely on one source.',
+  'Channel concentration risk':          'Reduce source concentration: add one secondary warm channel and review source mix weekly so lead flow is less dependent on one source.',
   'Lead capture friction':               'Stop lead leakage: pick one capture route, assign ownership, and meet a same-day response rule.',
   'Demand capture / local visibility':   'Increase inbound demand: run a weekly visibility routine and add one warm channel that consistently drives local leads.',
   'Lead tracking + ownership gap':       'Make leads visible and owned: capture every lead in one simple way, tag the source, and run a weekly check so growth stops being guesswork.',
@@ -193,10 +193,10 @@ const STEP5_WHAT_WE_FIX = Object.freeze({
   'Speed-to-lead':                       'Speed up first response: assign one owner, meet a same-day response rule, and run a simple follow-up sequence.',
   'Booking friction':                    'Make booking easy: use one booking path, confirm fast, and reduce no-shows with reminders.',
   'Show rate':                           'Lift show rate: set expectations, confirm twice, and make rescheduling simple.',
-  'Quote follow-up / decision drop-off': 'Stop quote ghosting: commit to a quote same-day response rule and follow up on a clear schedule.',
+  'Quote follow-up / decision drop-off': 'Stop quote ghosting: set a clear quote turnaround rule and follow up on a clear schedule.',
   'Stage clarity + follow-up consistency gap': 'Make conversion visible: define simple stages, set one follow-up rule, and track one weekly number so the biggest leak becomes clear and improves.',
   // Retention
-  'Rebook/recall gap':                   'Build recall: set a recall schedule and make "next appointment" a standard step at job end.',
+  'Rebook/recall gap':                   'Build recall: set a review schedule and make the next review a standard step at closeout.',
   'Review rhythm gap':                   'Increase reviews: choose the best moment to ask and run a simple weekly follow-up habit.',
   'Referral ask gap':                    'Increase referrals: install a simple ask and a weekly follow-up habit so intros become consistent.',
   'Post-service follow-up gap':          'Install follow-up: add a simple check-in + next-step prompt so clients don\'t go silent after service.',
@@ -295,7 +295,7 @@ const PREDETERMINED_ACTIONS = Object.freeze({
       helperNarration: 'Next, we do a quick weekly check so the plan stays real. The action is:',
       owner: 'Marketing/Admin', dueDay: 7 },
     { description: 'Install review-ask script + timing rule; 10-minute team train.',
-      helperNarration: 'Then, we respond faster so you win the lead. The action is:',
+      helperNarration: 'Then, we make the ask easier to repeat so reviews happen more consistently. The action is:',
       owner: 'Ops lead', dueDay: 21 },
     { description: 'Add one secondary warm channel + intro script + weekly outreach list.',
       helperNarration: 'After that, we do a quick weekly check so the plan stays real. The action is:',
@@ -304,7 +304,7 @@ const PREDETERMINED_ACTIONS = Object.freeze({
       helperNarration: 'Now, we do a quick weekly check so the plan stays real. The action is:',
       owner: 'Owner/GM', dueDay: 45 },
     { description: 'Lightweight follow-up rule: same-day response + 2 follow-ups.',
-      helperNarration: 'Finally, we respond faster so you win the lead. The action is:',
+      helperNarration: 'Finally, we add a simple follow-up rule so new demand does not go cold. The action is:',
       owner: 'Admin/CSR', dueDay: 45 },
   ],
 
@@ -339,16 +339,16 @@ const PREDETERMINED_ACTIONS = Object.freeze({
       helperNarration: 'Next, we keep deals moving with a simple follow-up habit. The action is:',
       owner: 'Admin/CSR', dueDay: 7 },
     { description: 'Add an immediate auto-reply for website requests: confirm we got it + tell them when you\'ll respond.',
-      helperNarration: 'Then, we reduce no-shows with simple reminders. The action is:',
+      helperNarration: 'Then we acknowledge every request right away so people don\'t wonder. The action is:',
       owner: 'Admin/CSR', dueDay: 21 },
     { description: 'Run a daily 10-minute lead review to clear any unassigned or unresponded leads.',
-      helperNarration: 'After that, we review weekly and fix the biggest bottleneck. The action is:',
+      helperNarration: 'After that, we clear the queue daily so nothing slips. The action is:',
       owner: 'Owner/GM', dueDay: 21 },
     { description: 'Track response time weekly and fix the single biggest delay in the process.',
       helperNarration: 'Now, we respond faster so you don\'t lose the job. The action is:',
       owner: 'Owner/GM', dueDay: 45 },
     { description: 'Standardize the first-call script: (1) what\'s the issue, (2) where is it, (3) how urgent is it \u2014 then book the next step.',
-      helperNarration: 'Finally, we make booking easy so people don\'t drop off. The action is:',
+      helperNarration: 'Finally, we make the first call consistent so leads move to the next step faster. The action is:',
       owner: 'Owner/GM', dueDay: 45 },
   ],
 
@@ -363,7 +363,7 @@ const PREDETERMINED_ACTIONS = Object.freeze({
     { description: 'Send confirmations + reminders (24h + 2h) and include "reply to confirm."',
       helperNarration: 'Then, we reduce no-shows with simple reminders. The action is:',
       owner: 'Admin/CSR', dueDay: 21 },
-    { description: 'Pre-confirm the basics: decision maker, address, and access details.',
+    { description: 'Pre-confirm the basics: decision maker, company details, and access requirements.',
       helperNarration: 'After that, we reduce no-shows with simple reminders. The action is:',
       owner: 'Admin/CSR', dueDay: 21 },
     { description: 'Review time-to-first-appointment weekly and adjust calendar blocks if needed.',
@@ -376,14 +376,14 @@ const PREDETERMINED_ACTIONS = Object.freeze({
 
   // ── C3: Show rate ──────────────────────────────────────────────────────
   'Show rate': [
-    { description: 'Send a "what to expect" message (arrival window, length, and prep).',
+    { description: 'Send a "what to expect" message (meeting time, length, and prep).',
       helperNarration: 'First, we take one practical step without a big rebuild. The action is:',
       owner: 'Admin/CSR', dueDay: 7 },
     { description: 'Use a reminder sequence (24h + 2h) plus a simple "easy reschedule" rule.',
       helperNarration: 'Next, we reduce no-shows with simple reminders. The action is:',
       owner: 'Admin/CSR', dueDay: 7 },
-    { description: 'Use a short prep checklist (photos, measurements, decision maker) before quoting.',
-      helperNarration: 'Then, we standardize the words so the team is consistent. The action is:',
+    { description: 'Use a short prep checklist (main issue, user count, decision maker) before the meeting.',
+      helperNarration: 'Then we make the meeting more useful by gathering the basics early. The action is:',
       owner: 'Owner/GM', dueDay: 21 },
     { description: 'Send a day-before confirmation: "Are we still good for tomorrow?"',
       helperNarration: 'After that, we reduce no-shows with simple reminders. The action is:',
@@ -405,7 +405,7 @@ const PREDETERMINED_ACTIONS = Object.freeze({
       helperNarration: 'Next, we keep deals moving with a simple follow-up habit. The action is:',
       owner: 'Admin/CSR', dueDay: 7 },
     { description: 'Add a 5-minute quote walkthrough to confirm fit and remove confusion.',
-      helperNarration: 'Then, we reduce no-shows with simple reminders. The action is:',
+      helperNarration: 'Then we remove confusion by walking through the quote briefly. The action is:',
       owner: 'Owner/GM', dueDay: 21 },
     { description: 'Ask one decision-blocker question in follow-up: "What would stop you from moving ahead?"',
       helperNarration: 'After that, we keep deals moving with a simple follow-up habit. The action is:',
@@ -442,17 +442,17 @@ const PREDETERMINED_ACTIONS = Object.freeze({
 
   // ── R1: Rebook/recall gap ──────────────────────────────────────────────
   'Rebook/recall gap': [
-    { description: 'Choose recall schedule (6m/12m etc.).',
+    { description: 'Choose recall schedule (quarterly / semi-annual / annual).',
       helperNarration: 'First, we set the foundation so this can happen every time. The action is:',
       owner: 'Owner/GM', dueDay: 7 },
     { description: 'At the end of the job, ask the customer to book their next service now (use a short, standard line).',
-      helperNarration: 'Next, we make it easy to rebook while the job is fresh. The action is:',
+      helperNarration: 'Next, we make it easy to book the next review while the work is still fresh. This is a simple ask at the end of the project or review so the next step gets booked early. The action is:',
       owner: 'Ops lead', dueDay: 7 },
     { description: 'Set up recall reminders based on the service interval (6/12 months): send a short text/email when it\'s time to book.',
       helperNarration: 'Then, we send a reminder at the right time so customers don\'t forget. The action is:',
       owner: 'Admin/CSR', dueDay: 21 },
     { description: 'After each job, mark whether the next appointment is booked (Yes/No). If "No," trigger a follow-up step.',
-      helperNarration: 'After that, we add a simple check so nothing slips through. The action is:',
+      helperNarration: 'After that, we add a simple check so nothing slips through. If the next review isn\'t booked, we know we need a follow-up. The action is:',
       owner: 'Ops lead', dueDay: 21 },
     { description: 'Track rebook count weekly/monthly; fix biggest drop-off.',
       helperNarration: 'Now, we make it consistent so the team can run it without thinking. The action is:',
@@ -514,7 +514,7 @@ const PREDETERMINED_ACTIONS = Object.freeze({
     { description: 'Create 30-day check-in pre-written message (text/email).',
       helperNarration: 'Next, now that the foundation is in place, we make the next step easy for the customer. The action is:',
       owner: 'Admin/CSR', dueDay: 7 },
-    { description: 'Add \'next step\' prompt at job end (maintenance/seasonal check).',
+    { description: 'Add a \'next step\' prompt at project end (review / optimization check).',
       helperNarration: 'Then, we remove friction so more people actually follow through. The action is:',
       owner: 'Ops lead', dueDay: 21 },
     { description: 'Run light win-back message to past clients.',
@@ -523,7 +523,7 @@ const PREDETERMINED_ACTIONS = Object.freeze({
     { description: 'Track follow-up completion weekly; improve one bottleneck.',
       helperNarration: 'Now, we make it consistent so the team can run it without thinking. The action is:',
       owner: 'Ops lead', dueDay: 45 },
-    { description: 'Standardize rebook ask script for techs/admin.',
+    { description: 'Standardize rebook ask script for the team.',
       helperNarration: 'Finally, we add a quick check so we know it\'s working and can tighten it. The action is:',
       owner: 'Ops lead', dueDay: 45 },
   ],
@@ -837,7 +837,9 @@ function generatePlan(scanData, contactInfo, confidenceResult) {
   // Section A: What We Found
   // 3.1: opener = oneLeverSentence verbatim; fallback if blank
   const subPathKey = scanData.subPath || '';
-  const whatWeFixFirst = STEP5_WHAT_WE_FIX[subPathKey]
+  // Prefer form-submitted one-liner (JotForm = source of truth); fall back to lookup
+  const whatWeFixFirst = scanData.whatWeFixFirst
+    || STEP5_WHAT_WE_FIX[subPathKey]
     || STEP5_WHAT_WE_FIX[subPathKey + ':' + (scanData.primaryGap || '')];
   const opener = whatWeFixFirst
     || scanData.oneLeverSentence
@@ -913,7 +915,7 @@ function generatePlan(scanData, contactInfo, confidenceResult) {
   const sectionD = {
     actions: predeterminedActions
       ? predeterminedActions.map((pa, i) => ({
-          description: pa.description,
+          description: (scanData.actions && scanData.actions[i]?.description) || pa.description,
           note: (scanData.actions && scanData.actions[i]?.note) || '',
           owner: (scanData.actions && scanData.actions[i]?.owner) || pa.owner,
           dueDate: (scanData.actions && scanData.actions[i]?.dueDate) || `Day ${pa.dueDay}`,

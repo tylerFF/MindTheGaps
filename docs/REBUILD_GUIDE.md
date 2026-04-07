@@ -1,6 +1,6 @@
 # MindtheGaps MVP — Complete Rebuild Guide
 
-**Last updated:** March 23, 2026
+**Last updated:** April 7, 2026
 
 This document contains everything needed to rebuild the MindtheGaps system from scratch. It covers every service, every field, every business rule, every integration, and every configuration detail. Hand this to any developer and they can reconstruct the entire system.
 
@@ -637,6 +637,8 @@ Counts "Not sure" answers only in Tier-1 baseline fields for the confirmed prima
 
 ### This is 100% deterministic — NO AI
 
+**Pass-through architecture (April 2026):** Action descriptions and one-liners now prefer form-submitted values from JotForm's locked dropdown fields (q95-q178 for actions, q179-q192 for one-liners). The lookup tables in planGenerator.js are fallbacks only. This means wording changes can be made in JotForm alone — no code edits or deployments required. Helper narration (sublabels) is JotForm-only and was never used in plan output.
+
 The plan generator uses three lookup tables and computed rules:
 
 ### Lookup Table 1: PREDETERMINED_ACTIONS
@@ -991,7 +993,7 @@ Full E2E test scripts are in `docs/MindtheGaps_QA_Test_Scripts_Complete_v3.md` c
 | **Stop rules halt generation** | Any of 4 rules → no plan, Marc notified. |
 | **Renamed sub-paths generate plans** | A4 ("Lead tracking + ownership gap"), C5 ("Stage clarity + follow-up consistency gap"), R5 ("Value review / renewal alignment gap") flow through to plan generation using predetermined lookup tables. |
 | **Baseline formula locked** | `ROUND(100 × (gap_total / max_possible), 0)` — do not change. |
-| **Predetermined actions** | For non-manual sub-paths, descriptions come from lookup table (not editable from form). |
+| **Predetermined actions** | For non-manual sub-paths, descriptions come from JotForm locked dropdowns (pass-through). Lookup tables in planGenerator.js are fallbacks. Wording changes only need JotForm edits. |
 | **Owner override** | Per-sub-path owner fields (q194-q277) take precedence over shared owner fields. |
 | **Non-blocking writes** | All HubSpot writes use `ctx.waitUntil()`. Customer response returns immediately. |
 | **JotForm conditions are destructive** | Always read existing conditions before writing. |

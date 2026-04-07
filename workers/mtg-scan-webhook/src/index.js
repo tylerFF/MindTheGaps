@@ -85,6 +85,24 @@ const JOTFORM_SCAN_FIELD_MAP = {
     Retention: 'q38_oneLeverRetention',
   },
   oneLeverSentence: 'q39_oneLeverSentence',
+  // Predetermined action dropdowns (q95-q178) and what-we-fix one-liners (q179-q192)
+  // Keyed by sub-path name → { actions: [qid1..qid6], wwf: qid }
+  predeterminedQids: {
+    'Channel concentration risk':          { actions: [95,96,97,98,99,100], wwf: 179 },
+    'Lead capture friction':               { actions: [101,102,103,104,105,106], wwf: 180 },
+    'Demand capture / local visibility':   { actions: [107,108,109,110,111,112], wwf: 181 },
+    'Lead tracking + ownership gap':       { actions: [113,114,115,116,117,118], wwf: 182 },
+    'Speed-to-lead':                       { actions: [119,120,121,122,123,124], wwf: 183 },
+    'Booking friction':                    { actions: [125,126,127,128,129,130], wwf: 184 },
+    'Show rate':                           { actions: [131,132,133,134,135,136], wwf: 185 },
+    'Quote follow-up / decision drop-off': { actions: [137,138,139,140,141,142], wwf: 186 },
+    'Stage clarity + follow-up consistency gap': { actions: [143,144,145,146,147,148], wwf: 187 },
+    'Rebook/recall gap':                   { actions: [149,150,151,152,153,154], wwf: 188 },
+    'Review rhythm gap':                   { actions: [155,156,157,158,159,160], wwf: 189 },
+    'Referral ask gap':                    { actions: [161,162,163,164,165,166], wwf: 190 },
+    'Post-service follow-up gap':          { actions: [167,168,169,170,171,172], wwf: 191 },
+    'Value review / renewal alignment gap': { actions: [173,174,175,176,177,178], wwf: 192 },
+  },
   // Baseline fields per pillar
   baseline: {
     q15_convInboundLeads: 'conv_inbound_leads',
@@ -382,18 +400,40 @@ function extractScanData(payload) {
     });
   }
 
-  // For predetermined sub-paths, fill in action descriptions from lookup tables
-  // (the old shared description fields q41/q44/q47/q50/q53/q56 are hidden;
-  //  predetermined dropdowns use different QIDs so descriptions arrive empty)
+  // For predetermined sub-paths, read action descriptions from the locked
+  // dropdown QIDs (q95-q178).  JotForm is the source of truth for wording;
+  // the PREDETERMINED_ACTIONS lookup in planGenerator.js is a fallback only.
   const predeterminedKey = scan.subPath.startsWith('Other')
     ? scan.subPath + ':' + (scan.primaryGap || '')
     : scan.subPath;
+  const predQids = JOTFORM_SCAN_FIELD_MAP.predeterminedQids[scan.subPath];
   const predeterminedActions = PREDETERMINED_ACTIONS[predeterminedKey];
-  if (predeterminedActions) {
+
+  if (predQids) {
+    for (let i = 0; i < scan.actions.length && i < predQids.actions.length; i++) {
+      if (!scan.actions[i].description) {
+        // Prefer form-submitted dropdown value; fall back to lookup table
+        const formValue = String(payload[String(predQids.actions[i])] || '').trim();
+        scan.actions[i].description = formValue
+          || (predeterminedActions && predeterminedActions[i]
+            ? predeterminedActions[i].description
+            : '');
+      }
+    }
+  } else if (predeterminedActions) {
+    // Unknown sub-path with lookup match — use lookup (legacy fallback)
     for (let i = 0; i < scan.actions.length && i < predeterminedActions.length; i++) {
       if (!scan.actions[i].description) {
         scan.actions[i].description = predeterminedActions[i].description;
       }
+    }
+  }
+
+  // Read the what-we-fix one-liner from the form dropdown (q179-q192)
+  if (predQids && predQids.wwf) {
+    const wwfValue = String(payload[String(predQids.wwf)] || '').trim();
+    if (wwfValue) {
+      scan.whatWeFixFirst = wwfValue;
     }
   }
 
