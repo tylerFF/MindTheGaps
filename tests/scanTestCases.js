@@ -93,6 +93,7 @@ function buildScanData(overrides = {}) {
     contradictionNote: has('contradictionNote') ? overrides.contradictionNote : '',
     field2Answer: has('field2Answer') ? overrides.field2Answer : '',
     field2Label: has('field2Label') ? overrides.field2Label : '',
+    whatWeFixFirst: has('whatWeFixFirst') ? overrides.whatWeFixFirst : '',
     baselineFields: { ...baselineDefaults, ...(overrides.baselineFields || {}) },
     actions: has('actions') ? overrides.actions : [...DEFAULT_ACTIONS],
     metrics: has('metrics') ? overrides.metrics : [...DEFAULT_METRICS],

@@ -837,7 +837,9 @@ function generatePlan(scanData, contactInfo, confidenceResult) {
   // Section A: What We Found
   // 3.1: opener = oneLeverSentence verbatim; fallback if blank
   const subPathKey = scanData.subPath || '';
-  const whatWeFixFirst = STEP5_WHAT_WE_FIX[subPathKey]
+  // Prefer form-submitted one-liner (JotForm = source of truth); fall back to lookup
+  const whatWeFixFirst = scanData.whatWeFixFirst
+    || STEP5_WHAT_WE_FIX[subPathKey]
     || STEP5_WHAT_WE_FIX[subPathKey + ':' + (scanData.primaryGap || '')];
   const opener = whatWeFixFirst
     || scanData.oneLeverSentence
@@ -913,7 +915,7 @@ function generatePlan(scanData, contactInfo, confidenceResult) {
   const sectionD = {
     actions: predeterminedActions
       ? predeterminedActions.map((pa, i) => ({
-          description: pa.description,
+          description: (scanData.actions && scanData.actions[i]?.description) || pa.description,
           note: (scanData.actions && scanData.actions[i]?.note) || '',
           owner: (scanData.actions && scanData.actions[i]?.owner) || pa.owner,
           dueDate: (scanData.actions && scanData.actions[i]?.dueDate) || `Day ${pa.dueDay}`,

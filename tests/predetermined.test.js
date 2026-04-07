@@ -182,10 +182,18 @@ describe('generatePlan() with predetermined actions', () => {
     assert.equal(plan.sectionA.opener, STEP5_WHAT_WE_FIX['Speed-to-lead']);
   });
 
-  it('uses predetermined action descriptions for known sub-path', () => {
+  it('falls back to predetermined action descriptions when form provides none', () => {
     const scanData = buildScanData({
       subPath: 'Channel concentration risk',
       primaryGap: 'Acquisition',
+      actions: [
+        { description: '', owner: '', dueDate: '' },
+        { description: '', owner: '', dueDate: '' },
+        { description: '', owner: '', dueDate: '' },
+        { description: '', owner: '', dueDate: '' },
+        { description: '', owner: '', dueDate: '' },
+        { description: '', owner: '', dueDate: '' },
+      ],
     });
     const plan = generatePlan(scanData, highConfidence());
     const expected = PREDETERMINED_ACTIONS['Channel concentration risk'];
@@ -271,9 +279,19 @@ describe('generatePlan() with predetermined actions', () => {
     const scanData = buildScanData({
       subPath: 'Lead tracking + ownership gap',
       primaryGap: 'Acquisition',
+      actions: [
+        { description: '', owner: '', dueDate: '' },
+        { description: '', owner: '', dueDate: '' },
+        { description: '', owner: '', dueDate: '' },
+        { description: '', owner: '', dueDate: '' },
+        { description: '', owner: '', dueDate: '' },
+        { description: '', owner: '', dueDate: '' },
+      ],
     });
     const plan = generatePlan(scanData, highConfidence());
+    // Falls back to lookup when no whatWeFixFirst in scanData
     assert.equal(plan.sectionA.opener, STEP5_WHAT_WE_FIX['Lead tracking + ownership gap']);
+    // Falls back to lookup when no action descriptions in scanData
     const expected = PREDETERMINED_ACTIONS['Lead tracking + ownership gap'];
     plan.sectionD.actions.forEach((a, i) => {
       assert.equal(a.description, expected[i].description);
@@ -298,7 +316,7 @@ describe('generatePlan() with predetermined actions', () => {
     assert.equal(plan.sectionA.opener, STEP5_WHAT_WE_FIX['Value review / renewal alignment gap']);
   });
 
-  it('action descriptions always come from lookup, never from form', () => {
+  it('action descriptions prefer form data over lookup (pass-through)', () => {
     const scanData = buildScanData({
       subPath: 'Show rate',
       primaryGap: 'Conversion',
@@ -312,12 +330,51 @@ describe('generatePlan() with predetermined actions', () => {
       ],
     });
     const plan = generatePlan(scanData, highConfidence());
+    // Form-submitted descriptions should be used (JotForm = source of truth)
+    plan.sectionD.actions.forEach((a, i) => {
+      assert.equal(a.description, `Form description ${i + 1}`,
+        `Action ${i + 1} description should come from form, not lookup`);
+      assert.equal(a.owner, 'Marc');
+    });
+  });
+
+  it('action descriptions fall back to lookup when form is empty', () => {
+    const scanData = buildScanData({
+      subPath: 'Show rate',
+      primaryGap: 'Conversion',
+      actions: [
+        { description: '', owner: 'Marc', dueDate: 'Week 1' },
+        { description: '', owner: 'Marc', dueDate: 'Week 1' },
+        { description: '', owner: '', dueDate: '' },
+        { description: '', owner: '', dueDate: '' },
+        { description: '', owner: '', dueDate: '' },
+        { description: '', owner: '', dueDate: '' },
+      ],
+    });
+    const plan = generatePlan(scanData, highConfidence());
     const expected = PREDETERMINED_ACTIONS['Show rate'];
     plan.sectionD.actions.forEach((a, i) => {
       assert.equal(a.description, expected[i].description,
-        `Action ${i + 1} description should come from lookup, not form`);
-      // But owner should come from form
-      assert.equal(a.owner, 'Marc');
+        `Action ${i + 1} should fall back to lookup when form is empty`);
     });
+  });
+
+  it('one-liner prefers form-submitted whatWeFixFirst over lookup', () => {
+    const scanData = buildScanData({
+      subPath: 'Speed-to-lead',
+      primaryGap: 'Conversion',
+      whatWeFixFirst: 'Custom one-liner from JotForm dropdown',
+    });
+    const plan = generatePlan(scanData, highConfidence());
+    assert.equal(plan.sectionA.opener, 'Custom one-liner from JotForm dropdown');
+  });
+
+  it('one-liner falls back to lookup when form provides none', () => {
+    const scanData = buildScanData({
+      subPath: 'Speed-to-lead',
+      primaryGap: 'Conversion',
+    });
+    const plan = generatePlan(scanData, highConfidence());
+    assert.equal(plan.sectionA.opener, STEP5_WHAT_WE_FIX['Speed-to-lead']);
   });
 });
