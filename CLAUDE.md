@@ -24,7 +24,7 @@ Facilitator runs 45-min Scan (JotForm worksheet, prefilled from quiz)
 | Function | Tool | Notes |
 |----------|------|-------|
 | CRM | HubSpot (Contacts only) | All data on Contact records, dedupe by email, `mtg_` prefix properties |
-| Forms | JotForm | Quiz + Scan Worksheet, webhooks to Workers |
+| Forms | JotForm | Quiz (260466844433158) + Scan Worksheet (260435948553162), webhooks to Workers. JotForm is source of truth for all form wording. |
 | Automation/Logic | Cloudflare Workers | All scoring, stop rules, plan gen, webhook handling |
 | Plan Generation | Deterministic (lookup tables) | No AI — rule-based plan builder from scan data |
 | Storage | Cloudflare R2 | DOCX plan drafts stored here |
