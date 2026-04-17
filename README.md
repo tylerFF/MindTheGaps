@@ -52,6 +52,7 @@ No redeployment needed — secrets take effect immediately.
 - **Scan worksheet pass-through** — Action descriptions and one-liners now flow from JotForm to the plan (JotForm = source of truth). Wording changes only need JotForm edits, no code deploy.
 - **18 wording changes applied** — Marc's QA feedback across A1, A3, C1, C2, C3, C4, R1, R4 sub-paths.
 - **JotForm conditions cleaned** — Removed 2 broken conditions referencing defunct sub-paths. Now 40 conditions (was 42).
+- **Quiz JotForm emails removed** — Disabled the default JotForm notification + autoresponder emails on the quiz form (260466844433158). Quiz takers now only receive the MindtheGaps-branded Resend email, not the JotForm-branded duplicate.
 
 ### MVP Feedback Implementation — Complete
 
@@ -87,7 +88,7 @@ All DOCX plans verified: correct business name, industry, gap, sub-path, lever, 
 | 1 | **Industry list review** — Marc to confirm whether to update the category list (see `docs/industry-refinement-notes.md`) | Marc | Waiting on Marc |
 | 2 | ~~**Resend production setup**~~ | Tyler | ✅ Complete |
 | 3 | **Stripe live mode** — Switch from test payment link to live, update `STRIPE_WEBHOOK_SECRET` (last thing before go-live) | Tyler + Marc | Not started |
-| 4 | **Disable JotForm autoresponder** — Must be toggled manually in JotForm dashboard (API doesn't work) | Tyler | Pending |
+| 4 | ~~**Disable JotForm autoresponder**~~ — Both quiz emails (notification + autoresponder) deleted via JotForm API. Quiz takers now only receive the MindtheGaps-branded Resend email. | Tyler | ✅ Complete |
 | 5 | **Create `mtg_scan_prefill_url` in HubSpot** — Single-line text property in "mindthegaps" group (code writes it, but property may need to be created in dashboard) | Tyler | Pending |
 
 ### Previously Resolved
