@@ -1,3 +1,9 @@
 nul
 node_modules/
 .env
+
+# Archived files (old HTML quiz era) - kept locally, not tracked
+archived-html-quiz/
+
+# Claude Code context file - kept locally for AI assistant, not shared in repo
+CLAUDE.md

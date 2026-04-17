@@ -4,7 +4,6 @@
   "private": true,
   "description": "MindtheGaps consulting automation — quiz scoring, scan processing, plan generation",
   "scripts": {
-    "dev": "node dev-server.js",
     "test": "node --test tests/*.test.js",
     "test:scoring": "node --test tests/scoring.test.js",
     "test:results": "node --test tests/results.test.js",

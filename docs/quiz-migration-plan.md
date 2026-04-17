@@ -1,7 +1,8 @@
-# Quiz Migration: HTML → JotForm
+# Quiz Migration: HTML → JotForm (HISTORICAL)
 
-**Status:** Planning — awaiting Marc's approval before execution
+**Status:** ✅ COMPLETE (merged April 2026)
 **Created:** 2026-04-14
+**Note:** This doc is kept as a historical reference. The migration is done — the quiz lives on JotForm (form 260466844433158). See `REBUILD_GUIDE.md` for current-state documentation.
 
 ## Context
 

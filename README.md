@@ -33,7 +33,7 @@ No redeployment needed — secrets take effect immediately.
 
 | Component | Status | Details |
 |-----------|--------|---------|
-| Quiz + Scoring Engine | ✅ **Live** | JotForm quiz (260466844433158). Old HTML quiz at `/quiz/` redirects to JotForm. |
+| Quiz + Scoring Engine | ✅ **Live** | JotForm quiz (form 260466844433158). Public URL: `form.jotform.com/260466844433158`. The `/quiz/` URL on Cloudflare Pages redirects here. |
 | Results Page | ✅ **Live** | Gap diagnosis, score, product info + CTA with Stripe link |
 | Booking Page | ✅ **Live** | Calendly inline widget, shown after Stripe payment |
 | Stripe Payment Webhook | ✅ **Live** | Receives checkout.session.completed, updates HubSpot (TEST mode) |
@@ -48,7 +48,7 @@ No redeployment needed — secrets take effect immediately.
 
 ### Recent Changes (Apr 2026)
 
-- **Quiz migrated to JotForm** — Custom HTML quiz replaced with JotForm (form 260466844433158). `/quiz/` URL now redirects to JotForm. All scoring, HubSpot writes, scan prefill, and results page work identically.
+- **Quiz on JotForm** — The quiz runs on JotForm (form 260466844433158). The `/quiz/` URL on Cloudflare Pages redirects to JotForm. All scoring, HubSpot writes, scan prefill, and results page work identically.
 - **Scan worksheet pass-through** — Action descriptions and one-liners now flow from JotForm to the plan (JotForm = source of truth). Wording changes only need JotForm edits, no code deploy.
 - **18 wording changes applied** — Marc's QA feedback across A1, A3, C1, C2, C3, C4, R1, R4 sub-paths.
 - **JotForm conditions cleaned** — Removed 2 broken conditions referencing defunct sub-paths. Now 40 conditions (was 42).
@@ -646,7 +646,6 @@ MindTheGaps/
 │   ├── Facilitator_Guide_vs_Worksheet_QA_Report.docx
 │   └── Marc MVP Feedback Docs/      # Original MVP feedback tickets + checklist
 │
-├── dev-server.js                # Local dev server (http://localhost:3000)
 ├── package.json
 ├── CLAUDE.md                    # Architecture guide for AI assistants
 ├── PROJECT_CONTEXT.md           # Complete technical spec (scoring matrix, etc.)

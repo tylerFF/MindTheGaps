@@ -50,7 +50,7 @@ MindtheGaps (MTG) is a consulting automation system for a consultant named Marc.
 ## 2. End-to-End Flow
 
 ```
-1. Prospect takes 13-question Quiz (custom HTML page)
+1. Prospect takes 13-question Quiz (JotForm)
    → Cloudflare Worker scores quiz, writes HubSpot Contact
    → Results page shows gap + sub-diagnosis + cost-of-leak
 
@@ -83,7 +83,7 @@ MindtheGaps (MTG) is a consulting automation system for a consultant named Marc.
 | Function | Service | Details |
 |----------|---------|---------|
 | CRM | HubSpot | Contacts only, no Deals. 73 custom `mtg_` properties. Dedupe by email. |
-| Quiz Form | JotForm (Form ID: 260466844433158) | JotForm is source of truth. `pages/quiz/index.html` is a redirect stub that forwards to JotForm. |
+| Quiz Form | JotForm (Form ID: 260466844433158) | Public URL: `form.jotform.com/260466844433158`. `pages/quiz/index.html` is a small redirect stub forwarding `/quiz/` to JotForm (preserves old bookmarks). |
 | Scan Worksheet | JotForm | Form ID: `260435948553162`. EU endpoint (`eu-api.jotform.com`). |
 | Automation | Cloudflare Workers | 4 workers handle all webhooks + logic |
 | Plan Generation | Deterministic | Lookup tables in `planGenerator.js` — zero AI |
@@ -1113,7 +1113,6 @@ MindTheGaps/
 ├── PROJECT_CONTEXT.md           # Complete technical spec
 ├── README.md                    # Project status + changelog
 ├── package.json
-├── dev-server.js                # Local dev server
 │
 ├── pages/
 │   ├── quiz/index.html          # Redirect stub → JotForm quiz (260466844433158)
