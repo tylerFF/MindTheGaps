@@ -1,6 +1,6 @@
 # MindtheGaps MVP — Complete Rebuild Guide
 
-**Last updated:** April 7, 2026
+**Last updated:** April 16, 2026
 
 This document contains everything needed to rebuild the MindtheGaps system from scratch. It covers every service, every field, every business rule, every integration, and every configuration detail. Hand this to any developer and they can reconstruct the entire system.
 
@@ -83,7 +83,7 @@ MindtheGaps (MTG) is a consulting automation system for a consultant named Marc.
 | Function | Service | Details |
 |----------|---------|---------|
 | CRM | HubSpot | Contacts only, no Deals. 73 custom `mtg_` properties. Dedupe by email. |
-| Quiz Form | Custom HTML/JS | `pages/quiz/index.html` — hosted on Cloudflare Pages |
+| Quiz Form | JotForm (Form ID: 260466844433158) | JotForm is source of truth. `pages/quiz/index.html` is a redirect stub that forwards to JotForm. |
 | Scan Worksheet | JotForm | Form ID: `260435948553162`. EU endpoint (`eu-api.jotform.com`). |
 | Automation | Cloudflare Workers | 4 workers handle all webhooks + logic |
 | Plan Generation | Deterministic | Lookup tables in `planGenerator.js` — zero AI |
@@ -264,10 +264,15 @@ If not eligible, `mtg_fix_first_reason` is written to HubSpot.
 
 ### Quiz Page
 
-**File:** `pages/quiz/index.html`
-**URL:** `https://mtg-pages-3yo.pages.dev/quiz/`
+**JotForm Form ID:** 260466844433158
+**JotForm URL:** `https://form.jotform.com/260466844433158`
+**Redirect stub:** `pages/quiz/index.html` → forwards to JotForm, preserving tracking params
 
-Custom HTML/JS page (not a JotForm embed). Multi-step form with progress bar — one question per page. Submits via `fetch()` POST to the quiz webhook.
+The quiz is a JotForm card-layout form with 13 scoring questions + contact fields. JotForm is the source of truth for question wording and answer options. The old `/quiz/` URL redirects to JotForm so existing links keep working.
+
+**Flow:** JotForm submit → JotForm thank-you auto-redirects to `/loading/?sid={submissionId}` → loading page polls worker → redirects to `/results/#base64data`
+
+**Editing quiz wording:** Open the form in JotForm builder, click the question to edit. Answer option text must exactly match the values in `workers/shared/constants.js` (`SCORING_RULES`) or scoring breaks. See `docs/quiz-migration-plan.md` for the full "Eric's Cheat Sheet" of what lives where.
 
 ### Quiz Webhook
 
@@ -1012,7 +1017,7 @@ MindTheGaps/
 ├── dev-server.js                # Local dev server
 │
 ├── pages/
-│   ├── quiz/index.html          # 13-question quiz (custom HTML/JS)
+│   ├── quiz/index.html          # Redirect stub → JotForm quiz (260466844433158)
 │   ├── results/index.html       # Results page (reads base64 from URL hash)
 │   ├── booking/index.html       # Calendly booking widget
 │   ├── landing/index.html       # Marketing landing page
