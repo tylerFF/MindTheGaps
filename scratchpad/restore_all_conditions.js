@@ -83,8 +83,7 @@ const conditions = [
   {type:"field",link:"Any",terms:[{field:"12",operator:"equals",value:"Demand capture / local visibility"}],action:[{visibility:"HideMultiple",fields:ACQ_LADDERS}]},
   {type:"field",link:"Any",terms:[{field:"12",operator:"equals",value:"Lead capture friction"}],action:[{visibility:"HideMultiple",fields:ACQ_LADDERS}]},
   {type:"field",link:"Any",terms:[{field:"12",operator:"equals",value:"Channel concentration risk"}],action:[{visibility:"HideMultiple",fields:ACQ_LADDERS}]},
-  {type:"field",link:"Any",terms:[{field:"12",operator:"equals",value:"Fit mismatch"}],action:[{visibility:"HideMultiple",fields:[...ACQ_LADDERS,...ALL_ACQ_PRED]}]},
-  {type:"field",link:"Any",terms:[{field:"12",operator:"equals",value:"Referral / partner flow is not intentional"}],action:[{visibility:"HideMultiple",fields:[...ACQ_LADDERS,...ALL_ACQ_PRED]}]},
+  // REMOVED: "Fit mismatch" and "Referral / partner flow is not intentional" (old sub-path options, no longer exist)
   {type:"field",link:"Any",terms:[{field:"12",operator:"equals",value:"Lead tracking + ownership gap"}],action:[{visibility:"HideMultiple",fields:ACQ_LADDERS}]},
 
   // 19-23: Conversion sub-path — LADDER CARDS NOW ALWAYS HIDDEN
@@ -152,7 +151,7 @@ const conditions = [
    action:[{visibility:"ShowMultiple",fields:R5_FIELDS},{visibility:"HideMultiple",fields:[...excludeFrom(ALL_RET_PRED, R5_FIELDS),...RET_FIELD2]}]},
 ];
 
-console.log(`Total conditions: ${conditions.length} (28 original + 14 predetermined)`);
+console.log(`Total conditions: ${conditions.length} (26 original + 14 predetermined = 40)`);
 
 // Build form-encoded body
 const parts = [];
