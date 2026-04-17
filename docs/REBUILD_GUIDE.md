@@ -906,9 +906,9 @@ All workers use:
 
 ---
 
-## 22. JotForm Conditional Logic (42 Rules)
+## 22. JotForm Conditional Logic (40 Rules)
 
-The scan worksheet has 42 conditional logic rules. These are configured via JotForm API and are destructive-write (writing `properties[conditions]` REPLACES ALL existing conditions).
+The scan worksheet has 40 conditional logic rules. These are configured via JotForm API and are destructive-write (writing `properties[conditions]` REPLACES ALL existing conditions).
 
 ### Rules 1-3: Pillar Visibility
 Based on q9 (Confirmed Primary Gap), show/hide pillar-specific fields:
@@ -920,16 +920,14 @@ Based on q9 (Confirmed Primary Gap), show/hide pillar-specific fields:
 ### Rules 4-12: Gap Change Reason
 Based on q9 vs q7 (quiz gap vs confirmed gap), show/hide q10 (gap change reason field). 9 combinations (3 quiz gaps × 3 confirmed gaps where they differ).
 
-### Rules 13-28: Sub-Path Ladder Fields
-Based on q11/q12/q13 (sub-path selection), show/hide the corresponding:
-- Action description fields (q95-q178)
-- "What We Fix" fields (q179-q192)
+### Rules 13-26: Sub-Path Ladder Fields
+Based on q11/q12/q13 (sub-path selection), hide legacy Action Ladder summary cards.
 
-### Rules 29-42: Predetermined Owner Fields
-Based on q11/q12/q13, show/hide per-sub-path owner fields (q194-q277).
+### Rules 27-40: Predetermined Show/Hide + Owners + Field 2
+Based on q11/q12/q13, show the selected sub-path's action cards (q95-q178), what-we-fix dropdown (q179-q192), per-sub-path owner fields (q194-q277), and Field 2 diagnostic question -- while hiding all other sub-paths' fields.
 
 ### Authoritative Copy
-`scratchpad/restore_all_conditions.js` contains the full 42-condition set. Always use this as reference.
+`scratchpad/restore_all_conditions.js` contains the full 40-condition set. Always use this as reference. See also `docs/MTG_JotForm_Conditions_Cheatsheet.xlsx` for a human-readable map of which condition controls which sub-path.
 
 ---
 
@@ -1003,6 +1001,107 @@ Full E2E test scripts are in `docs/MindtheGaps_QA_Test_Scripts_Complete_v3.md` c
 | **Non-blocking writes** | All HubSpot writes use `ctx.waitUntil()`. Customer response returns immediately. |
 | **JotForm conditions are destructive** | Always read existing conditions before writing. |
 | **`mtg_` property prefix** | All HubSpot properties start with `mtg_` in the "mindthegaps" group. |
+
+---
+
+## Where Things Live (Eric's Reference)
+
+This system has two layers: **JotForm** (forms Marc/Eric can edit) and **Cloudflare** (code + infrastructure that Tyler deployed). Here's what lives where.
+
+### JotForm (edit in browser, no code needed)
+
+| Form | Form ID | What it does |
+|------|---------|-------------|
+| Quiz | 260466844433158 | 13-question growth gap quiz. Question wording, answer options, helper text, branding -- all editable in JotForm builder. |
+| Scan Worksheet | 260435948553162 | 45-minute facilitator worksheet. Action card wording (helper narration + locked text), one-liners, owner defaults -- all editable in JotForm builder. |
+
+**What you can safely change in JotForm:**
+- Question text / wording
+- Helper text (descriptions on cards)
+- Answer option labels (⚠️ quiz options must exactly match the scoring engine values or scoring breaks -- see `workers/shared/constants.js`)
+- Form styling / theme
+- Welcome page and thank-you page text
+
+**What you should NOT change in JotForm without a developer:**
+- Field names (e.g. `quiz_V1`) -- the webhook uses these to map answers
+- Webhook URL (Settings > Integrations) -- this is how JotForm talks to Cloudflare
+- Thank-you redirect URL -- this controls the loading page flow
+- Conditional logic rules on the scan worksheet -- destructive-write risk
+
+### Cloudflare (code, requires deployment)
+
+All the "smart" logic lives in Cloudflare Workers. These are small JavaScript programs that run when JotForm sends a webhook.
+
+| Service | What it does | When Eric might need it |
+|---------|-------------|----------------------|
+| **mtg-quiz-webhook** (Worker) | Receives quiz submission, scores it, writes HubSpot, generates results page URL, sends emails | Change scoring rules, sub-diagnosis text, cost-of-leak text, eligibility thresholds, results email wording |
+| **mtg-scan-webhook** (Worker) | Receives scan submission, runs stop rules, generates plan, builds DOCX, uploads to R2, emails Marc | Change plan template, stop rules, confidence thresholds, action fallback text |
+| **mtg-stripe-webhook** (Worker) | Receives Stripe payment confirmation, updates HubSpot payment status | Rarely needs changes |
+| **mtg-calendly-webhook** (Worker) | Receives Calendly booking confirmation, updates HubSpot booking status | Rarely needs changes |
+| **Cloudflare Pages** (static hosting) | Hosts the results page, loading page, landing page, booking page | Change results page layout, loading page design |
+| **Cloudflare R2** (file storage) | Stores generated DOCX plan files | Never needs manual changes |
+| **Cloudflare KV** (cache) | Temporarily stores quiz results for the loading page to poll (1-hour TTL) | Never needs manual changes |
+
+**Where the code files live:**
+```
+workers/
+  mtg-quiz-webhook/src/
+    index.js          -- main handler, JotForm field mapping
+    scoring.js        -- scoring engine (pure math, no side effects)
+    results.js        -- sub-diagnosis text, cost-of-leak, next steps
+    eligibility.js    -- scan eligibility check
+    quizEmail.js      -- results email + Marc notification + scan prefill URL builder
+  mtg-scan-webhook/src/
+    index.js          -- main handler, JotForm field mapping
+    planGenerator.js  -- lookup tables (actions, one-liners, helper narration fallbacks)
+    stopRules.js      -- stop rule engine
+    confidence.js     -- confidence calculator
+    docxBuilder.js    -- DOCX plan file builder
+    storage.js        -- R2 upload
+    notifications.js  -- Resend email sender
+  shared/
+    constants.js      -- scoring rules, question IDs, pillar definitions
+    hubspot.js        -- HubSpot API client
+    validation.js     -- email validation
+pages/
+  quiz/index.html     -- redirect stub (forwards to JotForm quiz)
+  results/index.html  -- results page (reads base64 data from URL hash)
+  loading/index.html  -- loading spinner (polls worker for results)
+  landing/index.html  -- marketing landing page
+  booking/index.html  -- Calendly booking embed
+```
+
+**To deploy code changes:**
+```bash
+cd workers/mtg-quiz-webhook && npx wrangler@3 deploy    # quiz worker
+cd workers/mtg-scan-webhook && npx wrangler@3 deploy    # scan worker
+npx wrangler pages deploy pages/ --project-name mtg-pages --branch main  # static pages
+```
+
+### How JotForm and Cloudflare Connect
+
+```
+User fills JotForm quiz
+  → JotForm sends webhook POST to mtg-quiz-webhook (Cloudflare Worker)
+  → Worker scores quiz, writes HubSpot, stores results in KV cache
+  → JotForm redirects user to /loading/?sid={submissionId}
+  → Loading page polls the worker for results
+  → Worker returns resultsUrl from KV cache
+  → Browser redirects to /results/#base64data
+  → Results page decodes and renders everything client-side
+```
+
+### Secrets (API keys stored in Cloudflare, never in code)
+
+Secrets are set via `wrangler secret put` and are NOT in the GitHub repo. They take effect immediately without redeployment.
+
+```bash
+# To view which secrets are set (not their values):
+cd workers/mtg-quiz-webhook && npx wrangler@3 secret list
+
+# To update a secret:
+echo "new-value" | npx wrangler@3 secret put SECRET_NAME
+```
 
 ---
 

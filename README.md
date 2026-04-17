@@ -27,13 +27,13 @@ No redeployment needed — secrets take effect immediately.
 
 ---
 
-## Current Status (Mar 18, 2026)
+## Current Status (Apr 16, 2026)
 
 ### Core System — All Deployed, All Tested
 
 | Component | Status | Details |
 |-----------|--------|---------|
-| Quiz + Scoring Engine | ✅ **Live** | 13-question quiz, scoring, results, eligibility |
+| Quiz + Scoring Engine | ✅ **Live** | JotForm quiz (260466844433158). Old HTML quiz at `/quiz/` redirects to JotForm. |
 | Results Page | ✅ **Live** | Gap diagnosis, score, product info + CTA with Stripe link |
 | Booking Page | ✅ **Live** | Calendly inline widget, shown after Stripe payment |
 | Stripe Payment Webhook | ✅ **Live** | Receives checkout.session.completed, updates HubSpot (TEST mode) |
@@ -44,7 +44,14 @@ No redeployment needed — secrets take effect immediately.
 | Email Notifications | ✅ **Live** | Resend sends scan + quiz notifications to Marc (JotForm emails disabled) |
 | Quiz → Scan Prefill | ✅ **Live** | Quiz submission generates prefilled scan worksheet URL, stored in HubSpot |
 
-**575 tests passing, 0 failing**
+**578 tests passing, 0 failing**
+
+### Recent Changes (Apr 2026)
+
+- **Quiz migrated to JotForm** — Custom HTML quiz replaced with JotForm (form 260466844433158). `/quiz/` URL now redirects to JotForm. All scoring, HubSpot writes, scan prefill, and results page work identically.
+- **Scan worksheet pass-through** — Action descriptions and one-liners now flow from JotForm to the plan (JotForm = source of truth). Wording changes only need JotForm edits, no code deploy.
+- **18 wording changes applied** — Marc's QA feedback across A1, A3, C1, C2, C3, C4, R1, R4 sub-paths.
+- **JotForm conditions cleaned** — Removed 2 broken conditions referencing defunct sub-paths. Now 40 conditions (was 42).
 
 ### MVP Feedback Implementation — Complete
 
