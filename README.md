@@ -514,8 +514,6 @@ MVP Feedback implementation session (Tyler + Claude):
 
 ## What Changed (Feb 19, 2026)
 
-These changes were made by Jesse (Williamsjesse22) working with Claude in the Feb 19 session:
-
 ### 1. Booking Page Created
 Created `pages/booking/index.html` with an embedded Calendly inline widget. After Stripe payment, customers are redirected here to book their 45-Minute Growth Gap Scan. Uses Marc's Calendly URL: `https://calendly.com/marc-tribeon/45-minute-growth-gap-scan`.
 
@@ -523,7 +521,7 @@ Created `pages/booking/index.html` with an embedded Calendly inline widget. Afte
 Added a GET `/plans/*` route to the scan webhook worker so DOCX files stored in R2 are downloadable via a real URL (e.g. `https://mtg-scan-webhook.../plans/email@example.com/1234567890.docx`). Previously the plan URL was a broken relative path.
 
 ### 3. Email Notifications Configured
-Set `RESEND_API_KEY`, `MARC_EMAIL`, and `FROM_EMAIL` secrets on the scan webhook worker. Marc (currently Jesse for testing) receives:
+Set `RESEND_API_KEY`, `MARC_EMAIL`, and `FROM_EMAIL` secrets on the scan webhook worker. Marc receives:
 - **"Plan draft ready"** email when a DOCX is generated (includes download link + confidence level)
 - **"Manual plan required"** email when stop rules fire (includes stop reasons)
 
@@ -534,8 +532,6 @@ Set `RESEND_API_KEY`, `MARC_EMAIL`, and `FROM_EMAIL` secrets on the scan webhook
 ---
 
 ## What Changed (Feb 7 → Feb 18)
-
-These changes were made by Jesse (Williamsjesse22) working with Claude in the Feb 18 session:
 
 ### 1. HubSpot Property Name Alignment
 Fixed 9 property name mismatches between code and PROJECT_CONTEXT.md spec:
